@@ -300,7 +300,7 @@ section { padding: 130px 60px; }
 .service-card:hover::before { transform: scaleX(1); }
 .service-card:hover { border-color: rgba(155,112,64,.2); background: rgba(255,255,255,.02); transform: translateY(-4px); }
 .service-card .s-num { font-family: 'Cormorant Garamond', serif; font-size: 56px; font-weight: 300; color: rgba(191, 156, 117, 0.15); line-height: 1; margin-bottom: 18px; }
-.service-card h4 { font-family: 'Cormorant Garamond', serif; font-weight: 400; font-size: 26px; color: var(--cr); margin-bottom: 14px; line-height: 1.25; }
+.service-card h3 { font-family: 'Cormorant Garamond', serif; font-weight: 400; font-size: 26px; color: var(--cr); margin-bottom: 14px; line-height: 1.25; }
 .service-card p { font-weight: 300; font-size: 16px; color: var(--bg); line-height: 1.9; }
 
 /* ═══ NOS REALISATIONS LEGACY GRID ═══ */
@@ -407,10 +407,28 @@ section { padding: 130px 60px; }
 .faq-items { display: flex; flex-direction: column; gap: 0; }
 .faq-item { border-bottom: 1px solid rgba(200,187,168,.35); }
 .faq-item:first-child { border-top: 1px solid rgba(200,187,168,.35); }
-.faq-question { display: flex; justify-content: space-between; align-items: center; padding: 24px 0; cursor: pointer; gap: 20px; transition: color .3s; }
+.faq-question {
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 24px 0;
+  cursor: pointer;
+  gap: 20px;
+  transition: color .3s;
+  background: transparent;
+  border: 0;
+  text-align: left;
+}
 .faq-question:hover { color: var(--mr); }
-.faq-question h4 { font-family: 'Cormorant Garamond', serif; font-weight: 400; font-size: 25px; color: var(--vf); transition: color .3s; line-height: 1.4; }
-.faq-question:hover h4 { color: var(--mr); }
+.faq-question:focus-visible {
+  outline: 2px solid rgba(155,112,64,.55);
+  outline-offset: 6px;
+  border-radius: 8px;
+}
+.faq-question-text { font-family: 'Cormorant Garamond', serif; font-weight: 400; font-size: 25px; color: var(--vf); transition: color .3s; line-height: 1.4; }
+.faq-question:hover .faq-question-text,
+.faq-question:focus-visible .faq-question-text { color: var(--mr); }
 .faq-icon { width: 32px; height: 32px; min-width: 32px; border: 1px solid var(--bg); border-radius: 50%; display: flex; align-items: center; justify-content: center; transition: all .4s; position: relative; }
 .faq-icon::before, .faq-icon::after { content: ''; position: absolute; background: var(--vo); transition: all .3s; }
 .faq-icon::before { width: 12px; height: 1px; }
@@ -422,7 +440,7 @@ section { padding: 130px 60px; }
 
 /* ═══ CONTACT ═══ */
 .contact { background: var(--ow); display: grid; grid-template-columns: minmax(300px, .9fr) minmax(340px, 1.1fr); gap: clamp(40px, 6vw, 80px); align-items: start; }
-.contact-info h3 { font-family: 'Cormorant Garamond', serif; font-weight: 300; font-size: clamp(38px, 4vw, 58px); color: var(--vf); margin-bottom: 14px; line-height: 1.15; }
+.contact-info h2 { font-family: 'Cormorant Garamond', serif; font-weight: 300; font-size: clamp(38px, 4vw, 58px); color: var(--vf); margin-bottom: 14px; line-height: 1.15; }
 .contact-info .ci-sub { font-weight: 300; font-size: 17px; color: var(--vo); margin-bottom: 36px; line-height: 1.85; }
 .contact-detail { display: flex; flex-direction: column; gap: 24px; }
 .contact-detail .item { font-weight: 300; font-size: 17px; color: var(--vo); padding-left: 20px; border-left: 2px solid var(--mr); line-height: 1.85; }
@@ -446,14 +464,14 @@ section { padding: 130px 60px; }
 footer { background: var(--vf); padding: 80px 60px 40px; }
 .footer-top { display: grid; grid-template-columns: minmax(220px, 1.5fr) .85fr .85fr .85fr minmax(280px, 1.35fr); gap: 44px; margin-bottom: 60px; align-items: start; }
 .footer-brand img { height: 68px; margin-bottom: 18px; }
-.footer-brand p { font-weight: 300; font-size: 16px; color: rgba(245,240,232,.82); line-height: 1.9; max-width: 340px; }
-.footer-title { font-weight: 400; font-size: 11px; letter-spacing: 4px; text-transform: uppercase; color: #d7b684; margin-bottom: 24px; }
+.footer-brand p { font-weight: 300; font-size: 16px; color: rgba(250,248,244,.9); line-height: 1.9; max-width: 340px; }
+.footer-title { font-weight: 400; font-size: 11px; letter-spacing: 4px; text-transform: uppercase; color: #f1d8ab; margin-bottom: 24px; }
 .footer-col a { display: block; font-weight: 300; font-size: 16px; color: rgba(245,240,232,.82); text-decoration: none; margin-bottom: 14px; transition: all .3s; }
 .footer-col a:hover { color: var(--cr); padding-left: 6px; }
-.footer-map p { font-weight: 300; font-size: 15px; color: rgba(245,240,232,.82); line-height: 1.8; margin-bottom: 18px; }
+.footer-map p { font-weight: 300; font-size: 15px; color: rgba(250,248,244,.9); line-height: 1.8; margin-bottom: 18px; }
 .footer-map-frame { border-radius: 18px; overflow: hidden; border: 1px solid rgba(122,139,104,.16); background: rgba(255,255,255,.03); box-shadow: 0 16px 40px rgba(0,0,0,.12); }
 .footer-map-frame iframe { display: block; width: 100%; height: 240px; border: 0; filter: grayscale(.18) saturate(.9) contrast(1.02); }
-.footer-bottom { border-top: 1px solid rgba(122,139,104,.12); padding-top: 30px; display: flex; justify-content: space-between; font-weight: 300; font-size: 13px; color: rgba(245,240,232,.72); letter-spacing: 1px; gap: 20px; flex-wrap: wrap; }
+.footer-bottom { border-top: 1px solid rgba(122,139,104,.18); padding-top: 30px; display: flex; justify-content: space-between; font-weight: 300; font-size: 13px; color: rgba(250,248,244,.88); letter-spacing: 1px; gap: 20px; flex-wrap: wrap; }
 
 .about,
 .realisations,
@@ -724,7 +742,7 @@ footer,
   .section-title { font-size: clamp(38px, 5vw, 54px); }
   .section-text { font-size: 18px; }
   .property-card .info h3 { font-size: 28px; }
-  .faq-question h4 { font-size: 23px; }
+  .faq-question-text { font-size: 23px; }
 }
 
 @media (max-width: 768px) {
@@ -830,9 +848,9 @@ footer,
   .faq-grid { grid-template-columns: 1fr; gap: 40px; }
   .faq-left { position: static; }
   .faq-trust { gap: 16px; }
-  .faq-question h4 { font-size: 22px; }
+  .faq-question-text { font-size: 22px; }
   .faq-answer-inner { font-size: 16px; }
-  .contact-info h3 { font-size: 40px; }
+  .contact-info h2 { font-size: 40px; }
   .contact-info .ci-sub,
   .contact-detail .item { font-size: 16px; }
   .contact-form input,
@@ -874,15 +892,15 @@ footer,
   .property-card .info .details { flex-direction: column; gap: 12px; }
   .badge-construction { font-size: 10px; letter-spacing: 1px; }
   .service-card { padding: 30px 22px; }
-  .service-card h4 { font-size: 24px; }
+  .service-card h3 { font-size: 24px; }
   .quartier-card .q-overlay { padding: 22px; }
   .quartier-card h4 { font-size: 26px; }
   .map-copy { padding: 0 18px; }
   .map-copy__title { font-size: 36px; }
   .faq-question { padding: 20px 0; }
-  .faq-question h4 { font-size: 20px; }
+  .faq-question-text { font-size: 20px; }
   .faq-answer-inner { font-size: 15px; }
-  .contact-info h3 { font-size: 36px; }
+  .contact-info h2 { font-size: 36px; }
   .contact-form textarea { min-height: 120px; }
   .mobile-menu a { font-size: 30px; }
   .wa-float {
