@@ -76,7 +76,55 @@ body{background:var(--cr);font-family:'Jost',sans-serif;color:var(--bk);overflow
 .sop .pc{font-family:'Jost',sans-serif;font-size:8px;letter-spacing:3px;text-transform:uppercase;color:white;position:relative;z-index:2;margin-top:8px}
 .ft{text-align:center;padding:40px 0;border-top:1px solid var(--bg)}
 .ft p{font-family:'Jost',sans-serif;font-size:10px;letter-spacing:4px;text-transform:uppercase;color:var(--vo)}
-@media(max-width:768px){.b{padding:30px 20px}.mk,.lv,.ts,.sog{grid-template-columns:1fr}.mc.tl{grid-row:span 1;aspect-ratio:4/3}.bc{flex-direction:column}.sy{grid-template-columns:1fr}.sop{aspect-ratio:auto;min-height:150px}}
+@media(max-width:768px){
+.b{padding:30px 20px}
+.lv,.ts,.mk,.bc,.pl,.ev,.sog{
+display:flex;
+flex-wrap:nowrap;
+gap:18px;
+overflow-x:auto;
+overflow-y:visible;
+padding:6px 54px 14px 0;
+margin-bottom:64px;
+scroll-snap-type:x proximity;
+scrollbar-width:none;
+-webkit-overflow-scrolling:touch;
+touch-action:pan-x pinch-zoom
+}
+.lv::-webkit-scrollbar,.ts::-webkit-scrollbar,.mk::-webkit-scrollbar,.bc::-webkit-scrollbar,.pl::-webkit-scrollbar,.ev::-webkit-scrollbar,.sog::-webkit-scrollbar{display:none}
+.lv>*,.ts>*,.mk>*,.bc>*,.pl>*,.ev>*,.sog>*{scroll-snap-align:start}
+.st{margin-bottom:22px}
+.st::after{
+content:'Glissez';
+display:inline-block;
+margin-left:14px;
+font-size:9px;
+letter-spacing:3px;
+text-transform:uppercase;
+color:var(--mr);
+opacity:.8
+}
+.lv,.ts,.mk,.bc,.pl,.ev,.sog{position:relative}
+.lv::after,.ts::after,.mk::after,.bc::after,.pl::after,.ev::after,.sog::after{
+content:'';
+position:sticky;
+right:0;
+width:30px;
+height:100%;
+justify-self:end;
+pointer-events:none;
+background:linear-gradient(to left,rgba(245,240,232,.98),rgba(245,240,232,0))
+}
+.lb,.tb,.cd,.pi,.ec,.sp,.sop{min-width:0;flex:0 0 84%}
+.pi{min-width:140px}
+.ps{height:120px}
+.mk .mc,.mk .mc.tl{grid-row:span 1;aspect-ratio:4/3;min-height:0;flex:0 0 84%}
+.bc>*{flex-basis:88%}
+.sy{grid-template-columns:1fr;gap:24px}
+.ev>*{flex-basis:84%}
+.sog>*{flex-basis:70%}
+.sop{aspect-ratio:4/4.6;min-height:150px}
+}
 </style>
 </head>
 <body>
@@ -182,7 +230,7 @@ body{background:var(--cr);font-family:'Jost',sans-serif;color:var(--bk);overflow
 <div class="nm">Prénom Nom</div>
 <div class="rl">Directeur Commercial</div>
 </div>
-<div class="ci">++212 6 700 388 99<br><a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="b8dbd7d6ccd9dbccf8ddd5d9cad996d5d9">[email&#160;protected]</a><br>www.emara.ma</div>
+<div class="ci">+212 6 700 388 99<br><a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="b8dbd7d6ccd9dbccf8ddd5d9cad996d5d9">[email&#160;protected]</a><br>www.emara.ma</div>
 </div>
 </div>
 
@@ -192,7 +240,7 @@ body{background:var(--cr);font-family:'Jost',sans-serif;color:var(--bk);overflow
 <div class="lh">
 <div class="lhh">
 <img src="img/vert.png" style="height:35px;width:auto;" alt="Emara">
-<div class="lhi">Estates<br>Marrakech, Maroc<br>++212 6 700 388 99<br><a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="284b47465c494b5c684d45495a49064549">[email&#160;protected]</a></div>
+<div class="lhi">Estates<br>Marrakech, Maroc<br>+212 6 700 388 99<br><a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="284b47465c494b5c684d45495a49064549">[email&#160;protected]</a></div>
 </div>
 <div class="lhb"><div class="ll2"></div><div class="ll2"></div><div class="ll2"></div><div class="ll2"></div><div class="ll2"></div><div class="ll2"></div><div class="ll2"></div><div class="ll2"></div><div class="ll2"></div></div>
 <div class="lhf"><span>Emara Estates</span><span>RC: XXXXXX — IF: XXXXXXXX</span></div>
