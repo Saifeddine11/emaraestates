@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://emaraestates.com/sitemap.xml
