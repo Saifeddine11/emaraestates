@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>404 | Emara Estates</title>
+  <meta name="description" content="La page demandee est introuvable. Retrouvez les residences et opportunites immobilieres Emara Estates a Marrakech.">
+  <meta name="robots" content="noindex, follow">
+  <link rel="icon" type="image/png" href="/favicon.png">
+  <link rel="apple-touch-icon" href="/apple-touch-icon.png">
+  <link rel="shortcut icon" href="/favicon.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;500;600&family=Jost:wght@300;400;500&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --vf: #2D3A2D;
+      --vo: #7A8B68;
+      --mr: #9B7040;
+      --bg: #C8BBA8;
+      --cr: #F5F0E8;
+      --ow: #FAF8F4;
+      --white: #fff;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 32px 20px;
+      font-family: 'Jost', sans-serif;
+      background:
+        linear-gradient(rgba(45,58,45,.78), rgba(45,58,45,.78)),
+        url("img/honest789.webp") center/cover no-repeat;
+      color: var(--cr);
+    }
+
+    .card {
+      width: min(100%, 760px);
+      text-align: center;
+      padding: 48px 32px;
+      background: rgba(245,240,232,.08);
+      border: 1px solid rgba(245,240,232,.14);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border-radius: 28px;
+      box-shadow: 0 24px 80px rgba(0,0,0,.18);
+    }
+
+    .logo {
+      width: auto;
+      height: 88px;
+      display: block;
+      margin: 0 auto 26px;
+    }
+
+    .eyebrow {
+      font-size: 11px;
+      letter-spacing: 5px;
+      text-transform: uppercase;
+      color: var(--bg);
+      margin-bottom: 18px;
+    }
+
+    .code {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: clamp(88px, 16vw, 150px);
+      line-height: .9;
+      color: rgba(245,240,232,.26);
+      margin-bottom: 10px;
+    }
+
+    h1 {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: clamp(38px, 6vw, 68px);
+      line-height: 1;
+      font-weight: 400;
+      margin-bottom: 20px;
+    }
+
+    p {
+      max-width: 560px;
+      margin: 0 auto;
+      font-size: clamp(17px, 2vw, 20px);
+      line-height: 1.9;
+      color: rgba(245,240,232,.86);
+    }
+
+    .actions {
+      margin-top: 34px;
+      display: flex;
+      justify-content: center;
+      gap: 14px;
+      flex-wrap: wrap;
+    }
+
+    .btn-primary,
+    .btn-secondary {
+      min-width: 220px;
+      padding: 17px 24px;
+      border-radius: 999px;
+      font-size: 12px;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      text-decoration: none;
+      transition: all .3s ease;
+    }
+
+    .btn-primary {
+      background: var(--mr);
+      color: var(--white);
+      border: 1px solid var(--mr);
+    }
+
+    .btn-primary:hover {
+      background: #ad8050;
+      border-color: #ad8050;
+      transform: translateY(-2px);
+    }
+
+    .btn-secondary {
+      color: var(--cr);
+      border: 1px solid rgba(245,240,232,.24);
+      background: transparent;
+    }
+
+    .btn-secondary:hover {
+      border-color: rgba(245,240,232,.54);
+      background: rgba(255,255,255,.06);
+      transform: translateY(-2px);
+    }
+
+    .footer-link {
+      display: inline-block;
+      margin-top: 26px;
+      font-size: 11px;
+      letter-spacing: 4px;
+      text-transform: uppercase;
+      color: var(--bg);
+      text-decoration: none;
+      border-bottom: 1px solid rgba(200,187,168,.38);
+      padding-bottom: 4px;
+    }
+
+    @media (max-width: 640px) {
+      .card {
+        padding: 36px 22px;
+        border-radius: 22px;
+      }
+
+      .logo {
+        height: 72px;
+      }
+
+      .actions {
+        flex-direction: column;
+      }
+
+      .btn-primary,
+      .btn-secondary {
+        width: 100%;
+        min-width: 0;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="card">
+    <a href="/" aria-label="Retour a l'accueil Emara Estates">
+      <img class="logo" src="img/logo.webp" alt="Emara Estates">
+    </a>
+    <div class="eyebrow">Page introuvable</div>
+    <div class="code">404</div>
+    <h1>L'adresse a change,<br>pas l'opportunite.</h1>
+    <p>
+      La page que vous recherchez n'est plus disponible. Retrouvez nos residences a Gueliz et laissez-nous vous guider vers le bien qui vous correspond.
+    </p>
+
+    <div class="actions">
+      <a class="btn-primary" href="/#biens">Voir les residences</a>
+      <a class="btn-secondary" href="/#contact">Parler a un conseiller</a>
+    </div>
+
+    <a class="footer-link" href="/">Retour a l'accueil</a>
+  </main>
+</body>
+</html>
