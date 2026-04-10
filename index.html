@@ -130,6 +130,12 @@
   <div class="stat reveal stagger-4"><div class="num">Honest</div><div class="label">Promoteur Partenaire</div></div>
 </div>
 -->
+<div class="photo-ribbon-intro reveal">
+  <div class="section-label">L'Art de Vivre Emara</div>
+  <h2 class="photo-ribbon-intro__title">Des adresses pensées pour séduire avant même la première visite.</h2>
+  <p class="photo-ribbon-intro__text">Prestations bien-être, vues inspirées, matières nobles et espaces signatures : découvrez l'univers Emara Estates à travers nos résidences d'exception à Guéliz.</p>
+</div>
+
 <div class="photo-ribbon" aria-label="Galerie des résidences Emara Estates">
   <div class="photo-ribbon-track">
     <figure class="photo-ribbon-card"><img src="img/honest001.webp" alt="Façade d'une résidence Honest Signature à Guéliz Marrakech" loading="lazy"></figure>
@@ -777,12 +783,20 @@ document.querySelectorAll('#mapTitle,#mapDivider').forEach(function(el){ mapObs.
 
 // ═══ MOBILE REALISATIONS CAROUSEL START ═══
 var realisationsCarousel = document.querySelector('.realisations-grid');
+var wasMobileRealisations = window.innerWidth <= 768;
 function resetRealisationsCarouselPosition() {
   if (!realisationsCarousel) return;
   if (window.innerWidth <= 768) realisationsCarousel.scrollLeft = 0;
 }
 window.addEventListener('load', resetRealisationsCarouselPosition);
-window.addEventListener('resize', resetRealisationsCarouselPosition);
+window.addEventListener('resize', function(){
+  if (!realisationsCarousel) return;
+  var isMobileRealisations = window.innerWidth <= 768;
+  if (isMobileRealisations && !wasMobileRealisations) {
+    realisationsCarousel.scrollLeft = 0;
+  }
+  wasMobileRealisations = isMobileRealisations;
+});
 
 // ═══ PROPERTY SLIDER ═══
 var lightbox = document.getElementById('projectLightbox');
