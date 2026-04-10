@@ -169,7 +169,7 @@ section { padding: 130px 60px; }
 .about-float .af-label { font-size: 12px; letter-spacing: 3px; text-transform: uppercase; margin-top: 6px; }
 .about-values { display: flex; gap: 30px; margin-top: 40px; }
 .about-value { flex: 1; padding-top: 16px; border-top: 1px solid var(--bg); }
-.about-value h3 { font-family: 'Cormorant Garamond', serif; font-size: 22px; font-weight: 400; color: var(--vf); margin-bottom: 8px; }
+.about-value-title { font-family: 'Cormorant Garamond', serif; font-size: 22px; font-weight: 400; color: var(--vf); margin-bottom: 8px; }
 .about-value p { font-size: 15px; font-weight: 300; color: var(--vo); line-height: 1.85; }
 
 /* ═══ ESTATES ═══ */
@@ -436,7 +436,7 @@ section { padding: 130px 60px; }
 .track-item span { display: block; font-family: 'Cormorant Garamond', serif; font-size: 34px; font-weight: 300; color: var(--mr); line-height: 1; margin-bottom: 8px; }
 .track-sep { width: 1px; height: 32px; background: rgba(122,139,104,.2); }
 .property-card .info { padding: 26px; }
-.property-card .info h3 { font-family: 'Cormorant Garamond', serif; font-weight: 400; font-size: 30px; color: var(--vf); margin-bottom: 8px; line-height: 1.2; }
+.property-title { font-family: 'Cormorant Garamond', serif; font-weight: 400; font-size: 30px; color: var(--vf); margin-bottom: 8px; line-height: 1.2; }
 .property-card .info .loc { font-weight: 300; font-size: 13px; letter-spacing: 2px; text-transform: uppercase; color: var(--vo); margin-bottom: 18px; line-height: 1.6; }
 .property-card .info .details { display: flex; gap: 20px; padding-top: 18px; border-top: 1px solid rgba(200,187,168,.25); }
 .property-card .info .detail { font-weight: 300; font-size: 14px; color: var(--vo); line-height: 1.7; }
@@ -472,7 +472,7 @@ section { padding: 130px 60px; }
 .service-card:hover::before { transform: scaleX(1); }
 .service-card:hover { border-color: rgba(155,112,64,.2); background: rgba(255,255,255,.02); transform: translateY(-4px); }
 .service-card .s-num { font-family: 'Cormorant Garamond', serif; font-size: 56px; font-weight: 300; color: rgba(191, 156, 117, 0.15); line-height: 1; margin-bottom: 18px; }
-.service-card h4 { font-family: 'Cormorant Garamond', serif; font-weight: 400; font-size: 26px; color: var(--cr); margin-bottom: 14px; line-height: 1.25; }
+.service-title { font-family: 'Cormorant Garamond', serif; font-weight: 400; font-size: 26px; color: var(--cr); margin-bottom: 14px; line-height: 1.25; }
 .service-card p { font-weight: 300; font-size: 16px; color: var(--bg); line-height: 1.9; }
 
 /* ═══ NOS REALISATIONS LEGACY GRID ═══ */
@@ -581,8 +581,8 @@ section { padding: 130px 60px; }
 .faq-item:first-child { border-top: 1px solid rgba(200,187,168,.35); }
 .faq-question { display: flex; justify-content: space-between; align-items: center; padding: 24px 0; cursor: pointer; gap: 20px; transition: color .3s; }
 .faq-question:hover { color: var(--mr); }
-.faq-question h4 { font-family: 'Cormorant Garamond', serif; font-weight: 400; font-size: 25px; color: var(--vf); transition: color .3s; line-height: 1.4; }
-.faq-question:hover h4 { color: var(--mr); }
+.faq-question-text { font-family: 'Cormorant Garamond', serif; font-weight: 400; font-size: 25px; color: var(--vf); transition: color .3s; line-height: 1.4; }
+.faq-question:hover .faq-question-text { color: var(--mr); }
 .faq-icon { width: 32px; height: 32px; min-width: 32px; border: 1px solid var(--bg); border-radius: 50%; display: flex; align-items: center; justify-content: center; transition: all .4s; position: relative; }
 .faq-icon::before, .faq-icon::after { content: ''; position: absolute; background: var(--vo); transition: all .3s; }
 .faq-icon::before { width: 12px; height: 1px; }
@@ -594,7 +594,7 @@ section { padding: 130px 60px; }
 
 /* ═══ CONTACT ═══ */
 .contact { background: var(--ow); display: grid; grid-template-columns: minmax(300px, .9fr) minmax(340px, 1.1fr); gap: clamp(40px, 6vw, 80px); align-items: start; }
-.contact-info h3 { font-family: 'Cormorant Garamond', serif; font-weight: 300; font-size: clamp(38px, 4vw, 58px); color: var(--vf); margin-bottom: 14px; line-height: 1.15; }
+.contact-title { font-family: 'Cormorant Garamond', serif; font-weight: 300; font-size: clamp(38px, 4vw, 58px); color: var(--vf); margin-bottom: 14px; line-height: 1.15; }
 .contact-info .ci-sub { font-weight: 300; font-size: 17px; color: var(--vo); margin-bottom: 36px; line-height: 1.85; }
 .contact-detail { display: flex; flex-direction: column; gap: 24px; }
 .contact-detail .item { font-weight: 300; font-size: 17px; color: var(--vo); padding-left: 20px; border-left: 2px solid var(--mr); line-height: 1.85; }
@@ -1019,8 +1019,8 @@ footer,
   .footer-map { grid-column: 1 / -1; }
   .section-title { font-size: clamp(38px, 5vw, 54px); }
   .section-text { font-size: 18px; }
-  .property-card .info h3 { font-size: 28px; }
-  .faq-question h4 { font-size: 23px; }
+  .property-title { font-size: 28px; }
+  .faq-question-text { font-size: 23px; }
 }
 
 @media (max-width: 768px) {
@@ -1197,9 +1197,9 @@ footer,
   .faq-grid { grid-template-columns: 1fr; gap: 40px; }
   .faq-left { position: static; }
   .faq-trust { gap: 16px; }
-  .faq-question h4 { font-size: 22px; }
+  .faq-question-text { font-size: 22px; }
   .faq-answer-inner { font-size: 16px; }
-  .contact-info h3 { font-size: 40px; }
+  .contact-title { font-size: 40px; }
   .contact-info .ci-sub,
   .contact-detail .item { font-size: 16px; }
   .contact-form input,
@@ -1266,20 +1266,20 @@ footer,
   .lightbox__controls { inset: auto 12px 12px 12px; transform: none; }
   .lightbox__close { top: 12px; right: 12px; width: 44px; height: 44px; }
   .lightbox__caption { flex-direction: column; align-items: flex-start; }
-  .property-card .info h3 { font-size: 26px; }
+  .property-title { font-size: 26px; }
   .card-sold .badge-vendu { left: 14px; right: 14px; padding: 11px 18px; font-size: 14px; letter-spacing: 3px; }
   .property-card .info .details { flex-direction: column; gap: 12px; }
   .badge-construction { font-size: 10px; letter-spacing: 1px; }
   .service-card { padding: 30px 22px; }
-  .service-card h4 { font-size: 24px; }
+  .service-title { font-size: 24px; }
   .quartier-card .q-overlay { padding: 22px; }
   .quartier-card h4 { font-size: 26px; }
   .map-copy { padding: 0 18px; }
   .map-copy__title { font-size: 36px; }
   .faq-question { padding: 20px 0; }
-  .faq-question h4 { font-size: 20px; }
+  .faq-question-text { font-size: 20px; }
   .faq-answer-inner { font-size: 15px; }
-  .contact-info h3 { font-size: 36px; }
+  .contact-title { font-size: 36px; }
   .contact-form textarea { min-height: 120px; }
   .mobile-menu a { font-size: 30px; }
   .wa-float {

@@ -1,6 +1,7 @@
 Options -MultiViews
 DirectoryIndex index.html
 ErrorDocument 404 /404.html
+AddDefaultCharset UTF-8
 
 RewriteEngine On
 RewriteBase /
