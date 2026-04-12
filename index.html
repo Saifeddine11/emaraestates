@@ -230,6 +230,25 @@
     </div>
   </div>
 
+  <div class="realisations-carousel-ui reveal" aria-label="Navigation des réalisations">
+    <div class="realisations-carousel-copy">
+      <span>Glissez</span>
+      <strong id="realisationsCarouselStatus">1 / 4</strong>
+    </div>
+    <div class="realisations-carousel-actions">
+      <button class="realisations-carousel-btn realisations-carousel-btn--prev" type="button" aria-label="Réalisation précédente">
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M14.5 5.5L8 12l6.5 6.5"></path>
+        </svg>
+      </button>
+      <button class="realisations-carousel-btn realisations-carousel-btn--next" type="button" aria-label="Réalisation suivante">
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M9.5 5.5L16 12l-6.5 6.5"></path>
+        </svg>
+      </button>
+    </div>
+  </div>
+
   <div class="Estates-grid realisations-grid">
     <div class="property-card card-sold reveal stagger-1" data-type="vendu">
       <div class="img-wrap property-slider" data-slider-delay="4000">
@@ -795,11 +814,78 @@ document.querySelectorAll('#mapTitle,#mapDivider').forEach(function(el){ mapObs.
 // Le carrousel utilise le scroll natif du navigateur (touch-action: pan-x defini en CSS).
 // Aucun handler tactile custom : laisse passer le scroll vertical de la page.
 var realisationsCarousel = document.querySelector('.realisations-grid');
+var realisationsPrev = document.querySelector('.realisations-carousel-btn--prev');
+var realisationsNext = document.querySelector('.realisations-carousel-btn--next');
+var realisationsStatus = document.getElementById('realisationsCarouselStatus');
+var realisationsCarouselRaf = null;
+
+function getRealisationsCards() {
+  if (!realisationsCarousel) return [];
+  return Array.prototype.slice.call(realisationsCarousel.querySelectorAll(':scope > .property-card'));
+}
+
+function getRealisationsActiveIndex() {
+  var cards = getRealisationsCards();
+  if (!cards.length) return 0;
+  var scrollLeft = realisationsCarousel.scrollLeft;
+  var activeIndex = 0;
+  var smallestDistance = Infinity;
+  cards.forEach(function(card, index){
+    var distance = Math.abs(card.offsetLeft - realisationsCarousel.offsetLeft - scrollLeft);
+    if (distance < smallestDistance) {
+      smallestDistance = distance;
+      activeIndex = index;
+    }
+  });
+  return activeIndex;
+}
+
+function updateRealisationsCarouselUI() {
+  if (!realisationsCarousel) return;
+  var cards = getRealisationsCards();
+  if (!cards.length) return;
+  var activeIndex = getRealisationsActiveIndex();
+  if (realisationsStatus) realisationsStatus.textContent = (activeIndex + 1) + ' / ' + cards.length;
+  if (realisationsPrev) realisationsPrev.disabled = activeIndex === 0;
+  if (realisationsNext) realisationsNext.disabled = activeIndex >= cards.length - 1;
+}
+
+function scrollRealisationsTo(index) {
+  var cards = getRealisationsCards();
+  if (!cards.length) return;
+  var nextIndex = Math.max(0, Math.min(index, cards.length - 1));
+  realisationsCarousel.scrollTo({
+    left: cards[nextIndex].offsetLeft - realisationsCarousel.offsetLeft,
+    behavior: 'smooth'
+  });
+}
+
 function resetRealisationsCarouselPosition() {
   if (!realisationsCarousel) return;
-  if (window.innerWidth <= 768) realisationsCarousel.scrollLeft = 0;
+  if (window.innerWidth <= 768) {
+    realisationsCarousel.scrollLeft = 0;
+    updateRealisationsCarouselUI();
+  }
 }
 window.addEventListener('load', resetRealisationsCarouselPosition);
+window.addEventListener('resize', updateRealisationsCarouselUI);
+if (realisationsCarousel) {
+  realisationsCarousel.addEventListener('scroll', function(){
+    if (realisationsCarouselRaf) cancelAnimationFrame(realisationsCarouselRaf);
+    realisationsCarouselRaf = requestAnimationFrame(updateRealisationsCarouselUI);
+  }, { passive: true });
+}
+if (realisationsPrev) {
+  realisationsPrev.addEventListener('click', function(){
+    scrollRealisationsTo(getRealisationsActiveIndex() - 1);
+  });
+}
+if (realisationsNext) {
+  realisationsNext.addEventListener('click', function(){
+    scrollRealisationsTo(getRealisationsActiveIndex() + 1);
+  });
+}
+updateRealisationsCarouselUI();
 
 // ═══ PROPERTY SLIDER ═══
 var lightbox = document.getElementById('projectLightbox');
