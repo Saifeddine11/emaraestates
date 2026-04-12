@@ -1297,7 +1297,7 @@ footer,
   }
   .realisations .property-slider,
   .realisations .property-slider .slider-image {
-    touch-action: pan-x;
+    touch-action: auto;
   }
   .realisations .property-slider-controls {
     display: none;

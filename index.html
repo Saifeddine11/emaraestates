@@ -811,7 +811,7 @@ var mapObs = new IntersectionObserver(function(entries){
 document.querySelectorAll('#mapTitle,#mapDivider').forEach(function(el){ mapObs.observe(el); });
 
 // ═══ MOBILE REALISATIONS CAROUSEL — native horizontal scroll only ═══
-// Le carrousel utilise le scroll natif du navigateur (touch-action: pan-x defini en CSS).
+// Le carrousel utilise le scroll natif du navigateur.
 // Aucun handler tactile custom : laisse passer le scroll vertical de la page.
 var realisationsCarousel = document.querySelector('.realisations-grid');
 var realisationsPrev = document.querySelector('.realisations-carousel-btn--prev');
