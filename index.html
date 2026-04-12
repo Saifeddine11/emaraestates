@@ -148,6 +148,19 @@
     <figure class="photo-ribbon-card" aria-hidden="true"><img src="img/honest005.webp" alt="Détail architectural d'un appartement neuf Honest Signature" loading="lazy"></figure>
     <figure class="photo-ribbon-card" aria-hidden="true"><img src="img/honest006.webp" alt="Espace de vie de haut standing dans une résidence Honest Signature" loading="lazy"></figure>
   </div>
+  <div class="photo-ribbon-carousel-ui" aria-label="Navigation de la galerie">
+    <button class="photo-ribbon-carousel-btn photo-ribbon-carousel-btn--prev" type="button" aria-label="Photo précédente">
+      <svg viewBox="0 0 24 24" aria-hidden="true">
+        <path d="M14.5 5.5L8 12l6.5 6.5"></path>
+      </svg>
+    </button>
+    <span id="photoRibbonStatus">1 / 6</span>
+    <button class="photo-ribbon-carousel-btn photo-ribbon-carousel-btn--next" type="button" aria-label="Photo suivante">
+      <svg viewBox="0 0 24 24" aria-hidden="true">
+        <path d="M9.5 5.5L16 12l-6.5 6.5"></path>
+      </svg>
+    </button>
+  </div>
 </div>
 
 <!-- Nos projets sur plans -->
@@ -795,6 +808,81 @@ document.querySelectorAll('a[href^="#"]').forEach(function(a){
   });
 });
 
+// ═══ PHOTO RIBBON MOBILE CAROUSEL ═══
+var photoRibbon = document.querySelector('.photo-ribbon');
+var photoRibbonTrack = document.querySelector('.photo-ribbon-track');
+var photoRibbonPrev = document.querySelector('.photo-ribbon-carousel-btn--prev');
+var photoRibbonNext = document.querySelector('.photo-ribbon-carousel-btn--next');
+var photoRibbonStatus = document.getElementById('photoRibbonStatus');
+var photoRibbonIndex = 0;
+var photoRibbonTouchStartX = 0;
+var photoRibbonTouchStartY = 0;
+var photoRibbonTouchMode = '';
+
+function getPhotoRibbonSlides() {
+  if (!photoRibbonTrack) return [];
+  return Array.prototype.slice.call(photoRibbonTrack.querySelectorAll('.photo-ribbon-card:not([aria-hidden="true"])'));
+}
+
+function updatePhotoRibbonCarousel(nextIndex) {
+  var slides = getPhotoRibbonSlides();
+  if (!photoRibbon || !photoRibbonTrack || !slides.length) return;
+  photoRibbonIndex = Math.max(0, Math.min(nextIndex, slides.length - 1));
+  photoRibbon.style.setProperty('--photo-ribbon-index', photoRibbonIndex);
+  if (photoRibbonStatus) photoRibbonStatus.textContent = (photoRibbonIndex + 1) + ' / ' + slides.length;
+  if (photoRibbonPrev) photoRibbonPrev.disabled = photoRibbonIndex === 0;
+  if (photoRibbonNext) photoRibbonNext.disabled = photoRibbonIndex >= slides.length - 1;
+}
+
+if (photoRibbonPrev) {
+  photoRibbonPrev.addEventListener('click', function(){
+    updatePhotoRibbonCarousel(photoRibbonIndex - 1);
+  });
+}
+if (photoRibbonNext) {
+  photoRibbonNext.addEventListener('click', function(){
+    updatePhotoRibbonCarousel(photoRibbonIndex + 1);
+  });
+}
+if (photoRibbonTrack) {
+  photoRibbonTrack.addEventListener('touchstart', function(event){
+    if (window.innerWidth > 768) return;
+    var touch = event.touches && event.touches[0];
+    if (!touch) return;
+    photoRibbonTouchStartX = touch.clientX;
+    photoRibbonTouchStartY = touch.clientY;
+    photoRibbonTouchMode = '';
+  }, { passive: true });
+  photoRibbonTrack.addEventListener('touchmove', function(event){
+    if (window.innerWidth > 768) return;
+    var touch = event.touches && event.touches[0];
+    if (!touch) return;
+    var deltaX = touch.clientX - photoRibbonTouchStartX;
+    var deltaY = touch.clientY - photoRibbonTouchStartY;
+    var absX = Math.abs(deltaX);
+    var absY = Math.abs(deltaY);
+    if (!photoRibbonTouchMode && Math.max(absX, absY) > 8) {
+      photoRibbonTouchMode = absX > absY * 1.25 ? 'horizontal' : 'vertical';
+    }
+    if (photoRibbonTouchMode === 'horizontal') event.preventDefault();
+  }, { passive: false });
+  photoRibbonTrack.addEventListener('touchend', function(event){
+    if (window.innerWidth > 768 || photoRibbonTouchMode !== 'horizontal') {
+      photoRibbonTouchMode = '';
+      return;
+    }
+    var touch = event.changedTouches && event.changedTouches[0];
+    if (!touch) return;
+    var deltaX = touch.clientX - photoRibbonTouchStartX;
+    if (Math.abs(deltaX) > 44) updatePhotoRibbonCarousel(photoRibbonIndex + (deltaX < 0 ? 1 : -1));
+    photoRibbonTouchMode = '';
+  }, { passive: true });
+}
+window.addEventListener('resize', function(){
+  updatePhotoRibbonCarousel(photoRibbonIndex);
+});
+updatePhotoRibbonCarousel(0);
+
 // ═══ MAP SECTION ═══
 var mapObs = new IntersectionObserver(function(entries){
   entries.forEach(function(e){
@@ -810,12 +898,16 @@ var mapObs = new IntersectionObserver(function(entries){
 }, { threshold: 0.3 });
 document.querySelectorAll('#mapTitle,#mapDivider').forEach(function(el){ mapObs.observe(el); });
 
-// ═══ MOBILE REALISATIONS GRID ═══
+// ═══ MOBILE REALISATIONS CAROUSEL ═══
 var realisationsCarousel = document.querySelector('.realisations-grid');
 var realisationsPrev = document.querySelector('.realisations-carousel-btn--prev');
 var realisationsNext = document.querySelector('.realisations-carousel-btn--next');
 var realisationsStatus = document.getElementById('realisationsCarouselStatus');
 var realisationsCarouselRaf = null;
+var realisationsTouchStartX = 0;
+var realisationsTouchStartY = 0;
+var realisationsTouchScrollLeft = 0;
+var realisationsTouchMode = '';
 
 function getRealisationsCards() {
   if (!realisationsCarousel) return [];
@@ -871,6 +963,40 @@ if (realisationsCarousel) {
   realisationsCarousel.addEventListener('scroll', function(){
     if (realisationsCarouselRaf) cancelAnimationFrame(realisationsCarouselRaf);
     realisationsCarouselRaf = requestAnimationFrame(updateRealisationsCarouselUI);
+  }, { passive: true });
+  realisationsCarousel.addEventListener('touchstart', function(event){
+    if (window.innerWidth > 768) return;
+    var touch = event.touches && event.touches[0];
+    if (!touch) return;
+    realisationsTouchStartX = touch.clientX;
+    realisationsTouchStartY = touch.clientY;
+    realisationsTouchScrollLeft = realisationsCarousel.scrollLeft;
+    realisationsTouchMode = '';
+  }, { passive: true });
+  realisationsCarousel.addEventListener('touchmove', function(event){
+    if (window.innerWidth > 768) return;
+    var touch = event.touches && event.touches[0];
+    if (!touch) return;
+    var deltaX = touch.clientX - realisationsTouchStartX;
+    var deltaY = touch.clientY - realisationsTouchStartY;
+    var absX = Math.abs(deltaX);
+    var absY = Math.abs(deltaY);
+    if (!realisationsTouchMode && Math.max(absX, absY) > 8) {
+      realisationsTouchMode = absX > absY * 1.25 ? 'horizontal' : 'vertical';
+    }
+    if (realisationsTouchMode === 'horizontal') {
+      event.preventDefault();
+      realisationsCarousel.scrollLeft = realisationsTouchScrollLeft - deltaX;
+    }
+  }, { passive: false });
+  realisationsCarousel.addEventListener('touchend', function(){
+    if (realisationsTouchMode === 'horizontal') {
+      scrollRealisationsTo(getRealisationsActiveIndex());
+    }
+    realisationsTouchMode = '';
+  }, { passive: true });
+  realisationsCarousel.addEventListener('touchcancel', function(){
+    realisationsTouchMode = '';
   }, { passive: true });
 }
 if (realisationsPrev) {

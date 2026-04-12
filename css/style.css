@@ -189,6 +189,7 @@ nav .links a:hover::after { width: 100%; }
   display: block;
   filter: saturate(.96) contrast(1.02);
 }
+.photo-ribbon-carousel-ui { display: none; }
 
 @keyframes photoRibbonScroll {
   from { transform: translateX(0); }
@@ -1120,35 +1121,33 @@ footer,
   }
   .photo-ribbon {
     padding: 34px 0 42px;
-    overflow: visible;
+    overflow: hidden;
   }
   .photo-ribbon::before,
   .photo-ribbon::after {
     display: none;
   }
   .photo-ribbon-track {
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 14px;
-    width: min(100%, 640px);
-    min-width: 0;
-    max-width: 100%;
+    display: flex;
+    flex-wrap: nowrap;
+    gap: 0;
+    width: min(calc(100% - 48px), 560px);
     margin: 0 auto;
-    padding: 0 24px;
+    padding: 0;
     overflow: visible;
     animation: none;
-    transform: none;
+    transform: translateX(calc(var(--photo-ribbon-index, 0) * -100%));
+    transition: transform .45s cubic-bezier(.23, 1, .32, 1);
     will-change: auto;
     flex: none;
   }
   .photo-ribbon-card {
+    flex: 0 0 100%;
     width: 100%;
     max-width: 100%;
     min-width: 0;
-    flex: none;
     margin: 0;
     border-radius: 14px;
-    grid-column: span 1;
   }
   .photo-ribbon-card img {
     width: 100%;
@@ -1158,6 +1157,52 @@ footer,
   }
   .photo-ribbon-card:nth-child(n+7) {
     display: none;
+  }
+  .photo-ribbon-carousel-ui {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 16px;
+    margin-top: 18px;
+    padding: 0 24px;
+  }
+  .photo-ribbon-carousel-ui span {
+    min-width: 52px;
+    text-align: center;
+    font-family: 'Jost', sans-serif;
+    font-size: 12px;
+    font-weight: 400;
+    letter-spacing: 2px;
+    color: rgba(245,240,232,.86);
+    font-variant-numeric: lining-nums tabular-nums;
+  }
+  .photo-ribbon-carousel-btn {
+    width: 44px;
+    height: 44px;
+    border: 1px solid rgba(200,187,168,.3);
+    border-radius: 50%;
+    background: rgba(245,240,232,.08);
+    color: var(--cr);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: background .25s ease, border-color .25s ease, opacity .25s ease, transform .25s ease;
+    touch-action: manipulation;
+  }
+  .photo-ribbon-carousel-btn svg {
+    width: 18px;
+    height: 18px;
+    stroke: currentColor;
+    stroke-width: 1.8;
+    fill: none;
+  }
+  .photo-ribbon-carousel-btn:hover,
+  .photo-ribbon-carousel-btn:focus-visible {
+    background: var(--mr);
+    border-color: var(--mr);
+    transform: translateY(-1px);
+    outline: none;
   }
   .realisations {
     display: flex;
@@ -1177,7 +1222,15 @@ footer,
     margin: 0 0 30px;
   }
   .realisations-carousel-ui {
-    display: none;
+    order: 3;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 18px;
+    margin: 0 0 18px;
+    padding: 0 24px;
+    position: relative;
+    z-index: 6;
   }
   .realisations-carousel-copy {
     display: flex;
@@ -1252,35 +1305,50 @@ footer,
   }
   .realisations::before,
   .realisations::after {
-    display: none;
+    content: '';
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    width: 34px;
+    z-index: 4;
+    pointer-events: none;
+  }
+  .realisations::before {
+    left: 0;
+    background: linear-gradient(to right, rgba(245,240,232,.98), rgba(245,240,232,.7), rgba(245,240,232,0));
+  }
+  .realisations::after {
+    right: 0;
+    background: linear-gradient(to left, rgba(245,240,232,.98), rgba(245,240,232,.7), rgba(245,240,232,0));
   }
   .Estates-grid.realisations-grid {
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 16px;
-    overflow: visible;
+    display: flex;
+    flex-wrap: nowrap;
+    gap: 18px;
+    overflow-x: hidden;
+    overflow-y: hidden;
     width: 100%;
     max-width: 100%;
-    padding: 0;
+    padding: 6px 24px 18px;
     margin: 0;
-    scroll-snap-type: none;
+    scroll-snap-type: x mandatory;
     scrollbar-width: none;
-    scroll-padding-left: 0;
-    scroll-padding-right: 0;
+    scroll-padding-left: 24px;
+    scroll-padding-right: 24px;
     -webkit-overflow-scrolling: auto;
-    overscroll-behavior-x: auto;
-    touch-action: auto;
+    overscroll-behavior-x: contain;
+    touch-action: pan-y;
   }
   .Estates-grid.realisations-grid::-webkit-scrollbar { display: none; }
   .Estates-grid.realisations-grid > .property-card,
   .Estates-grid.realisations-grid > .property-card:nth-child(4),
   .Estates-grid.realisations-grid > .property-card:nth-child(5) {
     min-width: 0;
-    width: 100%;
-    max-width: 100%;
-    flex: none;
-    scroll-snap-align: none;
-    scroll-snap-stop: normal;
+    width: min(82vw, 360px);
+    max-width: min(82vw, 360px);
+    flex: 0 0 min(82vw, 360px);
+    scroll-snap-align: start;
+    scroll-snap-stop: always;
     align-self: stretch;
   }
   .realisations .property-card {
@@ -1288,12 +1356,16 @@ footer,
     background: rgba(255,255,255,.88);
     border: 1px solid rgba(200,187,168,.24);
     box-shadow: 0 18px 44px rgba(45,58,45,.08);
-    touch-action: auto;
+    touch-action: pan-y;
   }
   .realisations .property-card .img-wrap,
   .realisations .property-slider,
   .realisations .property-slider .slider-image {
-    touch-action: auto;
+    touch-action: pan-y;
+  }
+  .realisations .property-slider,
+  .realisations .property-slider .slider-image {
+    pointer-events: none;
   }
   .realisations .property-card .img-wrap::before,
   .realisations .property-card .img-wrap::after,
@@ -1440,20 +1512,19 @@ footer,
     padding: 0 18px;
   }
   .photo-ribbon-track {
-    display: grid;
-    grid-template-columns: 1fr;
-    gap: 10px;
-    padding: 0 18px;
-    flex: none;
+    width: min(calc(100% - 36px), 420px);
   }
   .photo-ribbon-card {
     border-radius: 10px;
-    width: 100%;
-    max-width: 100%;
-    min-width: 0;
-    flex: none;
-    margin: 0;
-    grid-column: span 1;
+  }
+  .photo-ribbon-carousel-ui {
+    gap: 14px;
+    margin-top: 16px;
+    padding: 0 18px;
+  }
+  .photo-ribbon-carousel-btn {
+    width: 42px;
+    height: 42px;
   }
   body { padding-bottom: calc(88px + env(safe-area-inset-bottom, 0px)); }
   nav { padding: 14px 18px; }
@@ -1477,18 +1548,35 @@ footer,
   .property-card .info { padding: 22px; }
   .realisations::before,
   .realisations::after { width: 22px; }
+  .realisations-carousel-ui {
+    padding: 0 18px;
+    margin-bottom: 14px;
+  }
+  .realisations-carousel-copy {
+    gap: 9px;
+  }
+  .realisations-carousel-copy span {
+    letter-spacing: 2px;
+  }
+  .realisations-carousel-btn {
+    width: 42px;
+    height: 42px;
+  }
   .Estates-grid.realisations-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 12px;
-    padding: 0;
+    gap: 16px;
+    padding: 6px 18px 16px;
     margin: 0;
+    scroll-padding-left: 18px;
+    scroll-padding-right: 18px;
+    overflow-x: hidden;
+    touch-action: pan-y;
   }
   .Estates-grid.realisations-grid > .property-card,
   .Estates-grid.realisations-grid > .property-card:nth-child(4),
   .Estates-grid.realisations-grid > .property-card:nth-child(5) {
-    width: 100%;
-    max-width: 100%;
-    flex-basis: auto;
+    width: min(84vw, 320px);
+    max-width: min(84vw, 320px);
+    flex-basis: min(84vw, 320px);
   }
   .property-card--featured .img-wrap { min-height: 240px; }
   .project-summary .property-card--featured .img-wrap { min-height: 280px; }
@@ -1558,7 +1646,7 @@ footer,
 .stagger-3 { transition-delay: .3s; }
 .stagger-4 { transition-delay: .4s; }
 
-/* FIX iOS scroll blocked inside cards */
+/* Standard mobile carousel: keep vertical scroll natural inside cards */
 .realisations .property-slider,
 .realisations .slider-image,
 .realisations .img-wrap,
@@ -1566,9 +1654,9 @@ footer,
   touch-action: pan-y !important;
 }
 
-/* mobile realisations use a static grid, not horizontal scroll */
+/* Horizontal movement is handled by carousel JS, vertical scroll stays native */
 .Estates-grid.realisations-grid {
-  touch-action: auto;
+  touch-action: pan-y;
 }
 
 /* overlays must not block scroll */
