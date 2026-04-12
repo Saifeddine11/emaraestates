@@ -1599,3 +1599,23 @@ footer,
 .stagger-2 { transition-delay: .2s; }
 .stagger-3 { transition-delay: .3s; }
 .stagger-4 { transition-delay: .4s; }
+
+/* FIX iOS scroll blocked inside cards */
+.realisations .property-slider,
+.realisations .slider-image,
+.realisations .img-wrap,
+.realisations .property-card {
+  touch-action: pan-y !important;
+}
+
+/* allow horizontal scroll only on container */
+.Estates-grid.realisations-grid {
+  touch-action: pan-x pan-y;
+}
+
+/* overlays must not block scroll */
+.realisations .slider-overlay,
+.realisations .badge,
+.realisations .badge-construction {
+  pointer-events: none;
+}
