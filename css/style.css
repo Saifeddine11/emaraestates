@@ -1290,9 +1290,6 @@ footer,
     scroll-padding-right: 24px;
     -webkit-overflow-scrolling: touch;
     overscroll-behavior-x: contain;
-    /* IMPORTANT: pas de touch-action restrictif ici, sinon le scroll vertical
-       de la page est bloqué quand le doigt commence sur le carrousel.
-       Le navigateur gère nativement pan-x + pan-y et choisit selon la direction. */
     touch-action: pan-x pan-y;
   }
   .Estates-grid.realisations-grid::-webkit-scrollbar { display: none; }
@@ -1312,10 +1309,17 @@ footer,
     background: rgba(255,255,255,.88);
     border: 1px solid rgba(200,187,168,.24);
     box-shadow: 0 18px 44px rgba(45,58,45,.08);
+    touch-action: auto;
   }
+  .realisations .property-card .img-wrap,
   .realisations .property-slider,
   .realisations .property-slider .slider-image {
     touch-action: auto;
+  }
+  .realisations .property-card .img-wrap::before,
+  .realisations .property-card .img-wrap::after,
+  .realisations .property-slider .slider-overlay {
+    pointer-events: none;
   }
   .realisations .property-slider-controls {
     display: none;
