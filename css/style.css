@@ -1177,15 +1177,7 @@ footer,
     margin: 0 0 30px;
   }
   .realisations-carousel-ui {
-    order: 3;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 18px;
-    margin: 0 0 18px;
-    padding: 0 24px;
-    position: relative;
-    z-index: 6;
+    display: none;
   }
   .realisations-carousel-copy {
     display: flex;
@@ -1260,38 +1252,23 @@ footer,
   }
   .realisations::before,
   .realisations::after {
-    content: '';
-    position: absolute;
-    top: 0;
-    bottom: 0;
-    width: 34px;
-    z-index: 4;
-    pointer-events: none;
-  }
-  .realisations::before {
-    left: 0;
-    background: linear-gradient(to right, rgba(245,240,232,.98), rgba(245,240,232,.7), rgba(245,240,232,0));
-  }
-  .realisations::after {
-    right: 0;
-    background: linear-gradient(to left, rgba(245,240,232,.98), rgba(245,240,232,.7), rgba(245,240,232,0));
+    display: none;
   }
   .Estates-grid.realisations-grid {
-    display: flex;
-    flex-wrap: nowrap;
-    gap: 18px;
-    overflow-x: auto;
-    overflow-y: hidden;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 16px;
+    overflow: visible;
     width: 100%;
     max-width: 100%;
-    padding: 6px 24px 18px;
+    padding: 0;
     margin: 0;
-    scroll-snap-type: x mandatory;
+    scroll-snap-type: none;
     scrollbar-width: none;
-    scroll-padding-left: 24px;
-    scroll-padding-right: 24px;
-    -webkit-overflow-scrolling: touch;
-    overscroll-behavior-x: contain;
+    scroll-padding-left: 0;
+    scroll-padding-right: 0;
+    -webkit-overflow-scrolling: auto;
+    overscroll-behavior-x: auto;
     touch-action: auto;
   }
   .Estates-grid.realisations-grid::-webkit-scrollbar { display: none; }
@@ -1299,11 +1276,11 @@ footer,
   .Estates-grid.realisations-grid > .property-card:nth-child(4),
   .Estates-grid.realisations-grid > .property-card:nth-child(5) {
     min-width: 0;
-    width: min(82vw, 360px);
-    max-width: min(82vw, 360px);
-    flex: 0 0 min(82vw, 360px);
-    scroll-snap-align: start;
-    scroll-snap-stop: always;
+    width: 100%;
+    max-width: 100%;
+    flex: none;
+    scroll-snap-align: none;
+    scroll-snap-stop: normal;
     align-self: stretch;
   }
   .realisations .property-card {
@@ -1317,10 +1294,6 @@ footer,
   .realisations .property-slider,
   .realisations .property-slider .slider-image {
     touch-action: auto;
-  }
-  .realisations .property-slider:hover,
-  .realisations .property-slider .slider-image:hover {
-    pointer-events: auto;
   }
   .realisations .property-card .img-wrap::before,
   .realisations .property-card .img-wrap::after,
@@ -1504,33 +1477,18 @@ footer,
   .property-card .info { padding: 22px; }
   .realisations::before,
   .realisations::after { width: 22px; }
-  .realisations-carousel-ui {
-    padding: 0 18px;
-    margin-bottom: 14px;
-  }
-  .realisations-carousel-copy {
-    gap: 9px;
-  }
-  .realisations-carousel-copy span {
-    letter-spacing: 2px;
-  }
-  .realisations-carousel-btn {
-    width: 42px;
-    height: 42px;
-  }
   .Estates-grid.realisations-grid {
-    gap: 16px;
-    padding: 6px 18px 16px;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+    padding: 0;
     margin: 0;
-    scroll-padding-left: 18px;
-    scroll-padding-right: 18px;
   }
   .Estates-grid.realisations-grid > .property-card,
   .Estates-grid.realisations-grid > .property-card:nth-child(4),
   .Estates-grid.realisations-grid > .property-card:nth-child(5) {
-    width: min(84vw, 320px);
-    max-width: min(84vw, 320px);
-    flex-basis: min(84vw, 320px);
+    width: 100%;
+    max-width: 100%;
+    flex-basis: auto;
   }
   .property-card--featured .img-wrap { min-height: 240px; }
   .project-summary .property-card--featured .img-wrap { min-height: 280px; }
@@ -1608,9 +1566,9 @@ footer,
   touch-action: pan-y !important;
 }
 
-/* allow horizontal scroll only on container */
+/* mobile realisations use a static grid, not horizontal scroll */
 .Estates-grid.realisations-grid {
-  touch-action: pan-x pan-y;
+  touch-action: auto;
 }
 
 /* overlays must not block scroll */
