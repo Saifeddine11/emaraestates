@@ -133,20 +133,22 @@
 
 <div class="photo-ribbon" aria-label="Galerie des résidences Emara Estates">
   <h3 class="photo-ribbon-title">Le Guéliz qu'on rêvait d'habiter</h3>
-  <div class="photo-ribbon-track">
-    <figure class="photo-ribbon-card"><img src="img/honest001.webp" alt="Façade d'une résidence Honest Signature à Guéliz Marrakech" loading="lazy"></figure>
-    <figure class="photo-ribbon-card"><img src="img/honest002.webp" alt="Hall intérieur d'une résidence Honest Signature à Guéliz" loading="lazy"></figure>
-    <figure class="photo-ribbon-card"><img src="img/honest003.webp" alt="Circulation intérieure et finitions d'une résidence Honest Signature" loading="lazy"></figure>
-    <figure class="photo-ribbon-card"><img src="img/honest004.webp" alt="Vue extérieure d'un programme immobilier Honest Signature à Marrakech" loading="lazy"></figure>
-    <figure class="photo-ribbon-card"><img src="img/honest005.webp" alt="Détail architectural d'un appartement neuf Honest Signature" loading="lazy"></figure>
-    <figure class="photo-ribbon-card"><img src="img/honest006.webp" alt="Espace de vie de haut standing dans une résidence Honest Signature" loading="lazy"></figure>
+  <div class="photo-ribbon-viewport">
+    <div class="photo-ribbon-track">
+      <figure class="photo-ribbon-card"><img src="img/honest001.webp" alt="Façade d'une résidence Honest Signature à Guéliz Marrakech" loading="lazy"></figure>
+      <figure class="photo-ribbon-card"><img src="img/honest002.webp" alt="Hall intérieur d'une résidence Honest Signature à Guéliz" loading="lazy"></figure>
+      <figure class="photo-ribbon-card"><img src="img/honest003.webp" alt="Circulation intérieure et finitions d'une résidence Honest Signature" loading="lazy"></figure>
+      <figure class="photo-ribbon-card"><img src="img/honest004.webp" alt="Vue extérieure d'un programme immobilier Honest Signature à Marrakech" loading="lazy"></figure>
+      <figure class="photo-ribbon-card"><img src="img/honest005.webp" alt="Détail architectural d'un appartement neuf Honest Signature" loading="lazy"></figure>
+      <figure class="photo-ribbon-card"><img src="img/honest006.webp" alt="Espace de vie de haut standing dans une résidence Honest Signature" loading="lazy"></figure>
 
-    <figure class="photo-ribbon-card" aria-hidden="true"><img src="img/honest001.webp" alt="Façade d'une résidence Honest Signature à Guéliz Marrakech" loading="lazy"></figure>
-    <figure class="photo-ribbon-card" aria-hidden="true"><img src="img/honest002.webp" alt="Hall intérieur d'une résidence Honest Signature à Guéliz" loading="lazy"></figure>
-    <figure class="photo-ribbon-card" aria-hidden="true"><img src="img/honest003.webp" alt="Circulation intérieure et finitions d'une résidence Honest Signature" loading="lazy"></figure>
-    <figure class="photo-ribbon-card" aria-hidden="true"><img src="img/honest004.webp" alt="Vue extérieure d'un programme immobilier Honest Signature à Marrakech" loading="lazy"></figure>
-    <figure class="photo-ribbon-card" aria-hidden="true"><img src="img/honest005.webp" alt="Détail architectural d'un appartement neuf Honest Signature" loading="lazy"></figure>
-    <figure class="photo-ribbon-card" aria-hidden="true"><img src="img/honest006.webp" alt="Espace de vie de haut standing dans une résidence Honest Signature" loading="lazy"></figure>
+      <figure class="photo-ribbon-card" aria-hidden="true"><img src="img/honest001.webp" alt="Façade d'une résidence Honest Signature à Guéliz Marrakech" loading="lazy"></figure>
+      <figure class="photo-ribbon-card" aria-hidden="true"><img src="img/honest002.webp" alt="Hall intérieur d'une résidence Honest Signature à Guéliz" loading="lazy"></figure>
+      <figure class="photo-ribbon-card" aria-hidden="true"><img src="img/honest003.webp" alt="Circulation intérieure et finitions d'une résidence Honest Signature" loading="lazy"></figure>
+      <figure class="photo-ribbon-card" aria-hidden="true"><img src="img/honest004.webp" alt="Vue extérieure d'un programme immobilier Honest Signature à Marrakech" loading="lazy"></figure>
+      <figure class="photo-ribbon-card" aria-hidden="true"><img src="img/honest005.webp" alt="Détail architectural d'un appartement neuf Honest Signature" loading="lazy"></figure>
+      <figure class="photo-ribbon-card" aria-hidden="true"><img src="img/honest006.webp" alt="Espace de vie de haut standing dans une résidence Honest Signature" loading="lazy"></figure>
+    </div>
   </div>
   <div class="photo-ribbon-carousel-ui" aria-label="Navigation de la galerie">
     <button class="photo-ribbon-carousel-btn photo-ribbon-carousel-btn--prev" type="button" aria-label="Photo précédente">
@@ -904,6 +906,7 @@ var realisationsPrev = document.querySelector('.realisations-carousel-btn--prev'
 var realisationsNext = document.querySelector('.realisations-carousel-btn--next');
 var realisationsStatus = document.getElementById('realisationsCarouselStatus');
 var realisationsCarouselRaf = null;
+var realisationsScrollAnimation = null;
 var realisationsTouchStartX = 0;
 var realisationsTouchStartY = 0;
 var realisationsTouchScrollLeft = 0;
@@ -940,14 +943,38 @@ function updateRealisationsCarouselUI() {
   if (realisationsNext) realisationsNext.disabled = activeIndex >= cards.length - 1;
 }
 
+function animateRealisationsScrollTo(targetLeft) {
+  if (!realisationsCarousel) return;
+  if (realisationsScrollAnimation) cancelAnimationFrame(realisationsScrollAnimation);
+  if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+    realisationsCarousel.scrollLeft = targetLeft;
+    updateRealisationsCarouselUI();
+    return;
+  }
+  var startLeft = realisationsCarousel.scrollLeft;
+  var distance = targetLeft - startLeft;
+  var duration = Math.min(520, Math.max(280, Math.abs(distance) * 1.4));
+  var startedAt = performance.now();
+  function step(now) {
+    var progress = Math.min(1, (now - startedAt) / duration);
+    var eased = 1 - Math.pow(1 - progress, 3);
+    realisationsCarousel.scrollLeft = startLeft + (distance * eased);
+    if (progress < 1) {
+      realisationsScrollAnimation = requestAnimationFrame(step);
+    } else {
+      realisationsScrollAnimation = null;
+      realisationsCarousel.scrollLeft = targetLeft;
+      updateRealisationsCarouselUI();
+    }
+  }
+  realisationsScrollAnimation = requestAnimationFrame(step);
+}
+
 function scrollRealisationsTo(index) {
   var cards = getRealisationsCards();
   if (!cards.length) return;
   var nextIndex = Math.max(0, Math.min(index, cards.length - 1));
-  realisationsCarousel.scrollTo({
-    left: cards[nextIndex].offsetLeft - realisationsCarousel.offsetLeft,
-    behavior: 'smooth'
-  });
+  animateRealisationsScrollTo(cards[nextIndex].offsetLeft - realisationsCarousel.offsetLeft);
 }
 
 function resetRealisationsCarouselPosition() {
@@ -966,6 +993,10 @@ if (realisationsCarousel) {
   }, { passive: true });
   realisationsCarousel.addEventListener('touchstart', function(event){
     if (window.innerWidth > 768) return;
+    if (realisationsScrollAnimation) {
+      cancelAnimationFrame(realisationsScrollAnimation);
+      realisationsScrollAnimation = null;
+    }
     var touch = event.touches && event.touches[0];
     if (!touch) return;
     realisationsTouchStartX = touch.clientX;

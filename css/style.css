@@ -166,6 +166,9 @@ nav .links a:hover::after { width: 100%; }
   right: 0;
   background: linear-gradient(to left, rgba(45,58,45,.98), rgba(45,58,45,.6), transparent);
 }
+.photo-ribbon-viewport {
+  overflow: visible;
+}
 .photo-ribbon-track {
   display: flex;
   gap: 18px;
@@ -1127,12 +1130,18 @@ footer,
   .photo-ribbon::after {
     display: none;
   }
+  .photo-ribbon-viewport {
+    width: min(calc(100% - 48px), 560px);
+    margin: 0 auto;
+    overflow: hidden;
+    border-radius: 14px;
+  }
   .photo-ribbon-track {
     display: flex;
     flex-wrap: nowrap;
     gap: 0;
-    width: min(calc(100% - 48px), 560px);
-    margin: 0 auto;
+    width: 100%;
+    margin: 0;
     padding: 0;
     overflow: visible;
     animation: none;
@@ -1332,11 +1341,13 @@ footer,
     padding: 6px 24px 18px;
     margin: 0;
     scroll-snap-type: x mandatory;
+    scroll-behavior: smooth;
     scrollbar-width: none;
     scroll-padding-left: 24px;
     scroll-padding-right: 24px;
     -webkit-overflow-scrolling: auto;
     overscroll-behavior-x: contain;
+    will-change: scroll-position;
     touch-action: pan-y;
   }
   .Estates-grid.realisations-grid::-webkit-scrollbar { display: none; }
@@ -1511,8 +1522,9 @@ footer,
     margin-bottom: 20px;
     padding: 0 18px;
   }
-  .photo-ribbon-track {
+  .photo-ribbon-viewport {
     width: min(calc(100% - 36px), 420px);
+    border-radius: 10px;
   }
   .photo-ribbon-card {
     border-radius: 10px;
