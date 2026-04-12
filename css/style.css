@@ -175,7 +175,6 @@ nav .links a:hover::after { width: 100%; }
   will-change: transform;
 }
 .photo-ribbon-card {
-  flex: 0 0 clamp(260px, 28vw, 420px);
   aspect-ratio: 4 / 3;
   margin: 0;
   border-radius: 24px;
@@ -194,6 +193,12 @@ nav .links a:hover::after { width: 100%; }
 @keyframes photoRibbonScroll {
   from { transform: translateX(0); }
   to { transform: translateX(calc(-50% - 9px)); }
+}
+
+@media (min-width: 769px) {
+  .photo-ribbon-card {
+    flex: 0 0 clamp(260px, 28vw, 420px);
+  }
 }
 
 /* ═══ SECTIONS ═══ */
@@ -1068,7 +1073,6 @@ footer,
   .contact { grid-template-columns: 1fr 1fr; gap: 44px; }
   .Estates-grid { grid-template-columns: repeat(2, 1fr); }
   .services-grid { grid-template-columns: repeat(2, 1fr); }
-  .photo-ribbon-card { flex-basis: clamp(240px, 32vw, 360px); }
   .project-summary { margin-top: -84px; }
   .project-summary .property-card--featured .img-wrap { min-height: clamp(380px, 56vw, 620px); }
   .project-overview,
@@ -1091,6 +1095,12 @@ footer,
   .section-text { font-size: 18px; }
   .property-title { font-size: 28px; }
   .faq-question-text { font-size: 23px; }
+}
+
+@media (min-width: 769px) and (max-width: 1024px) {
+  .photo-ribbon-card {
+    flex: 0 0 clamp(240px, 32vw, 360px);
+  }
 }
 
 @media (max-width: 768px) {
@@ -1121,20 +1131,28 @@ footer,
     grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 14px;
     width: min(100%, 640px);
+    min-width: 0;
     max-width: 100%;
     margin: 0 auto;
     padding: 0 24px;
     overflow: visible;
     animation: none;
+    transform: none;
+    will-change: auto;
   }
   .photo-ribbon-card {
-    flex: initial;
-    width: auto;
-    max-width: none;
+    width: 100%;
+    max-width: 100%;
     min-width: 0;
     aspect-ratio: 4 / 3;
     border-radius: 14px;
     margin: 0;
+  }
+  .photo-ribbon-card img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
   }
   .photo-ribbon-card:nth-child(n+7) {
     display: none;
@@ -1440,14 +1458,15 @@ footer,
     padding: 0 18px;
   }
   .photo-ribbon-track {
+    grid-template-columns: 1fr;
     gap: 10px;
     padding: 0 18px;
   }
   .photo-ribbon-card {
     border-radius: 10px;
-    flex: initial;
-    width: auto;
-    max-width: none;
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
   }
   body { padding-bottom: calc(88px + env(safe-area-inset-bottom, 0px)); }
   nav { padding: 14px 18px; }
