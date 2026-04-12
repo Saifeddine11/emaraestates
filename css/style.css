@@ -210,7 +210,7 @@ section { padding: 130px 60px; }
 .about-img img { width: 100%; height: 100%; object-fit: cover; transition: transform 1.2s; }
 .about-img:hover img { transform: scale(1.03); }
 .about-float { position: absolute; right: 0; bottom: 0; transform: translate(28%, 0); min-width: 172px; background: var(--mr); border-radius: 14px; padding: 30px 26px; color: var(--white); text-align: center; box-shadow: 0 20px 50px rgba(155,112,64,.25); z-index: 2; }
-.about-float .af-num { font-family: 'Cormorant Garamond', serif; font-size: 52px; font-weight: 300; line-height: 1; }
+.about-float .af-num { font-family: 'Jost', sans-serif; font-size: 52px; font-weight: 400; line-height: 1; font-variant-numeric: lining-nums tabular-nums; }
 .about-float .af-label { font-size: 12px; letter-spacing: 3px; text-transform: uppercase; margin-top: 6px; }
 .about-values { display: flex; gap: 30px; margin-top: 40px; }
 .about-value { flex: 1; padding-top: 16px; border-top: 1px solid var(--bg); }
@@ -227,13 +227,20 @@ section { padding: 130px 60px; }
 .realisations .Estates-header { margin-bottom: 44px; }
 .Estates-grid.realisations-grid {
   display: grid;
-  grid-template-columns: repeat(6, minmax(0, 1fr));
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 28px;
   align-items: stretch;
 }
-.Estates-grid.realisations-grid > .property-card { grid-column: span 2; }
-.Estates-grid.realisations-grid > .property-card:nth-child(4) { grid-column: 2 / span 2; }
-.Estates-grid.realisations-grid > .property-card:nth-child(5) { grid-column: 4 / span 2; }
+.Estates-grid.realisations-grid > .property-card { grid-column: span 1; }
+.realisations-featured-grid {
+  margin-top: 28px;
+}
+.realisations-featured-grid > .card-limited {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: minmax(320px, 1.05fr) minmax(320px, .95fr);
+  align-items: stretch;
+}
 .filter-tabs { display: flex; gap: 6px; }
 .filter-tab { font-weight: 300; font-size: 13px; letter-spacing: 2px; text-transform: uppercase; color: var(--bg); cursor: pointer; padding: 10px 22px; border: 1px solid transparent; border-radius: 6px; transition: all .3s; }
 .filter-tab.active { color: var(--vf); border-color: var(--mr); background: rgba(155,112,64,.06); }
@@ -439,10 +446,10 @@ section { padding: 130px 60px; }
   line-height: 1.2;
   text-wrap: balance;
 }
-.badge { position: absolute; top: 16px; left: 16px; font-weight: 400; font-size: 11px; letter-spacing: 2px; text-transform: uppercase; padding: 7px 16px; border-radius: 20px; backdrop-filter: blur(10px); z-index: 2; }
+.badge { position: absolute; top: 16px; left: 16px; font-weight: 400; font-size: 14px; letter-spacing: 2px; text-transform: uppercase; padding: 7px 16px; border-radius: 20px; backdrop-filter: blur(10px); z-index: 2; }
 .badge-dispo { background: rgba(122,139,104,.9); color: var(--cr); }
 .badge-vendu { background: rgba(26,26,26,.8); color: rgba(200,187,168,.75);}
-.badge-construction { position: absolute; bottom: 14px; left: 12px; right: 12px; font-size: 11px; letter-spacing: 2px; text-transform: uppercase; font-weight: 300; color: var(--cr); background: rgba(45,58,45,.75); backdrop-filter: blur(8px); padding: 8px 14px; border-radius: 20px; text-align: center; z-index: 2; line-height: 1.5; }
+.badge-construction { position: absolute; bottom: 14px; left: 12px; right: 12px; font-size: 17px; letter-spacing: 2px; text-transform: uppercase; font-weight: 300; color: var(--cr); background: rgba(45,58,45,.75); backdrop-filter: blur(8px); padding: 8px 14px; border-radius: 20px; text-align: center; z-index: 2; line-height: 1.5; }
 
 /* ═══ FEATURED CARD (7·8·9) ═══ */
 .property-card--featured { grid-column: 1 / -1; display: grid; grid-template-columns: minmax(320px, 1.05fr) minmax(320px, .95fr); border-radius: 20px; align-items: stretch; }
@@ -472,13 +479,21 @@ section { padding: 130px 60px; }
 }
 .card-sold:hover { transform: none !important; box-shadow: 0 8px 40px rgba(0,0,0,.03) !important; cursor: default; }
 .sold-label { font-size: 13px; font-weight: 300; letter-spacing: 1px; color: var(--bg); margin-top: 16px; font-style: italic; }
+.card-limited { background: var(--white); box-shadow: 0 16px 55px rgba(155,112,64,.12); }
+.card-limited .img-wrap { aspect-ratio: unset; min-height: 420px; height: 100%; border-radius: 20px 0 0 20px; }
+.card-limited .info { padding: clamp(32px, 4vw, 48px); display: flex; flex-direction: column; justify-content: center; }
+.card-limited .badge-dispo { right: 16px; text-align: center; background: rgba(155,112,64,.94); color: var(--white); }
+.card-limited .badge-construction { font-size: 12px; letter-spacing: 1.5px; background: rgba(45,58,45,.86); }
+.card-limited .img-wrap::after { opacity: 1; background: linear-gradient(transparent, rgba(0,0,0,.2)); }
+.limited-label { display: inline-flex; align-items: center; width: fit-content; margin-top: 18px; padding: 9px 13px; border: 1px solid rgba(155,112,64,.28); border-radius: 8px; font-size: 12px; font-weight: 400; letter-spacing: 1.5px; text-transform: uppercase; color: var(--mr); background: rgba(155,112,64,.07); line-height: 1.45; }
 .realisations .property-card { background: rgba(255,255,255,.7); }
+.realisations .card-limited { background: var(--white); }
 .realisations .property-card .img-wrap { aspect-ratio: 5 / 4; }
 
 /* ═══ ESTATES TRACK BAND ═══ */
 .estates-track { display: flex; align-items: center; justify-content: center; gap: 40px; padding: 28px 40px; background: var(--vf); border-radius: 16px; margin-bottom: 50px; flex-wrap: wrap; max-width: 1180px; margin-inline: auto; }
 .track-item { text-align: center; color: var(--bg); font-size: 11px; letter-spacing: 3px; text-transform: uppercase; font-weight: 300; line-height: 1.6; }
-.track-item span { display: block; font-family: 'Cormorant Garamond', serif; font-size: 34px; font-weight: 300; color: var(--mr); line-height: 1; margin-bottom: 8px; }
+.track-item span { display: block; font-family: 'Jost', sans-serif; font-size: 30px; font-weight: 400; color: var(--mr); line-height: 1; margin-bottom: 8px; font-variant-numeric: lining-nums tabular-nums; }
 .track-sep { width: 1px; height: 32px; background: rgba(122,139,104,.2); }
 .property-card .info { padding: 26px; }
 .property-title { font-family: 'Cormorant Garamond', serif; font-weight: 400; font-size: 30px; color: var(--vf); margin-bottom: 8px; line-height: 1.2; }
@@ -486,8 +501,13 @@ section { padding: 130px 60px; }
 .property-card .info .details { display: flex; gap: 20px; padding-top: 18px; border-top: 1px solid rgba(200,187,168,.25); }
 .property-card .info .detail { font-weight: 300; font-size: 14px; color: var(--vo); line-height: 1.7; }
 .property-card .info .detail strong,
-.property-card .info .detail .detail-value { font-weight: 400; color: var(--vf); display: block; font-size: 18px; margin-bottom: 2px; }
-.property-card .info .price { font-family: 'Cormorant Garamond', serif; font-weight: 500; font-size: 28px; color: var(--mr); margin-top: 20px; }
+.property-card .info .detail .detail-value { font-family: 'Jost', sans-serif; font-weight: 500; color: var(--vf); display: block; font-size: 18px; margin-bottom: 2px; font-variant-numeric: lining-nums tabular-nums; }
+.property-card .info .price { font-family: 'Jost', sans-serif; font-weight: 500; font-size: 28px; color: var(--mr); margin-top: 20px; font-variant-numeric: lining-nums tabular-nums; }
+.price-stack { display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px 12px; line-height: 1.05; }
+.price-eyebrow { flex: 0 0 100%; font-family: 'Jost', sans-serif; font-weight: 300; font-size: 11px; letter-spacing: 3px; text-transform: uppercase; color: var(--vo); }
+.price-main { font-size: 1.04em; font-weight: 500; color: var(--mr); letter-spacing: .02em; }
+.price-sub { font-family: 'Jost', sans-serif; font-weight: 400; font-size: .52em; color: var(--vf); }
+.price-note { flex: 0 0 100%; font-family: 'Jost', sans-serif; font-weight: 400; font-size: 13px; letter-spacing: 1px; color: var(--vo); }
 .featured-actions { display: flex; flex-direction: column; align-items: flex-start; gap: 28px; margin-top: 20px; flex: 1; position: relative; }
 .featured-actions .price { margin-top: 0; }
 .featured-cta-group { margin-top: auto; align-self: center; display: flex; align-items: center; justify-content: center; gap: 14px; transform: translate(0, -18px); }
@@ -790,7 +810,7 @@ footer,
 }
 .project-summary .detail strong,
 .project-summary .detail .detail-value {
-  font-size: clamp(26px, 2.8vw, 38px);
+  font-size: clamp(24px, 2.4vw, 34px);
   margin-bottom: 6px;
 }
 .project-summary .featured-actions {
@@ -799,8 +819,11 @@ footer,
   margin-top: 30px;
 }
 .project-summary .featured-actions .price {
-  font-size: clamp(40px, 4vw, 58px);
-  line-height: 1;
+  font-size: clamp(36px, 3.4vw, 50px);
+  line-height: 1.05;
+}
+.project-summary .featured-actions .price-note {
+  font-size: 14px;
 }
 .project-summary .featured-cta-group {
   align-self: flex-start;
@@ -1058,6 +1081,7 @@ footer,
   .Estates-grid.realisations-grid > .property-card,
   .Estates-grid.realisations-grid > .property-card:nth-child(4),
   .Estates-grid.realisations-grid > .property-card:nth-child(5) { grid-column: span 1; }
+  .realisations-featured-grid > .card-limited { grid-template-columns: 1fr; }
   .quartier-card:first-child { grid-row: span 1; }
   .quartier-card { min-height: 280px; }
   .footer-top { grid-template-columns: 1fr 1fr; }
@@ -1083,14 +1107,52 @@ footer,
     margin-bottom: 24px;
     padding: 0 24px;
   }
+  .photo-ribbon {
+    padding: 34px 0 38px;
+    overflow: visible;
+  }
+  .photo-ribbon::before,
+  .photo-ribbon::after {
+    display: none;
+  }
+  .photo-ribbon-track {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+    width: auto;
+    max-width: 620px;
+    margin: 0 auto;
+    padding: 0 24px;
+    animation: none;
+  }
+  .photo-ribbon-card {
+    flex: initial;
+    min-width: 0;
+    border-radius: 12px;
+    aspect-ratio: 4 / 3;
+  }
+  .photo-ribbon-card:nth-child(n+7) {
+    display: none;
+  }
   .realisations {
+    display: flex;
+    flex-direction: column;
     overflow-x: hidden;
     overflow-y: visible;
     position: relative;
   }
   .realisations .Estates-header {
+    order: 1;
     position: relative;
     margin-bottom: 26px;
+  }
+  .realisations-featured-grid {
+    order: 2;
+    width: 100%;
+    margin: 0 0 30px;
+  }
+  .realisations-grid {
+    order: 3;
   }
   .realisations .Estates-header::after {
     content: 'Glissez';
@@ -1191,7 +1253,8 @@ footer,
   .project-summary .property-card--featured .info { padding: 28px 26px 30px; }
   .project-summary .property-card--featured .info h2 { font-size: 40px; }
   .project-summary .property-card--featured .loc { font-size: 12px; letter-spacing: 3px; }
-  .project-summary .featured-actions .price { font-size: 38px; }
+  .project-summary .featured-actions .price { font-size: 34px; }
+  .price-stack { gap: 5px 10px; }
   .project-equipment-grid { grid-template-columns: 1fr; gap: 18px; }
   .project-overview,
   .project-layouts,
@@ -1202,14 +1265,19 @@ footer,
   .project-visual { min-height: 380px; }
   .project-layouts__grid { grid-template-columns: 1fr; }
   .project-location__map .footer-map-frame iframe { height: 300px; }
-  .photo-ribbon { padding-bottom: 28px; }
-  .photo-ribbon::before,
-  .photo-ribbon::after { bottom: 28px; width: 56px; }
-  .photo-ribbon-track { gap: 12px; padding: 0 12px; animation-duration: 28s; }
-  .photo-ribbon-card { flex-basis: 68vw; border-radius: 18px; }
+  .map-section__bg {
+    background-image: url('../img/mapsmobile.webp?v=1');
+    background-position: center center;
+  }
+  .photo-ribbon { padding-bottom: 38px; }
+  .photo-ribbon-track { gap: 12px; padding: 0 24px; }
+  .photo-ribbon-card { border-radius: 12px; }
   .property-card--featured { grid-template-columns: 1fr; }
+  .Estates-grid.realisations-grid > .card-limited { grid-template-columns: 1fr; }
   .property-card--featured .img-wrap { min-height: 280px; border-radius: 20px 20px 0 0; }
+  .card-limited .img-wrap { min-height: 280px; border-radius: 20px 20px 0 0; }
   .property-card--featured .info { padding: 26px; max-width: none; }
+  .card-limited .info { padding: 26px; }
   .property-slider-controls { inset: auto 14px 14px 14px; transform: none; }
   .slider-arrow { width: 48px; height: 48px; opacity: 1; }
   .lightbox { padding: 24px; }
@@ -1302,6 +1370,13 @@ footer,
     margin-bottom: 20px;
     padding: 0 18px;
   }
+  .photo-ribbon-track {
+    gap: 10px;
+    padding: 0 18px;
+  }
+  .photo-ribbon-card {
+    border-radius: 10px;
+  }
   body { padding-bottom: calc(88px + env(safe-area-inset-bottom, 0px)); }
   nav { padding: 14px 18px; }
   nav.scrolled { padding: 12px 18px; }
@@ -1342,7 +1417,8 @@ footer,
   .project-summary .property-card--featured .img-wrap { min-height: 280px; }
   .project-summary .property-card--featured .info { padding: 24px 22px 26px; }
   .project-summary .property-card--featured .info h2 { font-size: 34px; }
-  .project-summary .featured-actions .price { font-size: 32px; }
+  .project-summary .featured-actions .price { font-size: 30px; }
+  .price-note { font-size: 12px; letter-spacing: 1px; }
   .project-equipment-card { padding: 24px 22px; }
   .project-equipment-card h4 { font-size: 26px; }
   .project-equipment-card p { font-size: 15px; }
@@ -1359,6 +1435,8 @@ footer,
   .card-sold .badge-vendu { left: 14px; right: 14px; padding: 11px 18px; font-size: 14px; letter-spacing: 3px; }
   .property-card .info .details { flex-direction: column; gap: 12px; }
   .badge-construction { font-size: 10px; letter-spacing: 1px; }
+  .card-limited .badge-dispo { font-size: 11px; letter-spacing: 1px; }
+  .card-limited .badge-construction { font-size: 10px; letter-spacing: 1px; }
   .service-card { padding: 30px 22px; }
   .service-title { font-size: 24px; }
   .quartier-card .q-overlay { padding: 22px; }
