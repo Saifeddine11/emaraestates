@@ -1108,40 +1108,31 @@ footer,
     padding: 0 24px;
   }
   .photo-ribbon {
-    padding: 34px 0 38px;
-    overflow: hidden;
+    padding: 34px 0 42px;
+    overflow: visible;
   }
   .photo-ribbon::before,
   .photo-ribbon::after {
     display: none;
   }
-  /* Carrousel horizontal natif sur mobile — robuste, pas d'animation JS */
   .photo-ribbon-track {
-    display: flex;
-    flex-wrap: nowrap;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 14px;
-    width: auto;
+    width: min(100%, 640px);
     max-width: 100%;
-    margin: 0;
-    padding: 4px 24px 14px;
-    overflow-x: auto;
-    overflow-y: hidden;
-    scroll-snap-type: x mandatory;
-    scrollbar-width: none;
-    -webkit-overflow-scrolling: touch;
-    overscroll-behavior-x: contain;
-    touch-action: pan-x pan-y;
+    margin: 0 auto;
+    padding: 0 24px;
+    overflow: visible;
     animation: none;
   }
-  .photo-ribbon-track::-webkit-scrollbar { display: none; }
   .photo-ribbon-card {
-    flex: 0 0 78vw;
-    max-width: 320px;
+    flex: initial;
+    width: auto;
+    max-width: none;
     min-width: 0;
-    width: 78vw;
     aspect-ratio: 4 / 3;
     border-radius: 14px;
-    scroll-snap-align: center;
     margin: 0;
   }
   .photo-ribbon-card:nth-child(n+7) {
@@ -1287,8 +1278,8 @@ footer,
   .map-section__bg {
     background: url('../img/mapsmobile.webp?v=4') center center/cover no-repeat;
   }
-  .photo-ribbon { padding-bottom: 38px; }
-  .photo-ribbon-track { gap: 12px; padding: 4px 24px 14px; }
+  .photo-ribbon { padding-bottom: 42px; }
+  .photo-ribbon-track { gap: 14px; padding: 0 24px; }
   .photo-ribbon-card { border-radius: 12px; }
   .property-card--featured { grid-template-columns: 1fr; }
   .Estates-grid.realisations-grid > .card-limited { grid-template-columns: 1fr; }
@@ -1390,13 +1381,13 @@ footer,
   }
   .photo-ribbon-track {
     gap: 10px;
-    padding: 4px 18px 14px;
+    padding: 0 18px;
   }
   .photo-ribbon-card {
     border-radius: 10px;
-    flex: 0 0 82vw;
-    width: 82vw;
-    max-width: 300px;
+    flex: initial;
+    width: auto;
+    max-width: none;
   }
   body { padding-bottom: calc(88px + env(safe-area-inset-bottom, 0px)); }
   nav { padding: 14px 18px; }
