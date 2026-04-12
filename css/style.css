@@ -1290,7 +1290,7 @@ footer,
     scroll-padding-right: 24px;
     -webkit-overflow-scrolling: touch;
     overscroll-behavior-x: contain;
-    touch-action: pan-x pan-y;
+    touch-action: auto;
   }
   .Estates-grid.realisations-grid::-webkit-scrollbar { display: none; }
   .Estates-grid.realisations-grid > .property-card,
@@ -1315,6 +1315,10 @@ footer,
   .realisations .property-slider,
   .realisations .property-slider .slider-image {
     touch-action: auto;
+  }
+  .realisations .property-slider,
+  .realisations .property-slider .slider-image {
+    pointer-events: none;
   }
   .realisations .property-card .img-wrap::before,
   .realisations .property-card .img-wrap::after,
