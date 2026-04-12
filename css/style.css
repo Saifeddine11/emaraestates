@@ -1422,7 +1422,7 @@ footer,
     background: url('../img/mapsmobile.webp?v=4') center center/cover no-repeat;
   }
   .photo-ribbon { padding-bottom: 42px; }
-  .photo-ribbon-track { gap: 14px; padding: 0 24px; }
+  .photo-ribbon-track { gap: 0; padding: 0; }
   .photo-ribbon-card { border-radius: 12px; }
   .property-card--featured { grid-template-columns: 1fr; }
   .Estates-grid.realisations-grid > .card-limited { grid-template-columns: 1fr; }
