@@ -17,7 +17,7 @@
 /* ═══ RESET ═══ */
 * { margin: 0; padding: 0; box-sizing: border-box; }
 html { scroll-behavior: smooth; }
-body { font-family: 'Jost', sans-serif; color: var(--bk); background: var(--cr); overflow-x: hidden; line-height: 1.6; -webkit-overflow-scrolling: touch; touch-action: pan-y; }
+body { font-family: 'Jost', sans-serif; color: var(--bk); background: var(--cr); overflow-x: hidden; line-height: 1.6; -webkit-overflow-scrolling: touch; touch-action: pan-x pan-y; }
 ::selection { background: var(--mr); color: var(--white); }
 .sr-only {
   position: absolute;
@@ -1334,7 +1334,7 @@ footer,
     display: flex;
     flex-wrap: nowrap;
     gap: 18px;
-    overflow-x: hidden;
+    overflow-x: auto;
     overflow-y: hidden;
     width: 100%;
     max-width: 100%;
@@ -1345,10 +1345,10 @@ footer,
     scrollbar-width: none;
     scroll-padding-left: 24px;
     scroll-padding-right: 24px;
-    -webkit-overflow-scrolling: auto;
+    -webkit-overflow-scrolling: touch;
     overscroll-behavior-x: contain;
     will-change: scroll-position;
-    touch-action: pan-y;
+    touch-action: pan-x pan-y;
   }
   .Estates-grid.realisations-grid::-webkit-scrollbar { display: none; }
   .Estates-grid.realisations-grid > .property-card,
@@ -1367,12 +1367,12 @@ footer,
     background: rgba(255,255,255,.88);
     border: 1px solid rgba(200,187,168,.24);
     box-shadow: 0 18px 44px rgba(45,58,45,.08);
-    touch-action: pan-y;
+    touch-action: pan-x pan-y;
   }
   .realisations .property-card .img-wrap,
   .realisations .property-slider,
   .realisations .property-slider .slider-image {
-    touch-action: pan-y;
+    touch-action: pan-x pan-y;
   }
   .realisations .property-slider,
   .realisations .property-slider .slider-image {
@@ -1580,8 +1580,8 @@ footer,
     margin: 0;
     scroll-padding-left: 18px;
     scroll-padding-right: 18px;
-    overflow-x: hidden;
-    touch-action: pan-y;
+    overflow-x: auto;
+    touch-action: pan-x pan-y;
   }
   .Estates-grid.realisations-grid > .property-card,
   .Estates-grid.realisations-grid > .property-card:nth-child(4),
@@ -1663,12 +1663,12 @@ footer,
 .realisations .slider-image,
 .realisations .img-wrap,
 .realisations .property-card {
-  touch-action: pan-y !important;
+  touch-action: pan-x pan-y !important;
 }
 
-/* Horizontal movement is handled by carousel JS, vertical scroll stays native */
+/* Native horizontal carousel, vertical scroll stays natural */
 .Estates-grid.realisations-grid {
-  touch-action: pan-y;
+  touch-action: pan-x pan-y;
 }
 
 /* overlays must not block scroll */
