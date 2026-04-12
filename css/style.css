@@ -1109,27 +1109,40 @@ footer,
   }
   .photo-ribbon {
     padding: 34px 0 38px;
-    overflow: visible;
+    overflow: hidden;
   }
   .photo-ribbon::before,
   .photo-ribbon::after {
     display: none;
   }
+  /* Carrousel horizontal natif sur mobile — robuste, pas d'animation JS */
   .photo-ribbon-track {
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 12px;
+    display: flex;
+    flex-wrap: nowrap;
+    gap: 14px;
     width: auto;
-    max-width: 620px;
-    margin: 0 auto;
-    padding: 0 24px;
+    max-width: 100%;
+    margin: 0;
+    padding: 4px 24px 14px;
+    overflow-x: auto;
+    overflow-y: hidden;
+    scroll-snap-type: x mandatory;
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior-x: contain;
+    touch-action: pan-x pan-y;
     animation: none;
   }
+  .photo-ribbon-track::-webkit-scrollbar { display: none; }
   .photo-ribbon-card {
-    flex: initial;
+    flex: 0 0 78vw;
+    max-width: 320px;
     min-width: 0;
-    border-radius: 12px;
+    width: 78vw;
     aspect-ratio: 4 / 3;
+    border-radius: 14px;
+    scroll-snap-align: center;
+    margin: 0;
   }
   .photo-ribbon-card:nth-child(n+7) {
     display: none;
@@ -1208,8 +1221,10 @@ footer,
     scroll-padding-right: 24px;
     -webkit-overflow-scrolling: touch;
     overscroll-behavior-x: contain;
-    overscroll-behavior-y: contain;
-    touch-action: pan-x;
+    /* IMPORTANT: pas de touch-action restrictif ici, sinon le scroll vertical
+       de la page est bloqué quand le doigt commence sur le carrousel.
+       Le navigateur gère nativement pan-x + pan-y et choisit selon la direction. */
+    touch-action: pan-x pan-y;
   }
   .Estates-grid.realisations-grid::-webkit-scrollbar { display: none; }
   .Estates-grid.realisations-grid > .property-card,
@@ -1265,12 +1280,15 @@ footer,
   .project-visual { min-height: 380px; }
   .project-layouts__grid { grid-template-columns: 1fr; }
   .project-location__map .footer-map-frame iframe { height: 300px; }
+  .map-section {
+    height: 100svh;
+    min-height: 640px;
+  }
   .map-section__bg {
-    background-image: url('../img/mapsmobile.webp?v=1');
-    background-position: center center;
+    background: url('../img/mapsmobile.webp?v=4') center center/cover no-repeat;
   }
   .photo-ribbon { padding-bottom: 38px; }
-  .photo-ribbon-track { gap: 12px; padding: 0 24px; }
+  .photo-ribbon-track { gap: 12px; padding: 4px 24px 14px; }
   .photo-ribbon-card { border-radius: 12px; }
   .property-card--featured { grid-template-columns: 1fr; }
   .Estates-grid.realisations-grid > .card-limited { grid-template-columns: 1fr; }
@@ -1372,10 +1390,13 @@ footer,
   }
   .photo-ribbon-track {
     gap: 10px;
-    padding: 0 18px;
+    padding: 4px 18px 14px;
   }
   .photo-ribbon-card {
     border-radius: 10px;
+    flex: 0 0 82vw;
+    width: 82vw;
+    max-width: 300px;
   }
   body { padding-bottom: calc(88px + env(safe-area-inset-bottom, 0px)); }
   nav { padding: 14px 18px; }
@@ -1443,7 +1464,14 @@ footer,
   .quartier-card h4 { font-size: 26px; }
   .map-intro { padding: 76px 18px 56px; }
   .map-intro__title { font-size: 36px; }
-  .map-section { min-height: 560px; }
+  .map-section {
+    height: 86svh;
+    min-height: 560px;
+    max-height: 760px;
+  }
+  .map-section__bg {
+    background-position: center top;
+  }
   .faq-question { padding: 20px 0; }
   .faq-question-text { font-size: 20px; }
   .faq-answer-inner { font-size: 15px; }

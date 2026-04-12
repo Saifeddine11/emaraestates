@@ -539,7 +539,7 @@
     <div class="contact-detail">
       <div class="item"><strong>Adresse</strong>Bureau Emara, Guéliz<br>Marrakech, Maroc</div>
       <div class="item"><strong>Téléphone</strong>+212 6 700 388 99</div>
-      <div class="item"><strong>Email</strong>contact@emaraestates.com</div>
+      <div class="item"><strong>Email</strong><a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="bcdfd3d2c8dddfc8fcd9d1ddceddd9cfc8ddc8d9cf92dfd3d1">[email&#160;protected]</a></div>
       <div class="item"><strong>Horaires</strong>Lun – Sam : 9h – 19h</div>
     </div>
   </div>
@@ -659,7 +659,7 @@
   </div>
 </div>
 
-<script>
+<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
 // ═══ PRELOADER ═══
 (function(){
   var pre = document.getElementById('preloader');
@@ -791,50 +791,15 @@ var mapObs = new IntersectionObserver(function(entries){
 }, { threshold: 0.3 });
 document.querySelectorAll('#mapTitle,#mapDivider').forEach(function(el){ mapObs.observe(el); });
 
-// ═══ MOBILE REALISATIONS CAROUSEL START ═══
+// ═══ MOBILE REALISATIONS CAROUSEL — native horizontal scroll only ═══
+// Le carrousel utilise le scroll natif du navigateur (touch-action: pan-x defini en CSS).
+// Aucun handler tactile custom : laisse passer le scroll vertical de la page.
 var realisationsCarousel = document.querySelector('.realisations-grid');
-var wasMobileRealisations = window.innerWidth <= 768;
-var realisationsTouchStartX = 0;
-var realisationsTouchStartY = 0;
-var realisationsSwipeLocked = false;
 function resetRealisationsCarouselPosition() {
   if (!realisationsCarousel) return;
   if (window.innerWidth <= 768) realisationsCarousel.scrollLeft = 0;
 }
 window.addEventListener('load', resetRealisationsCarouselPosition);
-window.addEventListener('resize', function(){
-  if (!realisationsCarousel) return;
-  var isMobileRealisations = window.innerWidth <= 768;
-  if (isMobileRealisations && !wasMobileRealisations) {
-    realisationsCarousel.scrollLeft = 0;
-  }
-  wasMobileRealisations = isMobileRealisations;
-});
-if (realisationsCarousel) {
-  realisationsCarousel.addEventListener('touchstart', function(event){
-    var touch = event.touches && event.touches[0];
-    if (!touch || window.innerWidth > 768) return;
-    realisationsTouchStartX = touch.clientX;
-    realisationsTouchStartY = touch.clientY;
-    realisationsSwipeLocked = false;
-  }, { passive: true });
-
-  realisationsCarousel.addEventListener('touchmove', function(event){
-    var touch = event.touches && event.touches[0];
-    if (!touch || window.innerWidth > 768) return;
-
-    var deltaX = Math.abs(touch.clientX - realisationsTouchStartX);
-    var deltaY = Math.abs(touch.clientY - realisationsTouchStartY);
-
-    if (deltaX > 10 && deltaX > deltaY) {
-      realisationsSwipeLocked = true;
-    }
-
-    if (realisationsSwipeLocked) {
-      event.preventDefault();
-    }
-  }, { passive: false });
-}
 
 // ═══ PROPERTY SLIDER ═══
 var lightbox = document.getElementById('projectLightbox');
@@ -1037,14 +1002,13 @@ document.addEventListener('keydown', function(event){
   if (!lightbox || !lightbox.classList.contains('is-open')) return;
   if (event.key === 'Escape') {
     closeLightbox();
-  } else if (event.key === 'ArrowLeft') {
-    event.preventDefault();
-    if (lightboxPrev) lightboxPrev.click();
-  } else if (event.key === 'ArrowRight') {
-    event.preventDefault();
-    if (lightboxNext) lightboxNext.click();
+  } else if (event.key === 'ArrowLeft' && lightboxPrev) {
+    lightboxPrev.click();
+  } else if (event.key === 'ArrowRight' && lightboxNext) {
+    lightboxNext.click();
   }
 });
 </script>
 </body>
 </html>
+x
