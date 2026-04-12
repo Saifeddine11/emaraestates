@@ -810,14 +810,16 @@ var mapObs = new IntersectionObserver(function(entries){
 }, { threshold: 0.3 });
 document.querySelectorAll('#mapTitle,#mapDivider').forEach(function(el){ mapObs.observe(el); });
 
-// ═══ MOBILE REALISATIONS CAROUSEL — native horizontal scroll only ═══
-// Le carrousel utilise le scroll natif du navigateur.
-// Aucun handler tactile custom : laisse passer le scroll vertical de la page.
+// ═══ MOBILE REALISATIONS CAROUSEL ═══
 var realisationsCarousel = document.querySelector('.realisations-grid');
 var realisationsPrev = document.querySelector('.realisations-carousel-btn--prev');
 var realisationsNext = document.querySelector('.realisations-carousel-btn--next');
 var realisationsStatus = document.getElementById('realisationsCarouselStatus');
 var realisationsCarouselRaf = null;
+var realisationsTouchStartX = 0;
+var realisationsTouchStartY = 0;
+var realisationsTouchScrollLeft = 0;
+var realisationsTouchMode = '';
 
 function getRealisationsCards() {
   if (!realisationsCarousel) return [];
@@ -873,6 +875,40 @@ if (realisationsCarousel) {
   realisationsCarousel.addEventListener('scroll', function(){
     if (realisationsCarouselRaf) cancelAnimationFrame(realisationsCarouselRaf);
     realisationsCarouselRaf = requestAnimationFrame(updateRealisationsCarouselUI);
+  }, { passive: true });
+  realisationsCarousel.addEventListener('touchstart', function(event){
+    if (window.innerWidth > 768) return;
+    var touch = event.touches && event.touches[0];
+    if (!touch) return;
+    realisationsTouchStartX = touch.clientX;
+    realisationsTouchStartY = touch.clientY;
+    realisationsTouchScrollLeft = realisationsCarousel.scrollLeft;
+    realisationsTouchMode = '';
+  }, { passive: true });
+  realisationsCarousel.addEventListener('touchmove', function(event){
+    if (window.innerWidth > 768) return;
+    var touch = event.touches && event.touches[0];
+    if (!touch) return;
+    var deltaX = touch.clientX - realisationsTouchStartX;
+    var deltaY = touch.clientY - realisationsTouchStartY;
+    var absX = Math.abs(deltaX);
+    var absY = Math.abs(deltaY);
+    if (!realisationsTouchMode && Math.max(absX, absY) > 8) {
+      realisationsTouchMode = absX > absY * 1.25 ? 'horizontal' : 'vertical';
+    }
+    if (realisationsTouchMode === 'horizontal') {
+      event.preventDefault();
+      realisationsCarousel.scrollLeft = realisationsTouchScrollLeft - deltaX;
+    }
+  }, { passive: false });
+  realisationsCarousel.addEventListener('touchend', function(){
+    if (realisationsTouchMode === 'horizontal') {
+      scrollRealisationsTo(getRealisationsActiveIndex());
+    }
+    realisationsTouchMode = '';
+  }, { passive: true });
+  realisationsCarousel.addEventListener('touchcancel', function(){
+    realisationsTouchMode = '';
   }, { passive: true });
 }
 if (realisationsPrev) {
