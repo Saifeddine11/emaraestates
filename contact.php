@@ -7,7 +7,7 @@ header('Cache-Control: no-store');
 
 const MAX_BODY_BYTES = 16384;
 const RATE_LIMIT_WINDOW = 3600;
-const RATE_LIMIT_MAX = 5;
+const RATE_LIMIT_MAX = 20;
 
 $validBudgets = ['1 – 3 M MAD', '3 – 5 M MAD', '5 – 10 M MAD', '10 M+ MAD'];
 $blockedTerms = [
@@ -26,10 +26,6 @@ $env = loadEnv(__DIR__ . '/.env');
 $input = readJsonInput();
 $ip = clientIp();
 
-if (isRateLimited($ip)) {
-    sendJson(429, ['message' => 'Trop de demandes envoyées. Réessayez plus tard.']);
-}
-
 [$payload, $errors] = validatePayload($input, $validBudgets, $blockedTerms);
 if ($errors) {
     sendJson(422, ['message' => 'Corrigez les champs indiqués.', 'errors' => $errors]);
@@ -37,6 +33,10 @@ if ($errors) {
 
 if (!verifyTurnstile($payload['cf_turnstile_response'], $ip, $env['TURNSTILE_SECRET'] ?? '')) {
     sendJson(403, ['message' => 'Vérification anti-robot refusée.']);
+}
+
+if (isRateLimited($ip)) {
+    sendJson(429, ['message' => 'Trop de demandes envoyées. Réessayez plus tard.']);
 }
 
 try {

@@ -10,7 +10,7 @@ const TURNSTILE_SECRET = process.env.TURNSTILE_SECRET || '';
 const CONTACT_WEBHOOK_URL = process.env.CONTACT_WEBHOOK_URL || '';
 const MAX_BODY_BYTES = 16 * 1024;
 const RATE_LIMIT_WINDOW_MS = 60 * 60 * 1000;
-const RATE_LIMIT_MAX = 5;
+const RATE_LIMIT_MAX = 20;
 const rateLimitStore = new Map();
 
 function loadEnvFile(filePath) {
@@ -234,11 +234,6 @@ async function forwardLead(payload) {
 
 async function handleContact(req, res) {
   const ip = clientIp(req);
-  if (isRateLimited(ip)) {
-    sendJson(res, 429, { message: 'Trop de demandes envoyées. Réessayez plus tard.' });
-    return;
-  }
-
   let input;
   try {
     input = await readJsonBody(req);
@@ -257,6 +252,10 @@ async function handleContact(req, res) {
     const turnstileOk = await verifyTurnstile(result.payload.cf_turnstile_response, ip);
     if (!turnstileOk) {
       sendJson(res, 403, { message: 'Vérification anti-robot refusée.' });
+      return;
+    }
+    if (isRateLimited(ip)) {
+      sendJson(res, 429, { message: 'Trop de demandes envoyées. Réessayez plus tard.' });
       return;
     }
     await forwardLead(result.payload);
