@@ -135,7 +135,7 @@ function validatePayload(input) {
     message: sanitize(input.message, 1200),
     company_website: sanitize(input.company_website, 120),
     form_token: sanitize(input.form_token, 128),
-    cf_turnstile_response: sanitize(input.cf_turnstile_response, 2048),
+    cf_turnstile_response: sanitize(input['cf-turnstile-response'] || input.cf_turnstile_response, 2048),
     elapsed_ms: Number(input.elapsed_ms || 0)
   };
   const errors = {};
@@ -212,6 +212,7 @@ async function verifyTurnstile(token, ip) {
     body
   });
   const result = await response.json();
+  console.log('Turnstile siteverify response:', result);
   return Boolean(result.success);
 }
 

@@ -616,7 +616,7 @@
         <textarea name="message" placeholder="Décrivez votre projet..." minlength="20" maxlength="1200" required></textarea>
         <span class="field-error" data-error-for="message"></span>
       </div>
-      <input type="hidden" name="cf_turnstile_response" id="cfTurnstileResponse" value="">
+      <input type="hidden" name="cf-turnstile-response" id="cfTurnstileResponse" value="">
       <div id="contactTurnstile" class="turnstile-holder"></div>
       <button type="submit" class="btn-submit">Envoyer la demande</button>
       <div id="form-feedback" role="status" aria-live="polite"></div>
@@ -1228,7 +1228,7 @@ updateRealisationsCarouselUI();
     var formData = new FormData(form);
     var turnstileResponse = isLocalPreview()
       ? '__local_turnstile_bypass__'
-      : String(formData.get('cf_turnstile_response') || '').trim();
+      : String(formData.get('cf-turnstile-response') || formData.get('cf_turnstile_response') || '').trim();
     if (!turnstileResponse) {
       setFormFeedback('Cochez la vérification anti-robot avant d’envoyer.', true);
       setSubmitting(false);
@@ -1249,6 +1249,7 @@ updateRealisationsCarouselUI();
         message: formData.get('message'),
         company_website: formData.get('company_website'),
         form_token: formData.get('form_token'),
+        'cf-turnstile-response': turnstileResponse,
         cf_turnstile_response: turnstileResponse,
         elapsed_ms: Date.now() - startedAt
       }),

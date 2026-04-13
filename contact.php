@@ -160,7 +160,7 @@ function validatePayload(array $input, array $validBudgets, array $blockedTerms)
         'message' => sanitizeValue($input['message'] ?? '', 1200),
         'company_website' => sanitizeValue($input['company_website'] ?? '', 120),
         'form_token' => sanitizeValue($input['form_token'] ?? '', 128),
-        'cf_turnstile_response' => sanitizeValue($input['cf_turnstile_response'] ?? '', 2048),
+        'cf_turnstile_response' => sanitizeValue($input['cf-turnstile-response'] ?? $input['cf_turnstile_response'] ?? '', 2048),
         'elapsed_ms' => (int) ($input['elapsed_ms'] ?? 0),
     ];
     $errors = [];
@@ -241,6 +241,7 @@ function verifyTurnstile(string $token, string $ip, string $secret): bool
     }
     $result = json_decode($response, true);
     if (!is_array($result)) return false;
+    error_log('Turnstile siteverify response: ' . json_encode($result, JSON_UNESCAPED_UNICODE));
     if (empty($result['success'])) {
         $codes = isset($result['error-codes']) && is_array($result['error-codes'])
             ? implode(', ', $result['error-codes'])
