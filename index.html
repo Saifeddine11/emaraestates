@@ -28,7 +28,7 @@
   <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400;1,500&family=Jost:wght@200;300;400;500&display=swap">
   <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400;1,500&family=Jost:wght@200;300;400;500&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
   <noscript><link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400;1,500&family=Jost:wght@200;300;400;500&display=swap" rel="stylesheet"></noscript>
-  <link rel="stylesheet" href="css/style.css?v=202604131200">
+  <link rel="stylesheet" href="css/style.css?v=202604131230">
   <script src="https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit" async defer></script>
   <script type="application/ld+json">
     {
@@ -1080,16 +1080,14 @@ updateRealisationsCarouselUI();
     if (!holder || !window.turnstile || !sitekey || sitekey === 'YOUR_TURNSTILE_SITE_KEY' || turnstileWidgetId !== null) return;
     turnstileWidgetId = turnstile.render(holder, {
       sitekey: sitekey,
-      size: 'invisible',
-      execution: 'execute',
       callback: function(token) {
         if (turnstileInput) turnstileInput.value = token;
-        submitContactForm();
+        setFormFeedback('', false);
       },
       'error-callback': function() {
         if (turnstileInput) turnstileInput.value = '';
         if (window.turnstile && turnstileWidgetId !== null) turnstile.reset(turnstileWidgetId);
-        setFormFeedback('La vérification anti-robot n’a pas abouti. Réessayez, ou contactez-nous directement par WhatsApp.', true);
+        setFormFeedback('La vérification anti-robot n’a pas abouti. Vérifiez que la case de sécurité est validée, ou contactez-nous directement par WhatsApp.', true);
         setSubmitting(false);
       },
       'expired-callback': function() {
@@ -1111,7 +1109,7 @@ updateRealisationsCarouselUI();
   function setFormFeedback(message, isError) {
     if (!feedback) return;
     feedback.textContent = message;
-    feedback.style.display = 'block';
+    feedback.style.display = message ? 'block' : 'none';
     feedback.style.color = isError ? '#8f3f2f' : '#2d3a2d';
   }
 
@@ -1228,7 +1226,8 @@ updateRealisationsCarouselUI();
     }
     initTurnstile();
     if (window.turnstile && turnstileWidgetId !== null) {
-      turnstile.execute(turnstileWidgetId);
+      setFormFeedback('Validez la vérification anti-robot, puis renvoyez la demande.', true);
+      setSubmitting(false);
       return;
     }
     if (turnstileWaitTimer) clearTimeout(turnstileWaitTimer);
@@ -1245,7 +1244,7 @@ updateRealisationsCarouselUI();
   function submitContactForm() {
     var formData = new FormData(form);
     if (!isLocalPreview() && turnstileInput && !turnstileInput.value) {
-      setFormFeedback('La vérification anti-robot est requise.', true);
+      executeTurnstile();
       setSubmitting(false);
       return;
     }
@@ -1326,7 +1325,11 @@ updateRealisationsCarouselUI();
     }
 
     setSubmitting(true);
-    executeTurnstile();
+    if (isLocalPreview() || (turnstileInput && turnstileInput.value)) {
+      submitContactForm();
+    } else {
+      executeTurnstile();
+    }
   });
 })();
 

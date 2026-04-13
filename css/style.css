@@ -718,8 +718,9 @@ section { padding: 130px 60px; }
   pointer-events: none;
 }
 .turnstile-holder {
-  min-height: 0;
-  line-height: 0;
+  min-height: 65px;
+  line-height: 1;
+  margin: 6px 0 18px;
 }
 .contact .reveal-left,
 .contact .reveal-right {
