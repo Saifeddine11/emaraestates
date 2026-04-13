@@ -8,6 +8,8 @@ header('Cache-Control: no-store');
 const MAX_BODY_BYTES = 16384;
 const RATE_LIMIT_WINDOW = 3600;
 const RATE_LIMIT_MAX = 20;
+const TURNSTILE_SECRET_FALLBACK = '0x4AAAAAAC8jSxGLqAltGhC5jvWNSGSMy4c';
+const CONTACT_DEBUG_KEY = 'emara-contact-debug-20260413';
 
 $validBudgets = ['1 – 3 M MAD', '3 – 5 M MAD', '5 – 10 M MAD', '10 M+ MAD'];
 $blockedTerms = [
@@ -18,11 +20,24 @@ $blockedTerms = [
     'guest post', 'link building'
 ];
 
+$env = loadEnv(__DIR__ . '/.env');
+
+if ($_SERVER['REQUEST_METHOD'] === 'GET' && ($_GET['debug'] ?? '') === CONTACT_DEBUG_KEY) {
+    sendJson(200, [
+        'php' => PHP_VERSION,
+        'env_loaded' => is_file(__DIR__ . '/.env'),
+        'turnstile_secret_configured' => trim($env['TURNSTILE_SECRET'] ?? '') !== '' || TURNSTILE_SECRET_FALLBACK !== '',
+        'smtp_host' => $env['SMTP_HOST'] ?? 'smtp.gmail.com',
+        'smtp_user_configured' => trim($env['SMTP_USER'] ?? '') !== '',
+        'smtp_pass_configured' => trim($env['SMTP_PASS'] ?? '') !== '',
+        'allow_url_fopen' => (bool) ini_get('allow_url_fopen'),
+    ]);
+}
+
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     sendJson(405, ['message' => 'Méthode non autorisée.']);
 }
 
-$env = loadEnv(__DIR__ . '/.env');
 $input = readJsonInput();
 $ip = clientIp();
 
@@ -31,7 +46,8 @@ if ($errors) {
     sendJson(422, ['message' => 'Corrigez les champs indiqués.', 'errors' => $errors]);
 }
 
-if (!verifyTurnstile($payload['cf_turnstile_response'], $ip, $env['TURNSTILE_SECRET'] ?? '')) {
+$turnstileSecret = trim($env['TURNSTILE_SECRET'] ?? '') ?: TURNSTILE_SECRET_FALLBACK;
+if (!verifyTurnstile($payload['cf_turnstile_response'], $ip, $turnstileSecret)) {
     sendJson(403, ['message' => 'Vérification anti-robot refusée.']);
 }
 
