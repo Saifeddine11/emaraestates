@@ -1263,7 +1263,7 @@ updateRealisationsCarouselUI();
         } catch (parseError) {
           payload = {
             message: response.ok
-              ? 'Merci, votre demande a bien été envoyée.'
+              ? 'Votre demande a bien été envoyée. Merci, notre équipe vous contactera dans les plus brefs délais.'
               : 'Le serveur de contact ne répond pas correctement. Contactez-nous directement par WhatsApp.'
           };
         }
@@ -1273,7 +1273,7 @@ updateRealisationsCarouselUI();
     })
     .then(function(payload){
       sessionStorage.setItem('emara_contact_last_submit', String(Date.now()));
-      setFormFeedback(payload.message || 'Merci, votre demande a bien été envoyée.', false);
+      setFormFeedback(payload.message || 'Votre demande a bien été envoyée. Merci, notre équipe vous contactera dans les plus brefs délais.', false);
       form.reset();
       startedAt = Date.now();
       form.setAttribute('data-form-start', String(startedAt));

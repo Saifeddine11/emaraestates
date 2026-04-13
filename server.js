@@ -259,7 +259,7 @@ async function handleContact(req, res) {
       return;
     }
     await forwardLead(result.payload);
-    sendJson(res, 200, { message: 'Merci, votre demande a bien été envoyée.' });
+    sendJson(res, 200, { message: 'Votre demande a bien été envoyée. Merci, notre équipe vous contactera dans les plus brefs délais.' });
   } catch (error) {
     sendJson(res, 500, { message: 'Erreur serveur. Contactez-nous directement par WhatsApp.' });
   }

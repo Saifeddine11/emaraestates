@@ -57,7 +57,7 @@ if (isRateLimited($ip)) {
 
 try {
     sendLeadEmail($payload, $env);
-    sendJson(200, ['message' => 'Merci, votre demande a bien été envoyée.']);
+    sendJson(200, ['message' => 'Votre demande a bien été envoyée. Merci, notre équipe vous contactera dans les plus brefs délais.']);
 } catch (Throwable $error) {
     error_log('Contact form email error: ' . $error->getMessage());
     sendJson(500, ['message' => 'Erreur serveur. Contactez-nous directement par WhatsApp.']);
