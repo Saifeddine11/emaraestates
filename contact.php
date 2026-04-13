@@ -296,6 +296,52 @@ function encodeHeader(string $value): string
 
 function sendLeadEmail(array $payload, array $env): void
 {
+    try {
+        sendLeadEmailWithPhpMail($payload, $env);
+        return;
+    } catch (Throwable $error) {
+        error_log('PHP mail fallback to SMTP: ' . $error->getMessage());
+    }
+
+    sendLeadEmailWithSmtp($payload, $env);
+}
+
+function leadEmailBody(array $payload): string
+{
+    return implode("\r\n", [
+        'Nouvelle demande depuis emaraestates.com',
+        '',
+        'Nom complet: ' . $payload['nom_complet'],
+        'Email: ' . $payload['email'],
+        'Téléphone: ' . $payload['telephone'],
+        'Budget: ' . $payload['budget'],
+        '',
+        'Message:',
+        $payload['message'],
+    ]);
+}
+
+function sendLeadEmailWithPhpMail(array $payload, array $env): void
+{
+    $to = $env['CONTACT_TO'] ?? 'contact@emaraestates.com';
+    $from = $env['CONTACT_FROM'] ?? 'contact@emaraestates.com';
+    $subject = 'Nouvelle demande Emara Estates';
+    $headers = [
+        'From: Emara Estates <' . $from . '>',
+        'Reply-To: ' . encodeHeader($payload['nom_complet']) . ' <' . $payload['email'] . '>',
+        'MIME-Version: 1.0',
+        'Content-Type: text/plain; charset=UTF-8',
+        'Content-Transfer-Encoding: 8bit',
+    ];
+
+    $sent = mail($to, encodeHeader($subject), leadEmailBody($payload), implode("\r\n", $headers));
+    if (!$sent) {
+        throw new RuntimeException('mail() returned false.');
+    }
+}
+
+function sendLeadEmailWithSmtp(array $payload, array $env): void
+{
     $host = $env['SMTP_HOST'] ?? 'smtp.gmail.com';
     $port = (int) ($env['SMTP_PORT'] ?? 465);
     $user = $env['SMTP_USER'] ?? '';
@@ -308,21 +354,11 @@ function sendLeadEmail(array $payload, array $env): void
     }
 
     $subject = 'Nouvelle demande Emara Estates';
-    $body = implode("\r\n", [
-        'Nouvelle demande depuis emaraestates.com',
-        '',
-        'Nom complet: ' . $payload['nom_complet'],
-        'Email: ' . $payload['email'],
-        'Téléphone: ' . $payload['telephone'],
-        'Budget: ' . $payload['budget'],
-        '',
-        'Message:',
-        $payload['message'],
-    ]);
+    $body = leadEmailBody($payload);
     $headers = [
         'From: Emara Estates <' . $from . '>',
         'To: ' . $to,
-        'Reply-To: ' . $payload['nom_complet'] . ' <' . $payload['email'] . '>',
+        'Reply-To: ' . encodeHeader($payload['nom_complet']) . ' <' . $payload['email'] . '>',
         'Subject: ' . encodeHeader($subject),
         'MIME-Version: 1.0',
         'Content-Type: text/plain; charset=UTF-8',
