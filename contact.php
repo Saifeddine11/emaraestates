@@ -215,7 +215,10 @@ function isRateLimited(string $ip): bool
 function verifyTurnstile(string $token, string $ip, string $secret): bool
 {
     if ($token === '__local_turnstile_bypass__' && isLocalIp($ip)) return true;
-    if ($secret === '') return false;
+    if ($secret === '') {
+        error_log('Turnstile verification failed: missing TURNSTILE_SECRET in .env');
+        return false;
+    }
 
     $body = http_build_query([
         'secret' => $secret,
@@ -231,9 +234,21 @@ function verifyTurnstile(string $token, string $ip, string $secret): bool
         ],
     ]);
     $response = file_get_contents('https://challenges.cloudflare.com/turnstile/v0/siteverify', false, $context);
-    if ($response === false) return false;
+    if ($response === false) {
+        $error = error_get_last();
+        error_log('Turnstile verification failed: Cloudflare request failed' . ($error ? ' - ' . $error['message'] : ''));
+        return false;
+    }
     $result = json_decode($response, true);
-    return is_array($result) && !empty($result['success']);
+    if (!is_array($result)) return false;
+    if (empty($result['success'])) {
+        $codes = isset($result['error-codes']) && is_array($result['error-codes'])
+            ? implode(', ', $result['error-codes'])
+            : 'unknown';
+        error_log('Turnstile verification failed: ' . $codes);
+        return false;
+    }
+    return true;
 }
 
 function smtpRead($socket): string
