@@ -60,7 +60,7 @@ nav .links a:hover { color: var(--mr); }
 nav .links a:hover::after { width: 100%; }
 .cta-nav { border: 1px solid rgba(155,112,64,.5) !important; padding: 12px 26px !important; transition: all .4s !important; }
 .cta-nav:hover { background: var(--mr) !important; border-color: var(--mr) !important; color: var(--white) !important; }
-.nav-burger { display: none; flex-direction: column; gap: 5px; cursor: pointer; z-index: 101; }
+.nav-burger { display: none; flex-direction: column; gap: 5px; cursor: pointer; z-index: 101; background: transparent; border: 0; padding: 10px; margin: -10px; }
 .nav-burger span { width: 24px; height: 1px; background: var(--cr); transition: all .3s; }
 
 /* ═══ HERO ═══ */
@@ -1095,6 +1095,10 @@ footer,
 /* ═══ MOBILE MENU ═══ */
 .mobile-menu { position: fixed; inset: 0; background: var(--vf); z-index: 99; display: flex; flex-direction: column; justify-content: center; align-items: center; gap: 30px; opacity: 0; pointer-events: none; transition: opacity .4s; }
 .mobile-menu.open { opacity: 1; pointer-events: all; }
+.mobile-menu-open { overflow: hidden; }
+.nav-burger.is-open span:nth-child(1) { transform: translateY(6px) rotate(45deg); }
+.nav-burger.is-open span:nth-child(2) { opacity: 0; }
+.nav-burger.is-open span:nth-child(3) { transform: translateY(-6px) rotate(-45deg); }
 .mobile-menu a { font-family: 'Cormorant Garamond', serif; font-weight: 300; font-size: 38px; color: var(--cr); text-decoration: none; transition: color .3s; text-align: center; line-height: 1.2; }
 .mobile-menu a:hover { color: var(--mr); }
 .mobile-menu .close-menu { position: absolute; top: 24px; right: 24px; font-size: 34px; color: var(--cr); cursor: pointer; background: none; border: none; }

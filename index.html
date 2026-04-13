@@ -28,7 +28,7 @@
   <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400;1,500&family=Jost:wght@200;300;400;500&display=swap">
   <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400;1,500&family=Jost:wght@200;300;400;500&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
   <noscript><link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400;1,500&family=Jost:wght@200;300;400;500&display=swap" rel="stylesheet"></noscript>
-  <link rel="stylesheet" href="css/style.css?v=202604131230">
+  <link rel="stylesheet" href="css/style.css?v=202604131245">
   <script src="https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit" async defer></script>
   <script type="application/ld+json">
     {
@@ -80,12 +80,12 @@
 
 <!-- Mobile Menu -->
 <div class="mobile-menu" id="mobileMenu">
-  <button class="close-menu" onclick="document.getElementById('mobileMenu').classList.remove('open')">✕</button>
-  <a href="#biens"     onclick="this.parentElement.classList.remove('open')">Voir Nos projets sur plans</a>
-  <a href="#services"  onclick="this.parentElement.classList.remove('open')">Découvrir nos services</a>
-  <a href="#nos-réalisations" onclick="this.parentElement.classList.remove('open')">Voir nos réalisations</a>
-  <a href="#about"     onclick="this.parentElement.classList.remove('open')">Mieux nous connaître</a>
-  <a href="#contact"   onclick="this.parentElement.classList.remove('open')">Parler à notre équipe</a>
+  <button class="close-menu" onclick="closeMobileMenu()" aria-label="Fermer le menu">✕</button>
+  <a href="#biens"     onclick="closeMobileMenu()">Voir Nos projets sur plans</a>
+  <a href="#services"  onclick="closeMobileMenu()">Découvrir nos services</a>
+  <a href="#nos-réalisations" onclick="closeMobileMenu()">Voir nos réalisations</a>
+  <a href="#about"     onclick="closeMobileMenu()">Mieux nous connaître</a>
+  <a href="#contact"   onclick="closeMobileMenu()">Parler à notre équipe</a>
 </div>
 
 <!-- Nav -->
@@ -98,9 +98,9 @@
     <a href="#about">À Propos</a>
     <a href="#contact" class="cta-nav">Contact</a>
   </div>
-  <div class="nav-burger" onclick="document.getElementById('mobileMenu').classList.add('open')">
+  <button class="nav-burger" type="button" onclick="toggleMobileMenu()" aria-label="Ouvrir le menu" aria-controls="mobileMenu" aria-expanded="false">
     <span></span><span></span><span></span>
-  </div>
+  </button>
 </nav>
 
 <main id="main-content">
@@ -726,6 +726,28 @@ window.addEventListener('scroll', function(){
   if (nav) nav.classList.toggle('scrolled', window.scrollY > 80);
 });
 
+function setMobileMenuOpen(isOpen) {
+  var menu = document.getElementById('mobileMenu');
+  var burger = document.querySelector('.nav-burger');
+  if (!menu) return;
+  menu.classList.toggle('open', isOpen);
+  document.body.classList.toggle('mobile-menu-open', isOpen);
+  if (burger) {
+    burger.classList.toggle('is-open', isOpen);
+    burger.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+    burger.setAttribute('aria-label', isOpen ? 'Fermer le menu' : 'Ouvrir le menu');
+  }
+}
+
+function toggleMobileMenu() {
+  var menu = document.getElementById('mobileMenu');
+  setMobileMenuOpen(!(menu && menu.classList.contains('open')));
+}
+
+function closeMobileMenu() {
+  setMobileMenuOpen(false);
+}
+
 // ═══ CUSTOM CURSOR ═══
 var cursor = document.getElementById('cursor');
 if (cursor) {
@@ -823,8 +845,7 @@ document.querySelectorAll('a[href^="#"]').forEach(function(a){
     e.preventDefault();
     var target = document.querySelector(a.getAttribute('href'));
     if (target) target.scrollIntoView({ behavior: 'smooth' });
-    var menu = document.getElementById('mobileMenu');
-    if (menu) menu.classList.remove('open');
+    closeMobileMenu();
   });
 });
 

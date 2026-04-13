@@ -27,7 +27,7 @@
   <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400;1,500&family=Jost:wght@200;300;400;500&display=swap">
   <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400;1,500&family=Jost:wght@200;300;400;500&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
   <noscript><link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400;1,500&family=Jost:wght@200;300;400;500&display=swap" rel="stylesheet"></noscript>
-  <link rel="stylesheet" href="css/style.css?v=202604131230">
+  <link rel="stylesheet" href="css/style.css?v=202604131245">
 </head>
 <body class="project-page">
 
@@ -40,12 +40,12 @@
 </div>
 
 <div class="mobile-menu" id="mobileMenu">
-  <button class="close-menu" onclick="document.getElementById('mobileMenu').classList.remove('open')">✕</button>
-  <a href="#apercu" onclick="this.parentElement.classList.remove('open')">Aperçu</a>
-  <a href="#prestations" onclick="this.parentElement.classList.remove('open')">Prestations</a>
-  <a href="#galerie" onclick="this.parentElement.classList.remove('open')">Galerie</a>
-  <a href="#localisation" onclick="this.parentElement.classList.remove('open')">Localisation</a>
-  <a href="#contact-projet" onclick="this.parentElement.classList.remove('open')">Contact</a>
+  <button class="close-menu" onclick="closeMobileMenu()" aria-label="Fermer le menu">✕</button>
+  <a href="#apercu" onclick="closeMobileMenu()">Aperçu</a>
+  <a href="#prestations" onclick="closeMobileMenu()">Prestations</a>
+  <a href="#galerie" onclick="closeMobileMenu()">Galerie</a>
+  <a href="#localisation" onclick="closeMobileMenu()">Localisation</a>
+  <a href="#contact-projet" onclick="closeMobileMenu()">Contact</a>
 </div>
 
 <nav id="nav">
@@ -57,9 +57,9 @@
     <a href="#localisation">Localisation</a>
     <a href="#contact-projet" class="cta-nav">Contact</a>
   </div>
-  <div class="nav-burger" onclick="document.getElementById('mobileMenu').classList.add('open')">
+  <button class="nav-burger" type="button" onclick="toggleMobileMenu()" aria-label="Ouvrir le menu" aria-controls="mobileMenu" aria-expanded="false">
     <span></span><span></span><span></span>
-  </div>
+  </button>
 </nav>
 
 <header class="project-hero">
@@ -379,6 +379,28 @@ window.addEventListener('scroll', function(){
   if (nav) nav.classList.toggle('scrolled', window.scrollY > 80);
 });
 
+function setMobileMenuOpen(isOpen) {
+  var menu = document.getElementById('mobileMenu');
+  var burger = document.querySelector('.nav-burger');
+  if (!menu) return;
+  menu.classList.toggle('open', isOpen);
+  document.body.classList.toggle('mobile-menu-open', isOpen);
+  if (burger) {
+    burger.classList.toggle('is-open', isOpen);
+    burger.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+    burger.setAttribute('aria-label', isOpen ? 'Fermer le menu' : 'Ouvrir le menu');
+  }
+}
+
+function toggleMobileMenu() {
+  var menu = document.getElementById('mobileMenu');
+  setMobileMenuOpen(!(menu && menu.classList.contains('open')));
+}
+
+function closeMobileMenu() {
+  setMobileMenuOpen(false);
+}
+
 var cursor = document.getElementById('cursor');
 if (cursor) {
   document.addEventListener('mousemove', function(e){
@@ -404,8 +426,7 @@ document.querySelectorAll('a[href^="#"]').forEach(function(a){
     e.preventDefault();
     var target = document.querySelector(a.getAttribute('href'));
     if (target) target.scrollIntoView({ behavior: 'smooth' });
-    var menu = document.getElementById('mobileMenu');
-    if (menu) menu.classList.remove('open');
+    closeMobileMenu();
   });
 });
 
