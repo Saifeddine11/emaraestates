@@ -678,16 +678,54 @@ section { padding: 130px 60px; }
 .contact-form form { display: flex; flex-direction: column; gap: 18px; }
 .form-row { display: flex; gap: 18px; }
 .form-row > * { flex: 1; }
+.field-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
 .contact-form input,
 .contact-form textarea,
 .contact-form select { font-family: 'Jost', sans-serif; font-weight: 300; font-size: 16px; color: var(--vf); background: var(--white); border: 1px solid rgba(200,187,168,.5); padding: 18px 20px; border-radius: 10px; outline: none; transition: all .3s; width: 100%; line-height: 1.5; }
 .contact-form input:focus,
 .contact-form textarea:focus,
 .contact-form select:focus { border-color: var(--mr); box-shadow: 0 0 0 3px rgba(155,112,64,.08); }
+.contact-form input.is-invalid,
+.contact-form textarea.is-invalid,
+.contact-form select.is-invalid {
+  border-color: #8f3f2f;
+  box-shadow: 0 0 0 3px rgba(143,63,47,.08);
+}
+.field-error {
+  display: none;
+  color: #8f3f2f;
+  font-size: 13px;
+  font-weight: 300;
+  line-height: 1.5;
+}
+.field-error.is-visible { display: block; }
 .contact-form textarea { resize: vertical; min-height: 140px; }
 .btn-submit { font-family: 'Jost', sans-serif; font-weight: 300; font-size: 13px; letter-spacing: 3px; text-transform: uppercase; color: var(--white); background: var(--mr); border: none; padding: 20px 48px; border-radius: 10px; cursor: pointer; transition: all .4s; align-self: flex-start; }
 .btn-submit:hover { background: var(--vf); transform: translateY(-2px); box-shadow: 0 10px 30px rgba(45,58,45,.2); }
+.btn-submit:disabled { opacity: .62; cursor: not-allowed; transform: none; box-shadow: none; }
 #form-feedback { margin-top: 12px; font-size: 14px; font-weight: 300; display: none; }
+.form-trap {
+  position: absolute;
+  left: -10000px;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  opacity: 0;
+  pointer-events: none;
+}
+.turnstile-holder {
+  min-height: 0;
+  line-height: 0;
+}
+.contact .reveal-left,
+.contact .reveal-right {
+  opacity: 1;
+  transform: none;
+}
 
 /* ═══ FOOTER ═══ */
 footer { background: var(--vf); padding: 80px 60px 40px; }
@@ -706,7 +744,6 @@ footer { background: var(--vf); padding: 80px 60px 40px; }
 .realisations,
 .services,
 .faq,
-.contact,
 footer,
 .project-overview,
 .project-amenities,
