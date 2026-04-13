@@ -52,7 +52,7 @@
           "email": "contact@emaraestates.com",
          "address": {
   "@type": "PostalAddress",
-  "streetAddress": "2ème étage, JXJV+M3F Business center Paul, Rue Mouatamid Ibn Abaad",
+  "streetAddress": "2ème etage, Business center Paul, Rue Mouatamid Ibn Abaad",
   "addressLocality": "Marrakech",
   "postalCode": "40000",
   "addressCountry": "MA"
@@ -119,7 +119,6 @@
     </div>
   </div>
   <div class="hero-scroll">
-    <span>Scroll</span>
     <div class="scroll-dot"></div>
   </div>
 </section>
@@ -573,14 +572,14 @@
     <div class="contact-title">Parlons de votre projet</div>
     <div class="ci-sub">Notre équipe basée à Guéliz vous répond sous 24h.</div>
     <div class="contact-detail">
-      <div class="item"><strong>Adresse</strong>Bureau Emara, Guéliz<br>Marrakech, Maroc</div>
+      <div class="item"><strong>Adresse</strong>2ème etage, Business center Paul,<br>Rue Mouatamid Ibn Abaad, Marrakech 40000</div>
       <div class="item"><strong>Téléphone</strong>+212 6 700 388 99</div>
       <div class="item"><strong>Email</strong><a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="bcdfd3d2c8dddfc8fcd9d1ddceddd9cfc8ddc8d9cf92dfd3d1">[email&#160;protected]</a></div>
       <div class="item"><strong>Horaires</strong>Lun – Sam : 9h – 19h</div>
     </div>
   </div>
   <div class="contact-form reveal-right">
-    <form id="contactForm" action="/api/contact" method="post" novalidate data-form-start="" data-turnstile-sitekey="0x4AAAAAAC8jSxwtSDcvCJvV">
+    <form id="contactForm" action="/contact.php" method="post" novalidate data-form-start="" data-turnstile-sitekey="0x4AAAAAAC8jSxwtSDcvCJvV">
       <div class="form-trap" aria-hidden="true">
         <label for="company-website">Site web</label>
         <input id="company-website" type="text" name="company_website" tabindex="-1" autocomplete="off">
@@ -647,21 +646,17 @@
       <a href="#biens">Honest Signature 6</a>
       <a href="#biens">Honest Signature 7</a>
       <a href="#biens">Honest Signature 8</a>
-      <a href="https://www.honestsignature.com" target="_blank" rel="noopener">Honest Signature ↗</a>
+      <a href="https://www.honestsignature.com" target="_blank" rel="noopener">Honest Signature</a>
     </div>
     <div class="footer-col">
       <div class="footer-title">Suivez-nous</div>
-      <a href="#" rel="noopener">Instagram</a>
-      <a href="#" rel="noopener">Facebook</a>
-      <a href="#" rel="noopener">LinkedIn</a>
-      <a href="#" rel="noopener">YouTube</a>
-      <a href="https://wa.me/?text=Découvrez%20Emara%20Estates%20%C3%A0%20Gu%C3%A9liz%20Marrakech%20https%3A%2F%2Femaraestates.com" target="_blank" rel="noopener">Partager sur WhatsApp</a>
-      <a href="https://www.facebook.com/sharer/sharer.php?u=https%3A%2F%2Femaraestates.com" target="_blank" rel="noopener">Partager sur Facebook</a>
-      <a href="https://www.linkedin.com/sharing/share-offsite/?url=https%3A%2F%2Femaraestates.com" target="_blank" rel="noopener">Partager sur LinkedIn</a>
+      <a href="https://www.instagram.com/emara.estates" target="_blank" rel="noopener">Instagram</a>
+      <a href="https://www.tiktok.com/@emara.estates?_r=1&amp;_t=ZS-95VFqI78Wjw" target="_blank" rel="noopener">TikTok</a>
+      <a href="https://snapchat.com/t/kQce8jwo" target="_blank" rel="noopener">Snapchat</a>
     </div>
     <div class="footer-map">
       <div class="footer-title">Notre Bureau</div>
-      <p>Bureau Emara, Guéliz<br>Marrakech, Maroc</p>
+      <p>2ème etage, Business center Paul,<br>Rue Mouatamid Ibn Abaad, Marrakech 40000</p>
       <div class="footer-map-frame">
 <iframe src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d875.8418635332205!2d-8.00738759783571!3d31.6316639507953!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0xdafefb6dcc86ea1%3A0x6ae3814ee3fb96d0!2sEMARA%20ESTATES%20Marrakech!5e0!3m2!1sfr!2sma!4v1776019628621!5m2!1sfr!2sma" width="600" height="450" style="border:0;" allowfullscreen="" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
       </div>
@@ -669,7 +664,8 @@
   </div>
   <div class="footer-bottom">
     <span>© 2026 Emara Estates. Tous droits réservés.</span>
-    <span>Mentions légales — Politique de confidentialité</span>
+    
+   <!-- <span>Mentions légales — Politique de confidentialité</span> -->
   </div>
 </footer>
 
@@ -1292,7 +1288,7 @@ updateRealisationsCarouselUI();
         });
       }
       if (isLocalPreview() && (!error || !error.errors)) {
-        error = { message: 'Tu es sur Live Server. Lance npm start dans le terminal, puis ouvre http://localhost:5601 pour tester le formulaire.' };
+        error = { message: 'Tu es sur Live Server. Lance php -S localhost:5601 dans le terminal, puis ouvre http://localhost:5601 pour tester le formulaire.' };
       }
       setFormFeedback((error && error.message) || 'Votre demande n’a pas pu être envoyée. Contactez-nous directement par WhatsApp.', true);
     })

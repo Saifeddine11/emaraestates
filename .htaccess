@@ -3,6 +3,11 @@ DirectoryIndex index.html
 ErrorDocument 404 /404.html
 AddDefaultCharset UTF-8
 
+<FilesMatch "^\.env">
+  Require all denied
+  Deny from all
+</FilesMatch>
+
 RewriteEngine On
 RewriteBase /
 
