@@ -1061,7 +1061,6 @@ updateRealisationsCarouselUI();
   var turnstileInput = document.getElementById('cfTurnstileResponse');
   var submitButton = form.querySelector('.btn-submit');
   var turnstileWidgetId = null;
-  var turnstileWaitTimer = null;
   var startedAt = Date.now();
   var validBudgets = ['1 – 3 M MAD', '3 – 5 M MAD', '5 – 10 M MAD', '10 M+ MAD'];
   var blockedTerms = [
@@ -1097,30 +1096,20 @@ updateRealisationsCarouselUI();
   function initTurnstile() {
     var holder = document.getElementById('contactTurnstile');
     var sitekey = form.getAttribute('data-turnstile-sitekey');
-    if (isLocalPreview()) return;
-    if (!holder || !window.turnstile || !sitekey || sitekey === 'YOUR_TURNSTILE_SITE_KEY' || turnstileWidgetId !== null) return;
+    if (isLocalPreview() || !holder || !window.turnstile || !sitekey || turnstileWidgetId !== null) return;
     turnstileWidgetId = turnstile.render(holder, {
       sitekey: sitekey,
       callback: function(token) {
         if (turnstileInput) turnstileInput.value = token;
         setFormFeedback('', false);
       },
-      'error-callback': function() {
-        if (turnstileInput) turnstileInput.value = '';
-        if (window.turnstile && turnstileWidgetId !== null) turnstile.reset(turnstileWidgetId);
-        setFormFeedback('La vérification anti-robot n’a pas abouti. Vérifiez que la case de sécurité est validée, ou contactez-nous directement par WhatsApp.', true);
-        setSubmitting(false);
-      },
       'expired-callback': function() {
         if (turnstileInput) turnstileInput.value = '';
-        setFormFeedback('La vérification anti-robot a expiré. Relancez l’envoi.', true);
-        setSubmitting(false);
+        setFormFeedback('La vérification anti-robot a expiré. Cochez-la à nouveau.', true);
       },
-      'timeout-callback': function() {
+      'error-callback': function() {
         if (turnstileInput) turnstileInput.value = '';
-        if (window.turnstile && turnstileWidgetId !== null) turnstile.reset(turnstileWidgetId);
-        setFormFeedback('La vérification anti-robot prend trop de temps. Réessayez dans un instant.', true);
-        setSubmitting(false);
+        setFormFeedback('La vérification anti-robot n’a pas abouti. Réessayez, ou contactez-nous directement par WhatsApp.', true);
       }
     });
   }
@@ -1239,33 +1228,13 @@ updateRealisationsCarouselUI();
     return lastSubmit && Date.now() - lastSubmit < 60000;
   }
 
-  function executeTurnstile() {
-    if (isLocalPreview()) {
-      if (turnstileInput) turnstileInput.value = '__local_turnstile_bypass__';
-      submitContactForm();
-      return;
-    }
-    initTurnstile();
-    if (window.turnstile && turnstileWidgetId !== null) {
-      setFormFeedback('Validez la vérification anti-robot, puis renvoyez la demande.', true);
-      setSubmitting(false);
-      return;
-    }
-    if (turnstileWaitTimer) clearTimeout(turnstileWaitTimer);
-    setFormFeedback('Vérification anti-robot en cours de chargement. Réessayez dans une seconde.', true);
-    turnstileWaitTimer = setTimeout(function(){
-      initTurnstile();
-      if (window.turnstile && turnstileWidgetId !== null) {
-        setFormFeedback('Vérification prête. Vous pouvez renvoyer la demande.', false);
-      }
-      setSubmitting(false);
-    }, 900);
-  }
-
   function submitContactForm() {
     var formData = new FormData(form);
-    if (!isLocalPreview() && turnstileInput && !turnstileInput.value) {
-      executeTurnstile();
+    var turnstileResponse = isLocalPreview()
+      ? '__local_turnstile_bypass__'
+      : String(formData.get('cf_turnstile_response') || '').trim();
+    if (!turnstileResponse) {
+      setFormFeedback('Cochez la vérification anti-robot avant d’envoyer.', true);
       setSubmitting(false);
       return;
     }
@@ -1284,7 +1253,7 @@ updateRealisationsCarouselUI();
         message: formData.get('message'),
         company_website: formData.get('company_website'),
         form_token: formData.get('form_token'),
-        cf_turnstile_response: formData.get('cf_turnstile_response'),
+        cf_turnstile_response: turnstileResponse,
         elapsed_ms: Date.now() - startedAt
       }),
       credentials: 'same-origin'
@@ -1346,11 +1315,7 @@ updateRealisationsCarouselUI();
     }
 
     setSubmitting(true);
-    if (isLocalPreview() || (turnstileInput && turnstileInput.value)) {
-      submitContactForm();
-    } else {
-      executeTurnstile();
-    }
+    submitContactForm();
   });
 })();
 
