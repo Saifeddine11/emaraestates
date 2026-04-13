@@ -572,7 +572,7 @@ section { padding: 130px 60px; }
 .map-intro__divider { width: 46px; height: 1px; background: linear-gradient(to right, transparent, var(--mr), transparent); margin: 0 auto; opacity: 0; }
 .map-intro__divider.visible { animation: mapFadeIn .5s ease .3s forwards; }
 .map-section { position: relative; width: 100%; height: 100vh; min-height: 600px; overflow: hidden; display: flex; align-items: center; justify-content: center; padding: 0; }
-.map-section__bg { position: absolute; inset: 0; background: url('../img/map-desktop.webp?v=4') center 42%/cover no-repeat; filter: brightness(0.45) saturate(0.8); }
+.map-section__bg { position: absolute; inset: 0; background: url('../img/maps.webp?v=4') center 42%/cover no-repeat; filter: brightness(0.45) saturate(0.8); }
 .map-section__vignette { position: absolute; inset: 0; background: radial-gradient(ellipse at center, transparent 40%, rgba(0,0,0,.4) 100%); z-index: 1; }
 @keyframes mapSlideUp { to { opacity: 1; transform: translateY(0); } }
 @keyframes mapFadeIn { to { opacity: 1; } }
