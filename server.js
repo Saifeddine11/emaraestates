@@ -49,6 +49,26 @@ const mimeTypes = {
   '.txt': 'text/plain; charset=utf-8'
 };
 
+const longCacheExtensions = new Set([
+  '.css',
+  '.js',
+  '.png',
+  '.jpg',
+  '.jpeg',
+  '.webp',
+  '.svg',
+  '.ico'
+]);
+
+function cacheControlFor(filePath) {
+  const extension = path.extname(filePath).toLowerCase();
+  if (longCacheExtensions.has(extension)) {
+    return 'public, max-age=31536000, immutable';
+  }
+  if (extension === '.html') return 'public, max-age=0, must-revalidate';
+  return 'public, max-age=86400';
+}
+
 function sendJson(res, status, payload) {
   res.writeHead(status, {
     'Content-Type': 'application/json; charset=utf-8',
@@ -267,7 +287,9 @@ async function handleContact(req, res) {
 
 function serveStatic(req, res) {
   const urlPath = decodeURIComponent(new URL(req.url, 'http://localhost').pathname);
-  const filePath = path.resolve(ROOT, urlPath === '/' ? 'index.html' : urlPath.slice(1));
+  const requestedPath = path.resolve(ROOT, urlPath === '/' ? 'index.html' : urlPath.slice(1));
+  const htmlFallbackPath = path.extname(requestedPath) ? requestedPath : `${requestedPath}.html`;
+  const filePath = fs.existsSync(requestedPath) ? requestedPath : htmlFallbackPath;
   if (!filePath.startsWith(ROOT) || filePath.includes(`${path.sep}node_modules${path.sep}`)) {
     res.writeHead(403);
     res.end('Forbidden');
@@ -283,8 +305,13 @@ function serveStatic(req, res) {
     }
     res.writeHead(200, {
       'Content-Type': mimeTypes[path.extname(filePath).toLowerCase()] || 'application/octet-stream',
-      'X-Content-Type-Options': 'nosniff'
+      'X-Content-Type-Options': 'nosniff',
+      'Cache-Control': cacheControlFor(filePath)
     });
+    if (req.method === 'HEAD') {
+      res.end();
+      return;
+    }
     res.end(data);
   });
 }
