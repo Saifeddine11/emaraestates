@@ -289,7 +289,14 @@ function serveStatic(req, res) {
   const urlPath = decodeURIComponent(new URL(req.url, 'http://localhost').pathname);
   const requestedPath = path.resolve(ROOT, urlPath === '/' ? 'index.html' : urlPath.slice(1));
   const htmlFallbackPath = path.extname(requestedPath) ? requestedPath : `${requestedPath}.html`;
-  const filePath = fs.existsSync(requestedPath) ? requestedPath : htmlFallbackPath;
+  let filePath = requestedPath;
+  if (!path.extname(requestedPath) && fs.existsSync(htmlFallbackPath)) {
+    filePath = htmlFallbackPath;
+  } else if (fs.existsSync(requestedPath) && fs.statSync(requestedPath).isDirectory()) {
+    filePath = path.join(requestedPath, 'index.html');
+  } else if (!fs.existsSync(requestedPath)) {
+    filePath = htmlFallbackPath;
+  }
   if (!filePath.startsWith(ROOT) || filePath.includes(`${path.sep}node_modules${path.sep}`)) {
     res.writeHead(403);
     res.end('Forbidden');

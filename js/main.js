@@ -12,20 +12,6 @@ window.addEventListener('scroll', () => {
   if (nav) nav.classList.toggle('scrolled', window.scrollY > 80);
 });
 
-// ═══ CURSOR CUSTOM ═══
-const cursor = document.getElementById('cursor');
-if (cursor) {
-  document.addEventListener('mousemove', e => {
-    cursor.style.left = e.clientX - 10 + 'px';
-    cursor.style.top  = e.clientY - 10 + 'px';
-    cursor.classList.add('visible');
-  });
-  document.querySelectorAll('a, button, .property-card, .quartier-card, .filter-tab, .service-card, .faq-question').forEach(el => {
-    el.addEventListener('mouseenter', () => cursor.classList.add('hover'));
-    el.addEventListener('mouseleave', () => cursor.classList.remove('hover'));
-  });
-}
-
 // ═══ REVEAL AU SCROLL ═══
 const revealObs = new IntersectionObserver((entries) => {
   entries.forEach(e => {
