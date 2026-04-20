@@ -188,6 +188,9 @@ nav .links a:hover::after { width: 100%; }
   overflow: hidden;
   position: relative;
 }
+.estates-photo-ribbon {
+  margin: 72px -60px -130px;
+}
 .photo-ribbon-title {
   font-family: 'Cormorant Garamond', serif;
   font-weight: 300;
@@ -1298,6 +1301,9 @@ footer,
   .photo-ribbon {
     padding: 34px 0 42px;
     overflow: hidden;
+  }
+  .estates-photo-ribbon {
+    margin: 52px -24px -80px;
   }
   .photo-ribbon::before,
   .photo-ribbon::after {
