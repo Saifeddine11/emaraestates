@@ -10,6 +10,7 @@ const RATE_LIMIT_WINDOW = 3600;
 const RATE_LIMIT_MAX = 20;
 const TURNSTILE_SECRET_FALLBACK = '0x4AAAAAAC8jSxGLqAltGhC5jvWNSGSMy4c';
 const CONTACT_DEBUG_KEY = 'emara-contact-debug-20260413';
+const CONTACT_WEBHOOK_URL_FALLBACK = 'https://hooks.zapier.com/hooks/catch/27111467/ujcbawh/';
 
 $validBudgets = ['1 – 3 M MAD', '3 – 5 M MAD', '5 – 10 M MAD', '10 M+ MAD'];
 $blockedTerms = [
@@ -30,6 +31,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && ($_GET['debug'] ?? '') === CONTACT_D
         'smtp_host' => $env['SMTP_HOST'] ?? 'smtp.gmail.com',
         'smtp_user_configured' => trim($env['SMTP_USER'] ?? '') !== '',
         'smtp_pass_configured' => trim($env['SMTP_PASS'] ?? '') !== '',
+        'zapier_webhook_configured' => contactWebhookUrl($env) !== '',
         'allow_url_fopen' => (bool) ini_get('allow_url_fopen'),
     ]);
 }
@@ -56,10 +58,15 @@ if (isRateLimited($ip)) {
 }
 
 try {
-    sendLeadEmail($payload, $env);
+    sendLeadToZapier($payload, $env, $ip);
+    try {
+        sendLeadEmail($payload, $env);
+    } catch (Throwable $emailError) {
+        error_log('Contact form email skipped after Zapier success: ' . $emailError->getMessage());
+    }
     sendJson(200, ['message' => 'Votre demande a bien été envoyée. Merci, notre équipe vous contactera dans les plus brefs délais.']);
 } catch (Throwable $error) {
-    error_log('Contact form email error: ' . $error->getMessage());
+    error_log('Contact form Zapier error: ' . $error->getMessage());
     sendJson(500, ['message' => 'Erreur serveur. Contactez-nous directement par WhatsApp.']);
 }
 
@@ -266,6 +273,52 @@ function verifyTurnstile(string $token, string $ip, string $secret): bool
         return false;
     }
     return true;
+}
+
+function contactWebhookUrl(array $env): string
+{
+    return trim($env['CONTACT_WEBHOOK_URL'] ?? '') ?: CONTACT_WEBHOOK_URL_FALLBACK;
+}
+
+function sendLeadToZapier(array $payload, array $env, string $ip): void
+{
+    $webhookUrl = contactWebhookUrl($env);
+    if ($webhookUrl === '') {
+        throw new RuntimeException('Zapier webhook URL missing.');
+    }
+
+    $zapierPayload = [
+        'nom_complet' => $payload['nom_complet'],
+        'email' => $payload['email'],
+        'telephone' => $payload['telephone'],
+        'budget' => $payload['budget'],
+        'message' => $payload['message'],
+        'company_website' => $payload['company_website'],
+        'form_token' => $payload['form_token'],
+        'elapsed_ms' => $payload['elapsed_ms'],
+        'source' => 'emaraestates.com',
+        'form_id' => 'contactForm',
+        'submitted_at' => date(DATE_ATOM),
+        'ip' => $ip,
+        'user_agent' => sanitizeValue($_SERVER['HTTP_USER_AGENT'] ?? '', 300),
+        'page_url' => sanitizeValue($_SERVER['HTTP_REFERER'] ?? '', 500),
+    ];
+
+    $context = stream_context_create([
+        'http' => [
+            'method' => 'POST',
+            'header' => "Content-Type: application/json\r\nAccept: application/json\r\n",
+            'content' => json_encode($zapierPayload, JSON_UNESCAPED_UNICODE),
+            'ignore_errors' => true,
+            'timeout' => 10,
+        ],
+    ]);
+    $response = file_get_contents($webhookUrl, false, $context);
+    $statusLine = $http_response_header[0] ?? '';
+
+    if ($response === false || !preg_match('/\s2\d\d\s/', $statusLine)) {
+        throw new RuntimeException('Zapier webhook failed: ' . ($statusLine ?: 'no response'));
+    }
 }
 
 function smtpRead($socket): string

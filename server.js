@@ -7,7 +7,7 @@ loadEnvFile(path.join(__dirname, '.env'));
 const PORT = Number(process.env.PORT || 5601);
 const ROOT = __dirname;
 const TURNSTILE_SECRET = process.env.TURNSTILE_SECRET || '';
-const CONTACT_WEBHOOK_URL = process.env.CONTACT_WEBHOOK_URL || '';
+const CONTACT_WEBHOOK_URL = process.env.CONTACT_WEBHOOK_URL || 'https://hooks.zapier.com/hooks/catch/27111467/ujcbawh/';
 const MAX_BODY_BYTES = 16 * 1024;
 const RATE_LIMIT_WINDOW_MS = 60 * 60 * 1000;
 const RATE_LIMIT_MAX = 20;
@@ -238,7 +238,7 @@ async function verifyTurnstile(token, ip) {
 
 async function forwardLead(payload) {
   if (!CONTACT_WEBHOOK_URL) return;
-  await fetch(CONTACT_WEBHOOK_URL, {
+  const response = await fetch(CONTACT_WEBHOOK_URL, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
@@ -247,9 +247,13 @@ async function forwardLead(payload) {
       telephone: escapeHtml(payload.telephone),
       budget: escapeHtml(payload.budget),
       message: escapeHtml(payload.message),
+      company_website: escapeHtml(payload.company_website),
+      form_token: escapeHtml(payload.form_token),
+      elapsed_ms: payload.elapsed_ms,
       source: 'emaraestates.com'
     })
   });
+  if (!response.ok) throw new Error(`Zapier webhook failed: ${response.status}`);
 }
 
 async function handleContact(req, res) {
