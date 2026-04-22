@@ -282,7 +282,12 @@ async function handleContact(req, res) {
       sendJson(res, 429, { message: 'Trop de demandes envoyées. Réessayez plus tard.' });
       return;
     }
-    await forwardLead(result.payload);
+    try {
+      await forwardLead(result.payload);
+    } catch (error) {
+      console.error('Contact form Zapier error:', error.message);
+      throw error;
+    }
     sendJson(res, 200, { message: 'Votre demande a bien été envoyée. Merci, notre équipe vous contactera dans les plus brefs délais.' });
   } catch (error) {
     sendJson(res, 500, { message: 'Erreur serveur. Contactez-nous directement par WhatsApp.' });

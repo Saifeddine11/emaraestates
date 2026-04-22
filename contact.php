@@ -59,15 +59,17 @@ if (isRateLimited($ip)) {
 
 try {
     sendLeadToZapier($payload, $env, $ip);
+
     try {
         sendLeadEmail($payload, $env);
     } catch (Throwable $emailError) {
         error_log('Contact form email skipped after Zapier success: ' . $emailError->getMessage());
     }
+
     sendJson(200, ['message' => 'Votre demande a bien été envoyée. Merci, notre équipe vous contactera dans les plus brefs délais.']);
 } catch (Throwable $error) {
     error_log('Contact form Zapier error: ' . $error->getMessage());
-    sendJson(500, ['message' => 'Erreur serveur. Contactez-nous directement par WhatsApp.']);
+    sendJson(500, ['message' => 'La demande n’a pas été envoyée vers Zapier. Contactez-nous directement par WhatsApp.']);
 }
 
 function sendJson(int $status, array $payload): never
