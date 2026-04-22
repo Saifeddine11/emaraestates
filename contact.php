@@ -12,7 +12,7 @@ const TURNSTILE_SECRET_FALLBACK = '0x4AAAAAAC8jSxGLqAltGhC5jvWNSGSMy4c';
 const CONTACT_DEBUG_KEY = 'emara-contact-debug-20260413';
 const CONTACT_WEBHOOK_URL_FALLBACK = 'https://hooks.zapier.com/hooks/catch/27111467/ujcbawh/';
 
-$validBudgets = ['1 – 3 M MAD', '3 – 5 M MAD', '5 – 10 M MAD', '10 M+ MAD'];
+$validBudgets = ['1M - 1.5M MAD', '2M - 3M MAD', '+3M MAD'];
 $blockedTerms = [
     'refonte', 'refondre', 'seo', 'referencement', 'backlink', 'agence web',
     'creation de site', 'site internet', 'marketing digital', 'audit gratuit',

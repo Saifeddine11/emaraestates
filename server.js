@@ -27,7 +27,7 @@ function loadEnvFile(filePath) {
   });
 }
 
-const validBudgets = new Set(['1 – 3 M MAD', '3 – 5 M MAD', '5 – 10 M MAD', '10 M+ MAD']);
+const validBudgets = new Set(['1M - 1.5M MAD', '2M - 3M MAD', '+3M MAD']);
 const blockedTerms = [
   'refonte', 'refondre', 'seo', 'referencement', 'backlink', 'agence web',
   'creation de site', 'site internet', 'marketing digital', 'audit gratuit',
