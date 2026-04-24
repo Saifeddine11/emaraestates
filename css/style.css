@@ -585,7 +585,7 @@ section { padding: 130px 60px; }
 .featured-cta-secondary:hover { border-color: var(--vf); background: rgba(45,58,45,.05); }
 
 /* ═══ PARALLAX DIVIDER ═══ */
-.parallax-divider { height: 50vh; position: relative; overflow: hidden; display: flex; align-items: center; justify-content: center; }
+.parallax-divider { height: 100vh; position: relative; overflow: hidden; display: flex; align-items: center; justify-content: center; }
 .parallax-divider .pd-bg { position: absolute; inset: -20%; width: 140%; height: 140%; object-fit: cover; }
 .parallax-divider .pd-overlay { position: absolute; inset: 0; background: rgba(45,58,45,.8); }
 .parallax-divider .pd-content { position: relative; z-index: 2; text-align: center; }
@@ -1665,6 +1665,7 @@ footer,
   .footer-map-frame iframe { height: 220px; }
   .cta-section { padding: 80px 24px; }
   footer { padding: 60px 24px 30px; }
+  .parallax-divider { height: 50vh; }
   .parallax-divider .pd-quote { font-size: 28px; padding: 0 20px; }
   .cta-buttons { flex-direction: column; align-items: center; }
   .marquee-item { font-size: 18px; }

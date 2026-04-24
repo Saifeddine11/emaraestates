@@ -69,7 +69,8 @@ window.addEventListener('scroll', () => {
     const rect = pd.parentElement.getBoundingClientRect();
     if (rect.top < window.innerHeight && rect.bottom > 0) {
       const progress = (window.innerHeight - rect.top) / (window.innerHeight + rect.height);
-      pd.style.transform = 'translateY(' + (progress * 60 - 30) + 'px)';
+      const photoOffset = window.matchMedia('(min-width: 769px)').matches ? 70 : 0;
+      pd.style.transform = 'translateY(' + (progress * 60 - 30 + photoOffset) + 'px)';
     }
   }
 });
