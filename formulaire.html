@@ -1,0 +1,997 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Demander les disponibilités | Emara Estates Marrakech</title>
+  <meta name="description" content="Recevez les disponibilités et les prix des appartements neufs Honest Signature à Guéliz, Marrakech. Réponse rapide par l'équipe Emara Estates.">
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="https://emaraestates.com/formulaire">
+  <meta property="og:title" content="Demander les disponibilités | Emara Estates">
+  <meta property="og:description" content="Appartements neufs à Guéliz, Marrakech. Remplissez le formulaire pour recevoir les prix, plans et disponibilités.">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://emaraestates.com/formulaire">
+  <meta property="og:site_name" content="Emara Estates">
+  <meta property="og:locale" content="fr_MA">
+  <meta property="og:image" content="https://emaraestates.com/img/og-honest-signature-7.jpg">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Demander les disponibilités | Emara Estates">
+  <meta name="twitter:description" content="Recevez les prix, plans et disponibilités des appartements neufs à Guéliz Marrakech.">
+  <meta name="twitter:image" content="https://emaraestates.com/img/og-honest-signature-7.jpg">
+  <link rel="icon" type="image/png" sizes="48x48" href="/favicon-48x48.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/favicon.png">
+  <link rel="apple-touch-icon" href="/apple-touch-icon.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="preload" as="image" href="img/hero.webp" fetchpriority="high">
+  <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;500&amp;family=Jost:wght@300;400;500&amp;display=swap">
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;500&amp;family=Jost:wght@300;400;500&amp;display=swap" rel="stylesheet" media="print" onload="this.media='all'">
+  <noscript><link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;500&amp;family=Jost:wght@300;400;500&amp;display=swap" rel="stylesheet"></noscript>
+  <link rel="stylesheet" href="css/style.css?v=202604181715">
+  <style>
+    body.formulaire-page {
+      min-height: 100vh;
+      background: var(--vf);
+      color: var(--cr);
+    }
+
+    .ads-landing {
+      position: relative;
+      min-height: 100vh;
+      overflow: hidden;
+      isolation: isolate;
+      display: flex;
+      align-items: stretch;
+    }
+
+    .ads-landing__bg {
+      position: fixed;
+      inset: 0;
+      z-index: -3;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      filter: saturate(.92) contrast(1.05);
+    }
+
+    .ads-landing::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      z-index: -2;
+      background:
+        linear-gradient(90deg, rgba(18, 24, 18, .78) 0%, rgba(45, 58, 45, .62) 44%, rgba(18, 24, 18, .72) 100%),
+        linear-gradient(180deg, rgba(18, 24, 18, .18) 0%, rgba(18, 24, 18, .78) 100%);
+    }
+
+    .ads-landing::after {
+      content: "";
+      position: fixed;
+      inset: 0;
+      z-index: -1;
+      background: radial-gradient(ellipse at 25% 20%, rgba(245, 240, 232, .12), transparent 34%);
+      pointer-events: none;
+    }
+
+    .ads-shell {
+      width: min(100%, 1240px);
+      margin: 0 auto;
+      padding: clamp(22px, 4vw, 48px);
+      display: grid;
+      grid-template-columns: minmax(0, .86fr) minmax(360px, .82fr);
+      gap: clamp(28px, 5vw, 64px);
+      align-items: center;
+    }
+
+    .ads-copy {
+      padding-top: 16px;
+    }
+
+    .ads-logo-link {
+      display: inline-flex;
+      align-items: center;
+      margin-bottom: clamp(28px, 5vh, 58px);
+    }
+
+    .ads-logo {
+      width: clamp(170px, 20vw, 285px);
+      height: auto;
+      display: block;
+    }
+
+    .ads-kicker {
+      display: inline-flex;
+      align-items: center;
+      gap: 14px;
+      margin-bottom: 20px;
+      font-size: 12px;
+      font-weight: 300;
+      letter-spacing: 4px;
+      text-transform: uppercase;
+      color: var(--bg);
+    }
+
+    .ads-kicker::before {
+      content: "";
+      width: 46px;
+      height: 1px;
+      background: var(--mr);
+    }
+
+    .ads-title {
+      max-width: 650px;
+      margin: 0;
+      font-family: "Cormorant Garamond", serif;
+      font-size: clamp(42px, 6.2vw, 76px);
+      font-weight: 300;
+      line-height: .96;
+      color: var(--cr);
+      text-wrap: balance;
+    }
+
+    .ads-title em {
+      color: #f0ddba;
+      font-style: italic;
+      font-weight: 300;
+    }
+
+    .ads-title-highlight {
+      color: #f0ddba;
+    }
+
+    .ads-title .cta-highlight-svg {
+      height: 1.35em;
+      width: calc(100% + .72em);
+    }
+
+    .ads-title-line {
+      display: block;
+      white-space: nowrap;
+    }
+
+    .ads-subtitle {
+      max-width: 540px;
+      margin: 22px 0 0;
+      font-size: clamp(16px, 1.35vw, 19px);
+      font-weight: 300;
+      line-height: 1.65;
+      color: rgba(245, 240, 232, .82);
+    }
+
+    .ads-points {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 12px;
+      max-width: 600px;
+      margin: 28px 0 0;
+    }
+
+    .ads-point {
+      min-height: 88px;
+      padding: 16px 14px;
+      border: 1px solid rgba(245, 240, 232, .18);
+      background: rgba(245, 240, 232, .07);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border-radius: 8px;
+    }
+
+    .ads-point strong {
+      display: block;
+      margin-bottom: 6px;
+      font-family: "Jost", sans-serif;
+      font-size: clamp(20px, 2vw, 28px);
+      font-weight: 400;
+      line-height: 1.05;
+      letter-spacing: .6px;
+      color: #f0ddba;
+    }
+
+    .ads-point span {
+      display: block;
+      font-size: 12px;
+      font-weight: 300;
+      letter-spacing: 1.7px;
+      line-height: 1.55;
+      text-transform: uppercase;
+      color: rgba(245, 240, 232, .76);
+    }
+
+    .ads-trust {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 18px;
+    }
+
+    .ads-trust span {
+      border: 1px solid rgba(240, 221, 186, .26);
+      border-radius: 999px;
+      padding: 8px 12px;
+      color: rgba(245, 240, 232, .76);
+      font-size: 12px;
+      font-weight: 300;
+      letter-spacing: 1.4px;
+      text-transform: uppercase;
+      background: rgba(18, 24, 18, .2);
+    }
+
+    .ads-form-panel {
+      width: 100%;
+      padding: clamp(22px, 2.7vw, 34px);
+      border: 1px solid rgba(245, 240, 232, .26);
+      border-radius: 8px;
+      background: rgba(250, 248, 244, .94);
+      box-shadow: 0 34px 90px rgba(0, 0, 0, .24);
+      color: var(--vf);
+    }
+
+    .ads-form-head {
+      margin-bottom: 20px;
+    }
+
+    .ads-form-eyebrow {
+      margin-bottom: 10px;
+      font-size: 12px;
+      font-weight: 400;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      color: var(--mr);
+    }
+
+    .ads-form-title {
+      margin: 0;
+      font-family: "Cormorant Garamond", serif;
+      font-size: clamp(30px, 2.8vw, 40px);
+      font-weight: 300;
+      line-height: 1.06;
+      color: var(--vf);
+      text-wrap: balance;
+    }
+
+    .ads-form-note {
+      margin: 10px 0 0;
+      color: var(--vo);
+      font-size: 14px;
+      font-weight: 300;
+      line-height: 1.55;
+    }
+
+    .ads-form-panel .contact-form,
+    .ads-form-panel .contact-form form {
+      gap: 16px;
+    }
+
+    .ads-form-panel .contact-form input,
+    .ads-form-panel .contact-form textarea,
+    .ads-form-panel .contact-form select {
+      background: rgba(255, 255, 255, .92);
+      border-color: rgba(45, 58, 45, .14);
+    }
+
+    .ads-form-panel .contact-form textarea {
+      min-height: 126px;
+    }
+
+    .ads-form-panel .btn-submit {
+      width: 100%;
+      align-self: stretch;
+    }
+
+    .ads-direct {
+      display: flex;
+      justify-content: space-between;
+      gap: 14px;
+      margin-top: 18px;
+      padding-top: 18px;
+      border-top: 1px solid rgba(45, 58, 45, .12);
+      color: var(--vo);
+      font-size: 13px;
+      line-height: 1.6;
+    }
+
+    .ads-direct a {
+      color: var(--mr);
+      text-decoration: none;
+      white-space: nowrap;
+    }
+
+    .ads-bottom-bar {
+      position: absolute;
+      left: clamp(24px, 4vw, 54px);
+      bottom: 18px;
+      color: rgba(245, 240, 232, .62);
+      font-size: 12px;
+      font-weight: 300;
+      letter-spacing: 1.6px;
+      text-transform: uppercase;
+    }
+
+    @media (max-width: 980px) {
+      .ads-landing {
+        min-height: auto;
+      }
+
+      .ads-shell {
+        grid-template-columns: 1fr;
+        align-items: start;
+        max-width: 760px;
+      }
+
+      .ads-logo-link {
+        margin-bottom: 30px;
+      }
+
+      .ads-copy {
+        padding-top: 0;
+      }
+
+      .ads-points {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+      }
+
+      .ads-point {
+        min-height: 0;
+      }
+
+      .ads-bottom-bar {
+        position: static;
+        padding: 0 24px 24px;
+      }
+    }
+
+    @media (max-width: 640px) {
+      body.formulaire-page {
+        background: #243024;
+      }
+
+      .ads-landing {
+        display: block;
+        min-height: 100svh;
+        overflow: visible;
+      }
+
+      .ads-landing__bg {
+        position: fixed;
+        inset: 0;
+        height: 100svh;
+        object-position: center top;
+      }
+
+      .ads-landing::before {
+        background:
+          linear-gradient(180deg, rgba(18, 24, 18, .64) 0%, rgba(45, 58, 45, .74) 42%, rgba(18, 24, 18, .9) 100%),
+          linear-gradient(90deg, rgba(18, 24, 18, .28), rgba(18, 24, 18, .12));
+      }
+
+      .ads-landing::after {
+        display: none;
+      }
+
+      .ads-shell {
+        min-height: 100svh;
+        padding: max(16px, env(safe-area-inset-top)) 14px max(18px, env(safe-area-inset-bottom));
+        gap: 18px;
+        display: flex;
+        flex-direction: column;
+        justify-content: flex-start;
+      }
+
+      .ads-copy {
+        width: 100%;
+        text-align: center;
+        padding: 0;
+      }
+
+      .ads-logo-link {
+        width: 100%;
+        justify-content: center;
+        margin-bottom: 20px;
+      }
+
+      .ads-logo {
+        width: clamp(128px, 42vw, 156px);
+      }
+
+      .ads-kicker {
+        justify-content: center;
+        font-size: 11px;
+        letter-spacing: 2.4px;
+        margin-bottom: 12px;
+        color: rgba(245, 240, 232, .78);
+      }
+
+      .ads-kicker::before {
+        display: none;
+      }
+
+      .ads-title {
+        max-width: 100%;
+        margin: 0 auto;
+        font-size: clamp(28px, 8.4vw, 39px);
+        line-height: 1.02;
+      }
+
+      .ads-subtitle {
+        display: none;
+      }
+
+      .ads-points {
+        width: 100%;
+        max-width: 390px;
+        grid-template-columns: 1fr 1fr 1fr;
+        gap: 7px;
+        margin: 16px auto 0;
+      }
+
+      .ads-point {
+        min-height: 68px;
+        padding: 10px 6px;
+        text-align: center;
+        border-color: rgba(245, 240, 232, .22);
+        background: rgba(245, 240, 232, .1);
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+      }
+
+      .ads-point strong {
+        font-size: 19px;
+        letter-spacing: .4px;
+      }
+
+      .ads-point span {
+        font-size: 9.5px;
+        letter-spacing: .8px;
+        line-height: 1.25;
+      }
+
+      .ads-trust {
+        display: none;
+      }
+
+      .ads-form-panel {
+        width: 100%;
+        margin-top: 2px;
+        padding: 18px 14px 16px;
+        border-color: rgba(255, 255, 255, .45);
+        background: rgba(250, 248, 244, .97);
+        box-shadow: 0 18px 44px rgba(0, 0, 0, .22);
+      }
+
+      .ads-form-head {
+        margin-bottom: 15px;
+      }
+
+      .ads-form-eyebrow {
+        font-size: 11px;
+        letter-spacing: 2.3px;
+        margin-bottom: 6px;
+      }
+
+      .ads-form-title {
+        font-size: 29px;
+        line-height: 1;
+      }
+
+      .ads-form-note {
+        display: none;
+      }
+
+      .ads-form-panel .contact-form,
+      .ads-form-panel .contact-form form {
+        gap: 11px;
+      }
+
+      .ads-form-panel .form-row {
+        gap: 11px;
+      }
+
+      .ads-form-panel .contact-form input,
+      .ads-form-panel .contact-form textarea,
+      .ads-form-panel .contact-form select {
+        min-height: 54px;
+        padding: 24px 14px 8px;
+        border-radius: 8px;
+        font-size: 15px;
+      }
+
+      .ads-form-panel .field-label-animated {
+        top: 16px;
+        left: 14px;
+        max-width: calc(100% - 28px);
+        font-size: 14px;
+      }
+
+      .ads-form-panel .animated-field--textarea .field-label-animated {
+        top: 18px;
+      }
+
+      .ads-form-panel .contact-form textarea {
+        min-height: 96px;
+        padding-top: 30px;
+      }
+
+      .ads-form-panel .btn-submit {
+        min-height: 54px;
+        padding: 16px 18px;
+        border-radius: 8px;
+        font-size: 12px;
+        letter-spacing: 2.2px;
+      }
+
+      .ads-direct {
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+        gap: 4px;
+        margin-top: 12px;
+        padding-top: 12px;
+        font-size: 12px;
+        line-height: 1.4;
+      }
+
+      .ads-bottom-bar {
+        display: none;
+      }
+    }
+
+    @media (max-width: 420px) {
+      .ads-points {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+      }
+
+      .ads-point {
+        min-height: 64px;
+      }
+
+      .ads-point strong {
+        min-width: 0;
+        margin-bottom: 5px;
+        font-size: 18px;
+      }
+    }
+
+    @media (max-width: 360px) {
+      .ads-shell {
+        padding-left: 10px;
+        padding-right: 10px;
+      }
+
+      .ads-title {
+        font-size: clamp(26px, 8vw, 31px);
+      }
+
+      .ads-point span {
+        font-size: 9px;
+      }
+
+      .ads-form-panel {
+        padding-left: 12px;
+        padding-right: 12px;
+      }
+    }
+  </style>
+</head>
+<body class="formulaire-page">
+  <main class="ads-landing">
+    <img class="ads-landing__bg" src="img/hero.webp" alt="Vue de Marrakech et immobilier de prestige par Emara Estates" width="1280" height="855" fetchpriority="high" decoding="async">
+
+    <div class="ads-shell">
+      <section class="ads-copy" aria-labelledby="landing-title">
+        <a class="ads-logo-link" href="/" aria-label="Retour à l'accueil Emara Estates">
+          <img class="ads-logo" src="img/logo.webp" alt="Emara Estates" width="1250" height="625" decoding="async">
+        </a>
+        <div class="ads-kicker">Appartements neufs à Guéliz</div>
+        <h1 class="ads-title" id="landing-title">
+          <span class="ads-title-line">Prix et disponibilités</span>
+          <span class="ads-title-line">en <span class="cta-highlight-word ads-title-highlight">hyper-centre
+            <svg class="cta-highlight-svg" viewBox="0 0 420 120" aria-hidden="true" focusable="false">
+              <ellipse class="cta-highlight-outline" cx="210" cy="62" rx="198" ry="42"></ellipse>
+              <path class="cta-highlight-swipe" d="M84 32 C152 18, 268 18, 336 38"></path>
+            </svg>
+          </span> de Guéliz</span>
+        </h1>
+        <p class="ads-subtitle">Laissez vos coordonnées. Un conseiller Emara vous rappelle avec les plans et les lots disponibles.</p>
+
+        <div class="ads-points" aria-label="Avantages du programme">
+          <div class="ads-point">
+            <strong>1 min</strong>
+            <span>À pied du Plaza</span>
+          </div>
+          <div class="ads-point">
+            <strong>1.05M</strong>
+            <span>MAD à partir de</span>
+          </div>
+          <div class="ads-point">
+            <strong>2028</strong>
+            <span>Première livraison</span>
+          </div>
+        </div>
+
+        <div class="ads-trust" aria-label="Informations clés">
+          <span>Guéliz hyper-centre</span>
+          <span>Rappel rapide</span>
+          <span>Accompagnement Emara</span>
+        </div>
+      </section>
+
+      <section class="ads-form-panel" aria-labelledby="form-title">
+        <div class="ads-form-head">
+          <div class="ads-form-eyebrow">Demande privée</div>
+          <h2 class="ads-form-title" id="form-title">Parlez-nous de votre projet</h2>
+          <p class="ads-form-note">Recevez les plans, prix et disponibilités adaptés à votre budget.</p>
+        </div>
+
+        <div class="contact-form">
+          <form id="contactForm" action="/contact.php" method="post" novalidate data-form-start="" data-turnstile-sitekey="0x4AAAAAAC8jSxwtSDcvCJvV">
+            <div class="form-trap" aria-hidden="true">
+              <label for="company-website">Site web</label>
+              <input id="company-website" type="text" name="company_website" tabindex="-1" autocomplete="off">
+            </div>
+            <input type="hidden" name="form_token" id="contactFormToken" value="">
+            <div class="form-row">
+              <div class="field-wrap animated-field">
+                <label class="field-label-animated" for="contact-name" aria-hidden="true">
+                  <span style="--i:0">N</span><span style="--i:1">o</span><span style="--i:2">m</span><span style="--i:3">&nbsp;</span><span style="--i:4">c</span><span style="--i:5">o</span><span style="--i:6">m</span><span style="--i:7">p</span><span style="--i:8">l</span><span style="--i:9">e</span><span style="--i:10">t</span>
+                </label>
+                <input id="contact-name" type="text" name="nom_complet" placeholder=" " aria-label="Nom complet" autocomplete="name" minlength="3" maxlength="80" required>
+                <span class="field-error" data-error-for="nom_complet"></span>
+              </div>
+            </div>
+            <div class="form-row">
+              <div class="field-wrap animated-field">
+                <label class="field-label-animated" for="contact-email" aria-hidden="true">
+                  <span style="--i:0">E</span><span style="--i:1">m</span><span style="--i:2">a</span><span style="--i:3">i</span><span style="--i:4">l</span>
+                </label>
+                <input id="contact-email" type="email" name="email" placeholder=" " aria-label="Email" autocomplete="email" maxlength="120" required>
+                <span class="field-error" data-error-for="email"></span>
+              </div>
+              <div class="field-wrap animated-field">
+                <label class="field-label-animated" for="contact-phone" aria-hidden="true">
+                  <span style="--i:0">T</span><span style="--i:1">é</span><span style="--i:2">l</span><span style="--i:3">é</span><span style="--i:4">p</span><span style="--i:5">h</span><span style="--i:6">o</span><span style="--i:7">n</span><span style="--i:8">e</span>
+                </label>
+                <input id="contact-phone" type="tel" name="telephone" placeholder=" " aria-label="Téléphone" autocomplete="tel" inputmode="tel" minlength="8" maxlength="30" required>
+                <span class="field-error" data-error-for="telephone"></span>
+              </div>
+            </div>
+            <div class="field-wrap animated-field animated-field--select">
+              <label class="field-label-animated" for="budget-select" aria-hidden="true">
+                <span style="--i:0">B</span><span style="--i:1">u</span><span style="--i:2">d</span><span style="--i:3">g</span><span style="--i:4">e</span><span style="--i:5">t</span>
+              </label>
+              <select id="budget-select" name="budget" aria-label="Budget" autocomplete="off" required>
+                <option value="" selected></option>
+                <option value="1M - 1.5M MAD">1M - 1.5M MAD</option>
+                <option value="2M - 3M MAD">2M - 3M MAD</option>
+                <option value="+3M MAD">+3M MAD</option>
+              </select>
+              <span class="field-error" data-error-for="budget"></span>
+            </div>
+            <div class="field-wrap animated-field animated-field--textarea">
+              <label class="field-label-animated" for="contact-message" aria-hidden="true">
+                <span style="--i:0">D</span><span style="--i:1">é</span><span style="--i:2">c</span><span style="--i:3">r</span><span style="--i:4">i</span><span style="--i:5">v</span><span style="--i:6">e</span><span style="--i:7">z</span><span style="--i:8">&nbsp;</span><span style="--i:9">v</span><span style="--i:10">o</span><span style="--i:11">t</span><span style="--i:12">r</span><span style="--i:13">e</span><span style="--i:14">&nbsp;</span><span style="--i:15">p</span><span style="--i:16">r</span><span style="--i:17">o</span><span style="--i:18">j</span><span style="--i:19">e</span><span style="--i:20">t</span>
+              </label>
+              <textarea id="contact-message" name="message" placeholder=" " aria-label="Décrivez votre projet" minlength="20" maxlength="1200" required></textarea>
+              <span class="field-error" data-error-for="message"></span>
+            </div>
+            <input type="hidden" name="cf-turnstile-response" id="cfTurnstileResponse" value="">
+            <div id="contactTurnstile" class="turnstile-holder"></div>
+            <button type="submit" class="btn-submit">Envoyer la demande</button>
+            <div id="form-feedback" role="status" aria-live="polite"></div>
+          </form>
+        </div>
+
+        <div class="ads-direct">
+          <span>Besoin d'une réponse rapide ?</span>
+          <a href="https://wa.me/212670038899?text=Bonjour%2C%20je%20souhaite%20recevoir%20les%20disponibilit%C3%A9s%20des%20appartements%20%C3%A0%20Gu%C3%A9liz.%20Merci" target="_blank" rel="noopener">WhatsApp direct</a>
+        </div>
+      </section>
+    </div>
+
+    <div class="ads-bottom-bar">Emara Estates, Business center Paul, Guéliz Marrakech</div>
+  </main>
+
+  <script>
+    (function(){
+      var form = document.getElementById('contactForm');
+      if (!form) return;
+      var feedback = document.getElementById('form-feedback');
+      var tokenInput = document.getElementById('contactFormToken');
+      var turnstileInput = document.getElementById('cfTurnstileResponse');
+      var submitButton = form.querySelector('.btn-submit');
+      var turnstileWidgetId = null;
+      var startedAt = Date.now();
+      var validBudgets = ['1M - 1.5M MAD', '2M - 3M MAD', '+3M MAD'];
+      var blockedTerms = [
+        'refonte', 'refondre', 'seo', 'référencement', 'referencement', 'backlink',
+        'agence web', 'création de site', 'creation de site', 'site internet',
+        'marketing digital', 'audit gratuit', 'devis gratuit', 'visibilité',
+        'visibilite', 'ranking', 'google ads', 'wordpress', 'shopify',
+        'web design', 'webdesign', 'traffic', 'trafic', 'lead generation',
+        'guest post', 'link building'
+      ];
+
+      function refreshFormToken() {
+        if (!tokenInput || !window.crypto || !crypto.getRandomValues) return;
+        var tokenBytes = new Uint32Array(4);
+        crypto.getRandomValues(tokenBytes);
+        tokenInput.value = Array.prototype.map.call(tokenBytes, function(part){
+          return part.toString(16);
+        }).join('');
+      }
+
+      function isLocalPreview() {
+        return ['localhost', '127.0.0.1', '::1'].indexOf(window.location.hostname) !== -1;
+      }
+
+      form.setAttribute('data-form-start', String(startedAt));
+      function updateAnimatedFieldState(field) {
+        var wrap = field && field.closest ? field.closest('.animated-field') : null;
+        if (wrap) wrap.classList.toggle('has-value', String(field.value || '').trim().length > 0);
+      }
+      form.querySelectorAll('[name]').forEach(function(field){
+        updateAnimatedFieldState(field);
+        field.addEventListener('input', function(){ updateAnimatedFieldState(field); validateContactForm(false); });
+        field.addEventListener('blur', function(){ updateAnimatedFieldState(field); validateContactForm(true); });
+        field.addEventListener('change', function(){ updateAnimatedFieldState(field); validateContactForm(true); });
+      });
+      refreshFormToken();
+
+      function loadTurnstileScript() {
+        if (window.turnstile || document.querySelector('script[data-turnstile-loader]')) {
+          initTurnstile();
+          return;
+        }
+        var script = document.createElement('script');
+        script.src = 'https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit';
+        script.async = true;
+        script.defer = true;
+        script.dataset.turnstileLoader = 'true';
+        script.onload = initTurnstile;
+        document.head.appendChild(script);
+      }
+
+      function initTurnstile() {
+        var holder = document.getElementById('contactTurnstile');
+        var sitekey = form.getAttribute('data-turnstile-sitekey');
+        if (isLocalPreview() || !holder || !window.turnstile || !sitekey || turnstileWidgetId !== null) return;
+        turnstileWidgetId = turnstile.render(holder, {
+          sitekey: sitekey,
+          callback: function(token) {
+            if (turnstileInput) turnstileInput.value = token;
+            setFormFeedback('', false);
+          },
+          'expired-callback': function() {
+            if (turnstileInput) turnstileInput.value = '';
+            setFormFeedback('La vérification anti-robot a expiré. Cochez-la à nouveau.', true);
+          },
+          'error-callback': function() {
+            if (turnstileInput) turnstileInput.value = '';
+            setFormFeedback('La vérification anti-robot n’a pas abouti. Réessayez, ou contactez-nous directement par WhatsApp.', true);
+          }
+        });
+      }
+
+      form.addEventListener('focusin', loadTurnstileScript, { once: true });
+      form.addEventListener('pointerenter', loadTurnstileScript, { once: true });
+      if ('IntersectionObserver' in window) {
+        var turnstileObs = new IntersectionObserver(function(entries){
+          entries.forEach(function(entry){
+            if (entry.isIntersecting) {
+              loadTurnstileScript();
+              turnstileObs.disconnect();
+            }
+          });
+        }, { rootMargin: '300px 0px' });
+        turnstileObs.observe(form);
+      } else {
+        window.addEventListener('load', loadTurnstileScript);
+      }
+
+      function setFormFeedback(message, isError) {
+        if (!feedback) return;
+        feedback.textContent = message;
+        feedback.style.display = message ? 'block' : 'none';
+        feedback.style.color = isError ? '#8f3f2f' : '#2d3a2d';
+      }
+
+      function setSubmitting(isSubmitting) {
+        if (!submitButton) return;
+        submitButton.disabled = isSubmitting;
+        submitButton.textContent = isSubmitting ? 'Envoi...' : 'Envoyer la demande';
+      }
+
+      function normalizeFormText(value) {
+        return String(value || '')
+          .toLowerCase()
+          .normalize('NFD')
+          .replace(/[\u0300-\u036f]/g, '');
+      }
+
+      function looksLikeEmail(value) {
+        return /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/i.test(String(value || '').trim());
+      }
+
+      function looksLikePhone(value) {
+        var raw = String(value || '').trim();
+        var digits = raw.replace(/\D/g, '');
+        if (digits.length < 8 || digits.length > 15) return false;
+        if (!/^\+?[0-9][0-9\s().-]{6,}[0-9]$/.test(raw)) return false;
+        return !/^(\d)\1+$/.test(digits);
+      }
+
+      function looksLikeName(value) {
+        var raw = String(value || '').trim();
+        var parts = raw.split(/\s+/).filter(Boolean);
+        if (raw.length < 3 || raw.length > 80) return false;
+        if (looksLikeEmail(raw) || looksLikePhone(raw)) return false;
+        if (/\d/.test(raw)) return false;
+        if (!/^[A-Za-zÀ-ÖØ-öø-ÿ' -]{3,}$/.test(raw)) return false;
+        if (parts.length < 2) return false;
+        return parts.every(function(part){ return part.replace(/[-']/g, '').length >= 2; });
+      }
+
+      function isWeakMessage(value) {
+        var text = normalizeFormText(value).replace(/\s+/g, ' ').trim();
+        if (text.length < 20) return true;
+        if (/^(test|hello|bonjour|salut|aaaa+|12345+|ok|merci)$/i.test(text)) return true;
+        if (/^(.)\1{5,}$/.test(text.replace(/\s/g, ''))) return true;
+        return false;
+      }
+
+      function hasSpamContent(formData) {
+        var text = normalizeFormText([
+          formData.get('nom_complet'),
+          formData.get('email'),
+          formData.get('telephone'),
+          formData.get('budget'),
+          formData.get('message')
+        ].join(' '));
+        var hasBlockedTerm = blockedTerms.some(function(term){
+          return text.indexOf(normalizeFormText(term)) !== -1;
+        });
+        var hasLink = /(https?:\/\/|www\.|\.ru\b|\.xyz\b|\.top\b|\.click\b)/i.test(text);
+        return hasBlockedTerm || hasLink;
+      }
+
+      function setFieldError(name, message, showErrors) {
+        var field = form.elements[name];
+        var error = form.querySelector('[data-error-for="' + name + '"]');
+        if (!field || !error) return;
+        field.classList.toggle('is-invalid', Boolean(message && showErrors));
+        field.setAttribute('aria-invalid', message ? 'true' : 'false');
+        error.textContent = showErrors ? message : '';
+        error.classList.toggle('is-visible', Boolean(message && showErrors));
+      }
+
+      function clearFieldErrors() {
+        ['nom_complet', 'email', 'telephone', 'budget', 'message'].forEach(function(name){
+          setFieldError(name, '', true);
+        });
+      }
+
+      function validateContactForm(showErrors) {
+        var formData = new FormData(form);
+        var errors = {};
+        var name = String(formData.get('nom_complet') || '').trim();
+        var email = String(formData.get('email') || '').trim();
+        var phone = String(formData.get('telephone') || '').trim();
+        var budget = String(formData.get('budget') || '').trim();
+        var message = String(formData.get('message') || '').trim();
+
+        if (!looksLikeName(name)) errors.nom_complet = 'Indiquez un vrai nom complet, sans email ni numéro.';
+        if (!looksLikeEmail(email)) errors.email = 'Indiquez une adresse email valide.';
+        if (looksLikePhone(email)) errors.email = 'Le téléphone doit être dans le champ Téléphone.';
+        if (!looksLikePhone(phone)) errors.telephone = 'Indiquez un vrai numéro de téléphone.';
+        if (looksLikeEmail(phone)) errors.telephone = 'L’email doit être dans le champ Email.';
+        if (validBudgets.indexOf(budget) === -1) errors.budget = 'Choisissez un budget dans la liste.';
+        if (isWeakMessage(message)) errors.message = 'Décrivez votre projet en au moins 20 caractères.';
+        if (looksLikeEmail(name) || looksLikePhone(name)) errors.nom_complet = 'Le nom ne doit pas contenir d’email ni de téléphone.';
+        if (hasSpamContent(formData)) errors.message = 'Ce message ressemble à une prospection ou contient un lien non autorisé.';
+
+        ['nom_complet', 'email', 'telephone', 'budget', 'message'].forEach(function(name){
+          setFieldError(name, errors[name], showErrors);
+        });
+        return errors;
+      }
+
+      function wasSubmittedRecently() {
+        var lastSubmit = Number(sessionStorage.getItem('emara_contact_last_submit') || 0);
+        return lastSubmit && Date.now() - lastSubmit < 60000;
+      }
+
+      function submitContactForm() {
+        var formData = new FormData(form);
+        var turnstileResponse = isLocalPreview()
+          ? '__local_turnstile_bypass__'
+          : String(formData.get('cf-turnstile-response') || formData.get('cf_turnstile_response') || '').trim();
+        if (!turnstileResponse) {
+          loadTurnstileScript();
+          setFormFeedback('Cochez la vérification anti-robot avant d’envoyer.', true);
+          setSubmitting(false);
+          return;
+        }
+
+        fetch(form.action, {
+          method: 'POST',
+          headers: {
+            'Accept': 'application/json',
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            nom_complet: formData.get('nom_complet'),
+            email: formData.get('email'),
+            telephone: formData.get('telephone'),
+            budget: formData.get('budget'),
+            message: formData.get('message'),
+            company_website: formData.get('company_website'),
+            form_token: formData.get('form_token'),
+            'cf-turnstile-response': turnstileResponse,
+            cf_turnstile_response: turnstileResponse,
+            elapsed_ms: Date.now() - startedAt
+          }),
+          credentials: 'same-origin'
+        })
+        .then(function(response){
+          return response.text().then(function(text){
+            var payload = {};
+            try {
+              payload = text ? JSON.parse(text) : {};
+            } catch (parseError) {
+              payload = {
+                message: response.ok
+                  ? 'Votre demande a bien été envoyée. Merci, notre équipe vous contactera dans les plus brefs délais.'
+                  : 'Le serveur de contact ne répond pas correctement. Contactez-nous directement par WhatsApp.'
+              };
+            }
+            if (!response.ok) throw payload;
+            return payload;
+          });
+        })
+        .then(function(payload){
+          sessionStorage.setItem('emara_contact_last_submit', String(Date.now()));
+          setFormFeedback(payload.message || 'Votre demande a bien été envoyée. Merci, notre équipe vous contactera dans les plus brefs délais.', false);
+          form.reset();
+          form.querySelectorAll('[name]').forEach(updateAnimatedFieldState);
+          startedAt = Date.now();
+          form.setAttribute('data-form-start', String(startedAt));
+          refreshFormToken();
+          clearFieldErrors();
+          if (window.turnstile && turnstileWidgetId !== null) turnstile.reset(turnstileWidgetId);
+          if (turnstileInput) turnstileInput.value = '';
+        })
+        .catch(function(error){
+          if (error && error.errors) {
+            Object.keys(error.errors).forEach(function(name){
+              setFieldError(name, error.errors[name], true);
+            });
+          }
+          if (isLocalPreview() && (!error || !error.errors)) {
+            error = { message: 'Tu es sur Live Server. Lance php -S localhost:5601 dans le terminal, puis ouvre http://localhost:5601 pour tester le formulaire.' };
+          }
+          setFormFeedback((error && error.message) || 'Votre demande n’a pas pu être envoyée. Contactez-nous directement par WhatsApp.', true);
+        })
+        .finally(function(){
+          setSubmitting(false);
+        });
+      }
+
+      form.addEventListener('submit', function(event){
+        event.preventDefault();
+        var formData = new FormData(form);
+        var elapsed = Date.now() - startedAt;
+        var trap = String(formData.get('company_website') || '').trim();
+        var token = String(formData.get('form_token') || '').trim();
+        var errors = validateContactForm(true);
+
+        if (Object.keys(errors).length || trap || !token || elapsed < 4000 || wasSubmittedRecently()) {
+          setFormFeedback('Votre demande n’a pas pu être envoyée. Contactez-nous directement par WhatsApp.', true);
+          return;
+        }
+
+        setSubmitting(true);
+        submitContactForm();
+      });
+    })();
+  </script>
+</body>
+</html>

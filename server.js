@@ -296,6 +296,17 @@ async function handleContact(req, res) {
 
 function serveStatic(req, res) {
   const urlPath = decodeURIComponent(new URL(req.url, 'http://localhost').pathname);
+  if (urlPath !== '/index.html' && urlPath.endsWith('.html')) {
+    const cleanPath = urlPath.slice(0, -5) || '/';
+    res.writeHead(301, { 'Location': cleanPath });
+    res.end();
+    return;
+  }
+  if (urlPath === '/index.html') {
+    res.writeHead(301, { 'Location': '/' });
+    res.end();
+    return;
+  }
   const requestedPath = path.resolve(ROOT, urlPath === '/' ? 'index.html' : urlPath.slice(1));
   const htmlFallbackPath = path.extname(requestedPath) ? requestedPath : `${requestedPath}.html`;
   let filePath = requestedPath;
