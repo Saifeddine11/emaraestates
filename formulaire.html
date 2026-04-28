@@ -29,10 +29,17 @@
   <noscript><link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;500&amp;family=Jost:wght@300;400;500&amp;display=swap" rel="stylesheet"></noscript>
   <link rel="stylesheet" href="css/style.css?v=202604181715">
   <style>
+    html {
+      max-width: 100%;
+      overflow-x: hidden;
+    }
+
     body.formulaire-page {
       min-height: 100vh;
       background: var(--vf);
       color: var(--cr);
+      max-width: 100%;
+      overflow-x: hidden;
     }
 
     .ads-landing {
@@ -343,12 +350,17 @@
     @media (max-width: 640px) {
       body.formulaire-page {
         background: #243024;
+        max-width: 100%;
+        overflow-x: hidden;
       }
 
       .ads-landing {
         display: block;
         min-height: 100svh;
-        overflow: visible;
+        width: 100%;
+        max-width: 100%;
+        overflow-x: hidden;
+        overflow-y: visible;
       }
 
       .ads-landing__bg {
@@ -370,17 +382,22 @@
 
       .ads-shell {
         min-height: 100svh;
+        width: 100%;
+        max-width: 100%;
         padding: max(16px, env(safe-area-inset-top)) 14px max(18px, env(safe-area-inset-bottom));
         gap: 18px;
         display: flex;
         flex-direction: column;
         justify-content: flex-start;
+        overflow-x: hidden;
       }
 
       .ads-copy {
         width: 100%;
+        max-width: 100%;
         text-align: center;
         padding: 0;
+        overflow: hidden;
       }
 
       .ads-logo-link {
@@ -408,8 +425,26 @@
       .ads-title {
         max-width: 100%;
         margin: 0 auto;
-        font-size: clamp(28px, 8.4vw, 39px);
-        line-height: 1.02;
+        font-size: clamp(27px, 8.2vw, 34px);
+        line-height: 1.05;
+        overflow-wrap: normal;
+        overflow: hidden;
+        padding: 0 2px 8px;
+      }
+
+      .ads-title-line {
+        display: inline;
+        max-width: 100%;
+        white-space: normal;
+      }
+
+      .ads-title .cta-highlight-word {
+        max-width: 100%;
+      }
+
+      .ads-title .cta-highlight-svg {
+        width: 100%;
+        height: 1.2em;
       }
 
       .ads-subtitle {
@@ -418,13 +453,14 @@
 
       .ads-points {
         width: 100%;
-        max-width: 390px;
-        grid-template-columns: 1fr 1fr 1fr;
+        max-width: 100%;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
         gap: 7px;
         margin: 16px auto 0;
       }
 
       .ads-point {
+        min-width: 0;
         min-height: 68px;
         padding: 10px 6px;
         text-align: center;
@@ -451,11 +487,14 @@
 
       .ads-form-panel {
         width: 100%;
+        max-width: 100%;
+        min-width: 0;
         margin-top: 2px;
         padding: 18px 14px 16px;
         border-color: rgba(255, 255, 255, .45);
         background: rgba(250, 248, 244, .97);
         box-shadow: 0 18px 44px rgba(0, 0, 0, .22);
+        overflow: hidden;
       }
 
       .ads-form-head {
@@ -469,8 +508,8 @@
       }
 
       .ads-form-title {
-        font-size: 29px;
-        line-height: 1;
+        font-size: 27px;
+        line-height: 1.05;
       }
 
       .ads-form-note {
@@ -483,7 +522,12 @@
       }
 
       .ads-form-panel .form-row {
+        width: 100%;
         gap: 11px;
+      }
+
+      .ads-form-panel .field-wrap {
+        min-width: 0;
       }
 
       .ads-form-panel .contact-form input,
@@ -580,7 +624,7 @@
       }
 
       .ads-title {
-        font-size: clamp(26px, 8vw, 31px);
+        font-size: clamp(23px, 7.2vw, 28px);
       }
 
       .ads-point span {
