@@ -344,7 +344,7 @@ function serveStatic(req, res) {
 }
 
 const server = http.createServer(function(req, res) {
-  if (req.method === 'POST' && req.url === '/api/contact') {
+  if (req.method === 'POST' && (req.url === '/api/contact' || req.url === '/contact.php')) {
     handleContact(req, res);
     return;
   }
