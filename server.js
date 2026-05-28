@@ -113,6 +113,113 @@ function looksLikePhone(value) {
   return !/^(\d)\1+$/.test(digits);
 }
 
+function phoneCountryOptions() {
+  return {
+    MA: { code: '+212', country: 'Morocco' },
+    FR: { code: '+33', country: 'France' },
+    BE: { code: '+32', country: 'Belgium' },
+    CH: { code: '+41', country: 'Switzerland' },
+    ES: { code: '+34', country: 'Spain' },
+    NL: { code: '+31', country: 'Netherlands' },
+    GB: { code: '+44', country: 'United Kingdom' },
+    DE: { code: '+49', country: 'Germany' },
+    IT: { code: '+39', country: 'Italy' },
+    PT: { code: '+351', country: 'Portugal' },
+    AE: { code: '+971', country: 'United Arab Emirates' },
+    SA: { code: '+966', country: 'Saudi Arabia' },
+    QA: { code: '+974', country: 'Qatar' },
+    KW: { code: '+965', country: 'Kuwait' },
+    US: { code: '+1', country: 'United States / Canada' },
+    CA: { code: '+1', country: 'United States / Canada' },
+    DZ: { code: '+213', country: 'Algeria' },
+    TN: { code: '+216', country: 'Tunisia' },
+    SN: { code: '+221', country: 'Senegal' },
+    CI: { code: '+225', country: 'Cote d Ivoire' },
+    EG: { code: '+20', country: 'Egypt' },
+    TR: { code: '+90', country: 'Turkey' },
+    IE: { code: '+353', country: 'Ireland' },
+    LU: { code: '+352', country: 'Luxembourg' },
+    MC: { code: '+377', country: 'Monaco' },
+    AT: { code: '+43', country: 'Austria' },
+    SE: { code: '+46', country: 'Sweden' },
+    NO: { code: '+47', country: 'Norway' },
+    DK: { code: '+45', country: 'Denmark' },
+    FI: { code: '+358', country: 'Finland' },
+    PL: { code: '+48', country: 'Poland' },
+    GR: { code: '+30', country: 'Greece' },
+    BR: { code: '+55', country: 'Brazil' },
+    MX: { code: '+52', country: 'Mexico' },
+    RU: { code: '+7', country: 'Russia' },
+    CN: { code: '+86', country: 'China' },
+    JP: { code: '+81', country: 'Japan' },
+    IN: { code: '+91', country: 'India' },
+    AU: { code: '+61', country: 'Australia' }
+  };
+}
+
+function normalizePhoneNumber(value, code) {
+  let number = String(value || '').replace(/\D/g, '');
+  const codeDigits = String(code || '').replace(/\D/g, '');
+  if (number.startsWith('00')) number = number.slice(2);
+  if (codeDigits && number.startsWith(codeDigits) && number.length > codeDigits.length + 3) {
+    number = number.slice(codeDigits.length);
+  }
+  number = number.replace(/^0+/, '');
+  return number.slice(0, 20);
+}
+
+function findPhoneCountry(countries, phoneCode, countryCode) {
+  const normalizedCountryCode = String(countryCode || '').toUpperCase();
+  if (normalizedCountryCode && countries[normalizedCountryCode]) {
+    return [normalizedCountryCode, countries[normalizedCountryCode]];
+  }
+  const phoneCodeAsIso = String(phoneCode || '').toUpperCase();
+  if (phoneCodeAsIso && countries[phoneCodeAsIso]) {
+    return [phoneCodeAsIso, countries[phoneCodeAsIso]];
+  }
+  const match = Object.keys(countries).find(function(iso) {
+    return phoneCode && countries[iso].code === phoneCode;
+  });
+  return match ? [match, countries[match]] : ['MA', countries.MA];
+}
+
+function normalizePhonePayload(input) {
+  const countries = phoneCountryOptions();
+  const phoneCodeInput = sanitize(input.phoneCode, 8);
+  const countryCodeInput = sanitize(input.phoneCountryCode, 3);
+  const phoneFullInput = sanitize(input.phoneFull, 40);
+  const telephoneInput = sanitize(input.telephone, 40);
+  let [phoneCountryCode, countryMeta] = findPhoneCountry(countries, phoneCodeInput, countryCodeInput);
+  let phoneCode = countryMeta.code;
+  let phoneNumber = normalizePhoneNumber(sanitize(input.phoneNumber, 30), phoneCode);
+
+  if (!phoneNumber) {
+    const candidate = phoneFullInput || telephoneInput;
+    const candidateDigits = candidate.replace(/\D/g, '');
+    Object.keys(countries).some(function(code) {
+      const codeDigits = countries[code].code.replace(/\D/g, '');
+      if (candidate.trim().startsWith(countries[code].code) || (codeDigits && candidateDigits.startsWith(codeDigits))) {
+        phoneCountryCode = code;
+        countryMeta = countries[code];
+        phoneCode = countryMeta.code;
+        phoneNumber = normalizePhoneNumber(candidate, phoneCode);
+        return true;
+      }
+      return false;
+    });
+  }
+
+  const phoneFull = phoneNumber ? `${phoneCode}${phoneNumber}` : '';
+  return {
+    telephone: phoneFull,
+    phoneFull,
+    phoneCode,
+    phoneCountry: countryMeta.country,
+    phoneCountryCode,
+    phoneNumber
+  };
+}
+
 function looksLikeName(value) {
   const raw = String(value || '').trim();
   const parts = raw.split(/\s+/).filter(Boolean);
@@ -147,10 +254,16 @@ function hasSpamContent(payload) {
 }
 
 function validatePayload(input) {
+  const phonePayload = normalizePhonePayload(input);
   const payload = {
     nom_complet: sanitize(input.nom_complet, 80),
     email: sanitize(input.email, 120),
-    telephone: sanitize(input.telephone, 30),
+    telephone: phonePayload.telephone,
+    phoneFull: phonePayload.phoneFull,
+    phoneCode: phonePayload.phoneCode,
+    phoneCountry: phonePayload.phoneCountry,
+    phoneCountryCode: phonePayload.phoneCountryCode,
+    phoneNumber: phonePayload.phoneNumber,
     budget: sanitize(input.budget, 30),
     message: sanitize(input.message, 1200),
     company_website: sanitize(input.company_website, 120),
@@ -245,6 +358,11 @@ async function forwardLead(payload) {
       nom_complet: escapeHtml(payload.nom_complet),
       email: escapeHtml(payload.email),
       telephone: escapeHtml(payload.telephone),
+      phoneFull: escapeHtml(payload.phoneFull),
+      phoneCode: escapeHtml(payload.phoneCode),
+      phoneCountry: escapeHtml(payload.phoneCountry),
+      phoneCountryCode: escapeHtml(payload.phoneCountryCode),
+      phoneNumber: escapeHtml(payload.phoneNumber),
       budget: escapeHtml(payload.budget),
       message: escapeHtml(payload.message),
       company_website: escapeHtml(payload.company_website),

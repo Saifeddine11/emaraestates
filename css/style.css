@@ -760,6 +760,131 @@ section { padding: 130px 60px; }
 .contact-form input,
 .contact-form textarea,
 .contact-form select { font-family: 'Jost', sans-serif; font-weight: 300; font-size: 16px; color: var(--vf); background: var(--white); border: 1px solid rgba(200,187,168,.5); padding: 18px 20px; border-radius: 10px; outline: none; transition: all .3s; width: 100%; line-height: 1.5; }
+.phone-country-control {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(158px, 185px) minmax(0, 1fr);
+  gap: 10px;
+}
+.phone-country-control select:not(.phone-native-select),
+.phone-country-control input {
+  min-width: 0;
+}
+.phone-country-control select:not(.phone-native-select) {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.phone-native-select {
+  position: absolute;
+  width: 1px !important;
+  height: 1px !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  border: 0 !important;
+  opacity: 0;
+  pointer-events: none;
+}
+.phone-country-trigger {
+  display: inline-grid;
+  grid-template-columns: auto minmax(0, 1fr) auto auto;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  min-width: 0;
+  min-height: 64px;
+  padding: 18px 15px;
+  border: 1px solid rgba(200,187,168,.5);
+  border-radius: 10px;
+  background:
+    linear-gradient(180deg, rgba(255,255,255,.98), rgba(250,248,244,.96));
+  color: var(--vf);
+  font-family: 'Jost', sans-serif;
+  font-size: 15px;
+  font-weight: 300;
+  line-height: 1.2;
+  cursor: pointer;
+  transition: border-color .3s, box-shadow .3s, transform .3s;
+}
+.phone-country-trigger:hover,
+.phone-country-trigger[aria-expanded="true"] {
+  border-color: var(--mr);
+  box-shadow: 0 0 0 3px rgba(155,112,64,.08);
+}
+.phone-country-trigger__flag {
+  font-size: 18px;
+  line-height: 1;
+}
+.phone-country-trigger__name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.phone-country-trigger__code {
+  color: var(--mr);
+  white-space: nowrap;
+}
+.phone-country-trigger__chevron {
+  color: var(--vo);
+  font-size: 14px;
+}
+.phone-country-dropdown {
+  position: absolute;
+  z-index: 30;
+  top: calc(100% + 8px);
+  left: 0;
+  width: min(430px, 100%);
+  padding: 10px;
+  border: 1px solid rgba(200,187,168,.55);
+  border-radius: 10px;
+  background: rgba(255,255,255,.98);
+  box-shadow: 0 24px 60px rgba(18,24,18,.18);
+}
+.phone-country-search {
+  min-height: 44px !important;
+  padding: 10px 12px !important;
+  border-radius: 8px !important;
+  font-size: 14px !important;
+}
+.phone-country-options {
+  display: flex;
+  flex-direction: column;
+  max-height: 240px;
+  margin-top: 8px;
+  overflow-y: auto;
+}
+.phone-country-option {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 10px 9px;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--vf);
+  font-family: 'Jost', sans-serif;
+  font-size: 14px;
+  font-weight: 300;
+  text-align: left;
+  cursor: pointer;
+}
+.phone-country-option:hover,
+.phone-country-option[aria-selected="true"] {
+  background: rgba(155,112,64,.1);
+}
+.phone-country-option__name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.phone-country-option__meta {
+  color: var(--vo);
+  font-size: 12px;
+  white-space: nowrap;
+}
 .animated-field input,
 .animated-field textarea,
 .animated-field select {
@@ -821,7 +946,8 @@ section { padding: 130px 60px; }
 .contact-form select:focus { border-color: var(--mr); box-shadow: 0 0 0 3px rgba(155,112,64,.08); }
 .contact-form input.is-invalid,
 .contact-form textarea.is-invalid,
-.contact-form select.is-invalid {
+.contact-form select.is-invalid,
+.phone-country-trigger.is-invalid {
   border-color: #8f3f2f;
   box-shadow: 0 0 0 3px rgba(143,63,47,.08);
 }
@@ -1949,6 +2075,10 @@ footer,
   .contact-form input,
   .contact-form textarea,
   .contact-form select { font-size: 16px; }
+  .phone-country-control { grid-template-columns: minmax(104px, 118px) minmax(0, 1fr); gap: 8px; }
+  .phone-country-trigger { min-height: 58px; padding: 16px 10px; gap: 6px; }
+  .phone-country-trigger__name { display: none; }
+  .phone-country-dropdown { width: 100%; }
   .btn-submit { width: 100%; align-self: stretch; text-align: center; }
   .footer-brand img { height: 50px; }
   .footer-brand p,

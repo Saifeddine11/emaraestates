@@ -137,6 +137,120 @@ function looksLikePhone(string $value): bool
     return !preg_match('/^(\d)\1+$/', $digits);
 }
 
+function phoneCountryOptions(): array
+{
+    return [
+        'MA' => ['code' => '+212', 'country' => 'Morocco'],
+        'FR' => ['code' => '+33', 'country' => 'France'],
+        'BE' => ['code' => '+32', 'country' => 'Belgium'],
+        'CH' => ['code' => '+41', 'country' => 'Switzerland'],
+        'ES' => ['code' => '+34', 'country' => 'Spain'],
+        'NL' => ['code' => '+31', 'country' => 'Netherlands'],
+        'GB' => ['code' => '+44', 'country' => 'United Kingdom'],
+        'DE' => ['code' => '+49', 'country' => 'Germany'],
+        'IT' => ['code' => '+39', 'country' => 'Italy'],
+        'PT' => ['code' => '+351', 'country' => 'Portugal'],
+        'AE' => ['code' => '+971', 'country' => 'United Arab Emirates'],
+        'SA' => ['code' => '+966', 'country' => 'Saudi Arabia'],
+        'QA' => ['code' => '+974', 'country' => 'Qatar'],
+        'KW' => ['code' => '+965', 'country' => 'Kuwait'],
+        'US' => ['code' => '+1', 'country' => 'United States / Canada'],
+        'CA' => ['code' => '+1', 'country' => 'United States / Canada'],
+        'DZ' => ['code' => '+213', 'country' => 'Algeria'],
+        'TN' => ['code' => '+216', 'country' => 'Tunisia'],
+        'SN' => ['code' => '+221', 'country' => 'Senegal'],
+        'CI' => ['code' => '+225', 'country' => 'Cote d Ivoire'],
+        'EG' => ['code' => '+20', 'country' => 'Egypt'],
+        'TR' => ['code' => '+90', 'country' => 'Turkey'],
+        'IE' => ['code' => '+353', 'country' => 'Ireland'],
+        'LU' => ['code' => '+352', 'country' => 'Luxembourg'],
+        'MC' => ['code' => '+377', 'country' => 'Monaco'],
+        'AT' => ['code' => '+43', 'country' => 'Austria'],
+        'SE' => ['code' => '+46', 'country' => 'Sweden'],
+        'NO' => ['code' => '+47', 'country' => 'Norway'],
+        'DK' => ['code' => '+45', 'country' => 'Denmark'],
+        'FI' => ['code' => '+358', 'country' => 'Finland'],
+        'PL' => ['code' => '+48', 'country' => 'Poland'],
+        'GR' => ['code' => '+30', 'country' => 'Greece'],
+        'BR' => ['code' => '+55', 'country' => 'Brazil'],
+        'MX' => ['code' => '+52', 'country' => 'Mexico'],
+        'RU' => ['code' => '+7', 'country' => 'Russia'],
+        'CN' => ['code' => '+86', 'country' => 'China'],
+        'JP' => ['code' => '+81', 'country' => 'Japan'],
+        'IN' => ['code' => '+91', 'country' => 'India'],
+        'AU' => ['code' => '+61', 'country' => 'Australia'],
+    ];
+}
+
+function normalizePhoneNumber(string $value, string $code): string
+{
+    $number = preg_replace('/\D+/', '', $value) ?? '';
+    $codeDigits = preg_replace('/\D+/', '', $code) ?? '';
+    if (str_starts_with($number, '00')) $number = substr($number, 2);
+    if ($codeDigits !== '' && str_starts_with($number, $codeDigits) && strlen($number) > strlen($codeDigits) + 3) {
+        $number = substr($number, strlen($codeDigits));
+    }
+    $number = preg_replace('/^0+/', '', $number) ?? '';
+    return substr($number, 0, 20);
+}
+
+function findPhoneCountry(array $countries, string $phoneCode, string $countryCode): array
+{
+    $countryCode = strtoupper($countryCode);
+    if ($countryCode !== '' && isset($countries[$countryCode])) {
+        return [$countryCode, $countries[$countryCode]];
+    }
+    $phoneCodeAsIso = strtoupper($phoneCode);
+    if ($phoneCodeAsIso !== '' && isset($countries[$phoneCodeAsIso])) {
+        return [$phoneCodeAsIso, $countries[$phoneCodeAsIso]];
+    }
+    foreach ($countries as $iso => $country) {
+        if ($phoneCode !== '' && $country['code'] === $phoneCode) {
+            return [$iso, $country];
+        }
+    }
+    return ['MA', $countries['MA']];
+}
+
+function normalizePhonePayload(array $input): array
+{
+    $countries = phoneCountryOptions();
+    $phoneCodeInput = sanitizeValue($input['phoneCode'] ?? '', 8);
+    $countryCodeInput = sanitizeValue($input['phoneCountryCode'] ?? '', 3);
+    $phoneFullInput = sanitizeValue($input['phoneFull'] ?? '', 40);
+    $telephoneInput = sanitizeValue($input['telephone'] ?? '', 40);
+    [$phoneCountryCode, $countryMeta] = findPhoneCountry($countries, $phoneCodeInput, $countryCodeInput);
+    $phoneCode = $countryMeta['code'];
+    $phoneNumber = normalizePhoneNumber(sanitizeValue($input['phoneNumber'] ?? '', 30), $phoneCode);
+
+    if ($phoneNumber === '') {
+        $candidate = $phoneFullInput !== '' ? $phoneFullInput : $telephoneInput;
+        foreach ($countries as $iso => $country) {
+            $candidateDigits = preg_replace('/\D+/', '', $candidate) ?? '';
+            $codeDigits = preg_replace('/\D+/', '', $country['code']) ?? '';
+            if (str_starts_with(trim($candidate), $country['code']) || ($codeDigits !== '' && str_starts_with($candidateDigits, $codeDigits))) {
+                $phoneCountryCode = $iso;
+                $countryMeta = $country;
+                $phoneCode = $country['code'];
+                $phoneNumber = normalizePhoneNumber($candidate, $phoneCode);
+                break;
+            }
+        }
+    }
+
+    $phoneCountry = $countryMeta['country'];
+    $phoneFull = $phoneNumber !== '' ? $phoneCode . $phoneNumber : '';
+
+    return [
+        'telephone' => $phoneFull,
+        'phoneFull' => $phoneFull,
+        'phoneCode' => $phoneCode,
+        'phoneCountry' => $phoneCountry,
+        'phoneCountryCode' => $phoneCountryCode,
+        'phoneNumber' => $phoneNumber,
+    ];
+}
+
 function looksLikeName(string $value): bool
 {
     $raw = trim($value);
@@ -177,10 +291,16 @@ function hasSpamContent(array $payload, array $blockedTerms): bool
 
 function validatePayload(array $input, array $validBudgets, array $blockedTerms): array
 {
+    $phonePayload = normalizePhonePayload($input);
     $payload = [
         'nom_complet' => sanitizeValue($input['nom_complet'] ?? '', 80),
         'email' => sanitizeValue($input['email'] ?? '', 120),
-        'telephone' => sanitizeValue($input['telephone'] ?? '', 30),
+        'telephone' => $phonePayload['telephone'],
+        'phoneFull' => $phonePayload['phoneFull'],
+        'phoneCode' => $phonePayload['phoneCode'],
+        'phoneCountry' => $phonePayload['phoneCountry'],
+        'phoneCountryCode' => $phonePayload['phoneCountryCode'],
+        'phoneNumber' => $phonePayload['phoneNumber'],
         'budget' => sanitizeValue($input['budget'] ?? '', 30),
         'message' => sanitizeValue($input['message'] ?? '', 1200),
         'company_website' => sanitizeValue($input['company_website'] ?? '', 120),
@@ -198,6 +318,7 @@ function validatePayload(array $input, array $validBudgets, array $blockedTerms)
     if (looksLikePhone($payload['email'])) $errors['email'] = 'Le téléphone doit être dans le champ Téléphone.';
     if (!looksLikePhone($payload['telephone'])) $errors['telephone'] = 'Indiquez un vrai numéro de téléphone.';
     if (looksLikeEmail($payload['telephone'])) $errors['telephone'] = 'L’email doit être dans le champ Email.';
+    if (!isset(phoneCountryOptions()[$payload['phoneCountryCode']])) $errors['telephone'] = 'Choisissez un indicatif pays valide.';
     if (!in_array($payload['budget'], $validBudgets, true)) $errors['budget'] = 'Choisissez un budget dans la liste.';
     if (isWeakMessage($payload['message'])) $errors['message'] = 'Décrivez votre projet en au moins 20 caractères.';
     if (hasSpamContent($payload, $blockedTerms)) $errors['message'] = 'Ce message ressemble à une prospection ou contient un lien non autorisé.';
@@ -293,6 +414,11 @@ function sendLeadToZapier(array $payload, array $env, string $ip): void
         'nom_complet' => $payload['nom_complet'],
         'email' => $payload['email'],
         'telephone' => $payload['telephone'],
+        'phoneFull' => $payload['phoneFull'],
+        'phoneCode' => $payload['phoneCode'],
+        'phoneCountry' => $payload['phoneCountry'],
+        'phoneCountryCode' => $payload['phoneCountryCode'],
+        'phoneNumber' => $payload['phoneNumber'],
         'budget' => $payload['budget'],
         'message' => $payload['message'],
         'company_website' => $payload['company_website'],
@@ -369,6 +495,11 @@ function leadEmailBody(array $payload): string
         'Nom complet: ' . $payload['nom_complet'],
         'Email: ' . $payload['email'],
         'Téléphone: ' . $payload['telephone'],
+        'phoneFull: ' . $payload['phoneFull'],
+        'phoneCode: ' . $payload['phoneCode'],
+        'phoneCountry: ' . $payload['phoneCountry'],
+        'phoneCountryCode: ' . $payload['phoneCountryCode'],
+        'phoneNumber: ' . $payload['phoneNumber'],
         'Budget: ' . $payload['budget'],
         '',
         'Message:',
