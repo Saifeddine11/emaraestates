@@ -748,7 +748,13 @@ section { padding: 130px 60px; }
 .contact-detail .item { font-weight: 300; font-size: 17px; color: var(--vo); padding-left: 20px; border-left: 2px solid var(--mr); line-height: 1.85; }
 .contact-detail .item strong { display: block; font-weight: 400; font-size: 11px; letter-spacing: 3px; text-transform: uppercase; color: var(--mr); margin-bottom: 6px; }
 .contact-form,
-.contact-form form { display: flex; flex-direction: column; gap: 18px; }
+.contact-form form {
+  --form-field-height: 64px;
+  --form-field-radius: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
 .form-row { display: flex; gap: 18px; }
 .form-row > * { flex: 1; }
 .field-wrap {
@@ -759,16 +765,22 @@ section { padding: 130px 60px; }
 }
 .contact-form input,
 .contact-form textarea,
-.contact-form select { font-family: 'Jost', sans-serif; font-weight: 300; font-size: 16px; color: var(--vf); background: var(--white); border: 1px solid rgba(200,187,168,.5); padding: 18px 20px; border-radius: 10px; outline: none; transition: all .3s; width: 100%; line-height: 1.5; }
+.contact-form select { font-family: 'Jost', sans-serif; font-weight: 300; font-size: 16px; color: var(--vf); background: var(--white); border: 1px solid rgba(200,187,168,.5); padding: 18px 20px; border-radius: var(--form-field-radius); outline: none; transition: all .3s; width: 100%; line-height: 1.5; }
+.contact-form input,
+.contact-form select {
+  min-height: var(--form-field-height);
+}
 .phone-country-control {
   position: relative;
   display: grid;
-  grid-template-columns: minmax(158px, 185px) minmax(0, 1fr);
+  grid-template-columns: minmax(142px, 164px) minmax(0, 1fr);
   gap: 10px;
+  align-items: stretch;
 }
 .phone-country-control select:not(.phone-native-select),
 .phone-country-control input {
   min-width: 0;
+  height: var(--form-field-height);
 }
 .phone-country-control select:not(.phone-native-select) {
   overflow: hidden;
@@ -793,10 +805,11 @@ section { padding: 130px 60px; }
   gap: 8px;
   width: 100%;
   min-width: 0;
-  min-height: 64px;
+  height: var(--form-field-height);
+  min-height: var(--form-field-height);
   padding: 18px 15px;
   border: 1px solid rgba(200,187,168,.5);
-  border-radius: 10px;
+  border-radius: var(--form-field-radius);
   background:
     linear-gradient(180deg, rgba(255,255,255,.98), rgba(250,248,244,.96));
   color: var(--vf);
@@ -828,6 +841,10 @@ section { padding: 130px 60px; }
 .phone-country-trigger__chevron {
   color: var(--vo);
   font-size: 14px;
+}
+.phone-country-field .field-label-animated {
+  left: calc(164px + 10px + 20px);
+  max-width: calc(100% - 164px - 10px - 40px);
 }
 .phone-country-dropdown {
   position: absolute;
@@ -891,6 +908,20 @@ section { padding: 130px 60px; }
   padding-top: 28px;
   padding-bottom: 10px;
 }
+.animated-field--select select {
+  height: var(--form-field-height);
+  padding-right: 48px;
+  -webkit-appearance: none;
+  appearance: none;
+  background-image:
+    linear-gradient(45deg, transparent 50%, rgba(45,58,45,.62) 50%),
+    linear-gradient(135deg, rgba(45,58,45,.62) 50%, transparent 50%);
+  background-position:
+    calc(100% - 24px) 50%,
+    calc(100% - 18px) 50%;
+  background-size: 6px 6px, 6px 6px;
+  background-repeat: no-repeat;
+}
 .animated-field--textarea textarea {
   padding-top: 34px;
 }
@@ -936,10 +967,19 @@ section { padding: 130px 60px; }
   color: var(--vo);
   opacity: .92;
 }
+.phone-country-field:not(:focus-within):has([data-phone-number]:placeholder-shown) .field-label-animated span {
+  transform: translateY(0);
+  color: inherit;
+  opacity: 1;
+}
 .animated-field:focus-within input,
 .animated-field:focus-within textarea,
 .animated-field:focus-within select {
   transform: translateY(-1px);
+}
+.phone-country-field:focus-within input,
+.phone-country-field:focus-within select {
+  transform: none;
 }
 .contact-form input:focus,
 .contact-form textarea:focus,
@@ -976,7 +1016,14 @@ section { padding: 130px 60px; }
 .turnstile-holder {
   min-height: 65px;
   line-height: 1;
-  margin: 6px 0 18px;
+  width: 100%;
+  max-width: 100%;
+  margin: 8px 0 18px;
+  overflow: hidden;
+}
+.turnstile-holder > div,
+.turnstile-holder iframe {
+  max-width: 100% !important;
 }
 .contact .reveal-left,
 .contact .reveal-right {
@@ -2011,7 +2058,7 @@ footer,
   .contact { grid-template-columns: 1fr; gap: 50px; }
   .contact-hero {
     min-height: auto;
-    padding: 104px 0 40px;
+    padding: 104px 0 calc(92px + env(safe-area-inset-bottom, 0px));
   }
   .contact-page-shell {
     padding: 0 18px;
@@ -2027,12 +2074,19 @@ footer,
     display: none;
   }
   .contact-page-copy h1 {
-    font-size: clamp(38px, 10vw, 54px);
+    max-width: 100%;
+    font-size: clamp(30px, 8vw, 36px);
+    line-height: 1.08;
+    overflow-wrap: anywhere;
   }
   .contact-page-copy p {
+    max-width: 330px;
+    margin-left: auto;
+    margin-right: auto;
     margin-top: 18px;
-    font-size: 16px;
-    line-height: 1.75;
+    font-size: 14px;
+    line-height: 1.8;
+    overflow-wrap: anywhere;
   }
   .contact-quick {
     grid-template-columns: 1fr;
@@ -2041,6 +2095,7 @@ footer,
     text-align: left;
   }
   .contact-panel {
+    margin-bottom: 12px;
     padding: 22px 16px 18px;
   }
   .contact-panel .contact-form,
@@ -2075,10 +2130,60 @@ footer,
   .contact-form input,
   .contact-form textarea,
   .contact-form select { font-size: 16px; }
-  .phone-country-control { grid-template-columns: minmax(104px, 118px) minmax(0, 1fr); gap: 8px; }
-  .phone-country-trigger { min-height: 58px; padding: 16px 10px; gap: 6px; }
+  .contact-form,
+  .contact-form form {
+    --form-field-height: 56px;
+    --form-field-radius: 8px;
+  }
+  .animated-field input,
+  .animated-field select {
+    height: var(--form-field-height);
+    padding: 23px 14px 8px;
+    line-height: 1.25;
+  }
+  .animated-field--select select {
+    padding-right: 42px;
+    background-position:
+      calc(100% - 22px) 50%,
+      calc(100% - 16px) 50%;
+    background-size: 6px 6px, 6px 6px;
+  }
+  .field-label-animated {
+    top: 17px;
+    left: 14px;
+    max-width: calc(100% - 28px);
+    font-size: 14px;
+  }
+  .phone-country-control { grid-template-columns: 104px minmax(0, 1fr); gap: 8px; }
+  .phone-country-control input {
+    height: var(--form-field-height);
+    min-height: var(--form-field-height);
+    padding: 23px 14px 8px;
+  }
+  .phone-country-trigger {
+    grid-template-columns: auto auto auto;
+    justify-content: center;
+    height: var(--form-field-height);
+    min-height: var(--form-field-height);
+    padding: 0 9px;
+    gap: 5px;
+    border-radius: var(--form-field-radius);
+    font-size: 14px;
+  }
   .phone-country-trigger__name { display: none; }
+  .phone-country-trigger__flag { font-size: 17px; }
+  .phone-country-trigger__chevron { font-size: 12px; }
+  .phone-country-field .field-label-animated {
+    left: calc(104px + 8px + 14px);
+    max-width: calc(100% - 104px - 8px - 28px);
+  }
   .phone-country-dropdown { width: 100%; }
+  .turnstile-holder {
+    margin: 10px 0 16px;
+  }
+  .turnstile-holder > div {
+    max-width: 100% !important;
+  }
   .btn-submit { width: 100%; align-self: stretch; text-align: center; }
   .footer-brand img { height: 50px; }
   .footer-brand p,
@@ -2194,6 +2299,16 @@ footer,
   .lightbox__caption { flex-direction: column; align-items: flex-start; }
   .property-title { font-size: 26px; }
   .card-sold .badge-vendu { left: 14px; right: 14px; padding: 11px 18px; font-size: 14px; letter-spacing: 3px; }
+  .phone-country-control {
+    grid-template-columns: 98px minmax(0, 1fr);
+  }
+  .phone-country-trigger {
+    padding-inline: 8px;
+  }
+  .phone-country-field .field-label-animated {
+    left: calc(98px + 8px + 14px);
+    max-width: calc(100% - 98px - 8px - 28px);
+  }
   .property-card .info .details { grid-template-columns: 1fr; gap: 0; }
   .property-card .info .detail,
   .property-card .info .detail:first-child,
@@ -2232,13 +2347,20 @@ footer,
   .contact-form textarea { min-height: 120px; }
   .mobile-menu a { font-size: 30px; }
   .wa-float {
-    width: 56px;
-    height: 56px;
+    width: 52px;
+    height: 52px;
     right: 18px;
     bottom: calc(18px + env(safe-area-inset-bottom, 0px));
     touch-action: manipulation;
   }
-  .wa-float svg { width: 28px; height: 28px; }
+  .wa-float svg { width: 26px; height: 26px; }
+  .contact-page .contact-hero {
+    padding-bottom: calc(104px + env(safe-area-inset-bottom, 0px));
+  }
+  .contact-page .wa-float {
+    right: 14px;
+    bottom: calc(14px + env(safe-area-inset-bottom, 0px));
+  }
 }
 
 /* ═══ ANIMATIONS ═══ */
