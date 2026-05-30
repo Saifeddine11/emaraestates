@@ -412,28 +412,54 @@ async function handleContact(req, res) {
   }
 }
 
+const CANONICAL_REDIRECTS = {
+  '/residences-honest-678': '/residences-honest-678/',
+  '/residences-honest-678.html': '/residences-honest-678/',
+  '/contact/': '/contact',
+  '/contact.html': '/contact',
+  '/formulaire.html': '/formulaire',
+  '/index.html': '/'
+};
+
+const CANONICAL_PAGES = {
+  '/contact': 'contact.html',
+  '/formulaire': 'formulaire.html',
+  '/residences-honest-678/': path.join('residences-honest-678', 'index.html')
+};
+
+function redirectTo(res, location) {
+  res.writeHead(301, { Location: location });
+  res.end();
+}
+
 function serveStatic(req, res) {
   const urlPath = decodeURIComponent(new URL(req.url, 'http://localhost').pathname);
-  if (urlPath !== '/index.html' && urlPath.endsWith('.html')) {
-    const cleanPath = urlPath.slice(0, -5) || '/';
-    res.writeHead(301, { 'Location': cleanPath });
-    res.end();
+  if (CANONICAL_REDIRECTS[urlPath]) {
+    redirectTo(res, CANONICAL_REDIRECTS[urlPath]);
     return;
   }
-  if (urlPath === '/index.html') {
-    res.writeHead(301, { 'Location': '/' });
-    res.end();
+  if (urlPath.endsWith('.html') && urlPath !== '/404.html') {
+    const basePath = urlPath.slice(0, -5) || '/';
+    const target = basePath === '/residences-honest-678' ? '/residences-honest-678/' : basePath;
+    redirectTo(res, target);
     return;
   }
-  const requestedPath = path.resolve(ROOT, urlPath === '/' ? 'index.html' : urlPath.slice(1));
-  const htmlFallbackPath = path.extname(requestedPath) ? requestedPath : `${requestedPath}.html`;
-  let filePath = requestedPath;
-  if (!path.extname(requestedPath) && fs.existsSync(htmlFallbackPath)) {
-    filePath = htmlFallbackPath;
-  } else if (fs.existsSync(requestedPath) && fs.statSync(requestedPath).isDirectory()) {
-    filePath = path.join(requestedPath, 'index.html');
-  } else if (!fs.existsSync(requestedPath)) {
-    filePath = htmlFallbackPath;
+  let filePath;
+  if (urlPath === '/') {
+    filePath = path.join(ROOT, 'index.html');
+  } else if (CANONICAL_PAGES[urlPath]) {
+    filePath = path.join(ROOT, CANONICAL_PAGES[urlPath]);
+  } else {
+    const requestedPath = path.resolve(ROOT, urlPath.slice(1));
+    const htmlFallbackPath = path.extname(requestedPath) ? requestedPath : `${requestedPath}.html`;
+    filePath = requestedPath;
+    if (!path.extname(requestedPath) && fs.existsSync(htmlFallbackPath)) {
+      filePath = htmlFallbackPath;
+    } else if (fs.existsSync(requestedPath) && fs.statSync(requestedPath).isDirectory()) {
+      filePath = path.join(requestedPath, 'index.html');
+    } else if (!fs.existsSync(requestedPath)) {
+      filePath = htmlFallbackPath;
+    }
   }
   if (!filePath.startsWith(ROOT) || filePath.includes(`${path.sep}node_modules${path.sep}`)) {
     res.writeHead(403);

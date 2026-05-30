@@ -4,23 +4,23 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Contact Emara Estates | Immobilier de prestige à Marrakech</title>
-  <meta name="description" content="Contactez Emara Estates à Marrakech pour recevoir les prix, plans et disponibilités des appartements neufs à Guéliz. Réponse rapide par téléphone, WhatsApp ou email.">
-  <meta name="robots" content="index, follow">
+  <meta name="description" content="Contactez Emara Estates à Marrakech pour recevoir les plans, prix et disponibilités des appartements neufs haut standing, ou organiser une visite avec un conseiller.">
   <link rel="canonical" href="https://emaraestates.com/contact">
-  <meta property="og:title" content="Contact Emara Estates | Marrakech">
-  <meta property="og:description" content="Parlez à l'équipe Emara Estates pour votre projet immobilier à Marrakech : rendez-vous, visite, prix et disponibilités à Guéliz.">
+  <meta name="robots" content="index, follow">
   <meta property="og:type" content="website">
-  <meta property="og:url" content="https://emaraestates.com/contact">
-  <meta property="og:site_name" content="Emara Estates">
   <meta property="og:locale" content="fr_MA">
+  <meta property="og:site_name" content="Emara Estates">
+  <meta property="og:url" content="https://emaraestates.com/contact">
+  <meta property="og:title" content="Contact Emara Estates | Immobilier de prestige à Marrakech">
+  <meta property="og:description" content="Échangez avec Emara Estates pour votre projet immobilier à Marrakech : appartements neufs, programmes haut standing, plans, prix, disponibilités et visite.">
   <meta property="og:image" content="https://emaraestates.com/img/og-honest-signature-7.jpg">
   <meta property="og:image:secure_url" content="https://emaraestates.com/img/og-honest-signature-7.jpg">
   <meta property="og:image:type" content="image/jpeg">
   <meta property="og:image:width" content="1200">
   <meta property="og:image:height" content="630">
   <meta name="twitter:card" content="summary_large_image">
-  <meta name="twitter:title" content="Contact Emara Estates | Marrakech">
-  <meta name="twitter:description" content="Recevez les informations sur les appartements neufs à Guéliz Marrakech.">
+  <meta name="twitter:title" content="Contact Emara Estates | Immobilier de prestige à Marrakech">
+  <meta name="twitter:description" content="Recevez les informations, plans, prix et disponibilités des programmes immobiliers sélectionnés par Emara Estates à Marrakech.">
   <meta name="twitter:image" content="https://emaraestates.com/img/og-honest-signature-7.jpg">
   <link rel="icon" type="image/png" sizes="48x48" href="/favicon-48x48.png">
   <link rel="icon" type="image/png" sizes="32x32" href="/favicon.png">
@@ -36,25 +36,67 @@
   <script type="application/ld+json">
     {
       "@context": "https://schema.org",
-      "@type": ["Organization", "RealEstateAgent", "LocalBusiness"],
-      "@id": "https://emaraestates.com/#organization",
-      "name": "Emara Estates",
-      "url": "https://emaraestates.com/",
-      "logo": "https://emaraestates.com/img/logo.webp",
-      "image": "https://emaraestates.com/img/hero.webp",
-      "telephone": "+212670038899",
-      "email": "contact@emaraestates.com",
-      "address": {
-        "@type": "PostalAddress",
-        "streetAddress": "2ème etage, Business center Paul, Rue Mouatamid Ibn Abaad",
-        "addressLocality": "Marrakech",
-        "postalCode": "40000",
-        "addressCountry": "MA"
-      },
-      "areaServed": {
-        "@type": "City",
-        "name": "Marrakech"
-      }
+      "@graph": [
+        {
+          "@type": "WebSite",
+          "@id": "https://emaraestates.com/#website",
+          "url": "https://emaraestates.com/",
+          "name": "Emara Estates",
+          "inLanguage": "fr-MA",
+          "publisher": {
+            "@id": "https://emaraestates.com/#organization"
+          }
+        },
+        {
+          "@type": ["Organization", "LocalBusiness", "RealEstateAgent"],
+          "@id": "https://emaraestates.com/#organization",
+          "name": "Emara Estates",
+          "url": "https://emaraestates.com/",
+          "telephone": "+212670038899",
+          "address": {
+            "@type": "PostalAddress",
+            "streetAddress": "2e étage, Business Center Paul, Rue Mouatamid Ibn Abaad",
+            "addressLocality": "Marrakech",
+            "postalCode": "40000",
+            "addressCountry": "MA"
+          }
+        },
+        {
+          "@type": "ContactPage",
+          "@id": "https://emaraestates.com/contact#webpage",
+          "url": "https://emaraestates.com/contact",
+          "name": "Contact Emara Estates | Immobilier de prestige à Marrakech",
+          "description": "Contactez Emara Estates à Marrakech pour recevoir les plans, prix et disponibilités des appartements neufs haut standing, ou organiser une visite avec un conseiller.",
+          "isPartOf": {
+            "@id": "https://emaraestates.com/#website"
+          },
+          "about": {
+            "@id": "https://emaraestates.com/#organization"
+          },
+          "inLanguage": "fr-MA",
+          "breadcrumb": {
+            "@id": "https://emaraestates.com/contact#breadcrumb"
+          }
+        },
+        {
+          "@type": "BreadcrumbList",
+          "@id": "https://emaraestates.com/contact#breadcrumb",
+          "itemListElement": [
+            {
+              "@type": "ListItem",
+              "position": 1,
+              "name": "Accueil",
+              "item": "https://emaraestates.com/"
+            },
+            {
+              "@type": "ListItem",
+              "position": 2,
+              "name": "Contact",
+              "item": "https://emaraestates.com/contact"
+            }
+          ]
+        }
+      ]
     }
   </script>
 </head>
@@ -241,10 +283,11 @@
       <a href="/#services">Notre accompagnement</a>
       <a href="/#nos-réalisations">Résidences livrées</a>
       <a href="/contact">Prendre contact</a>
+      <div class="footer-title">Immobilier à Marrakech</div>
+      <a href="/immobilier-luxe-marrakech">Immobilier luxe Marrakech</a>
+      <a href="/appartement-neuf-gueliz-marrakech">Appartement neuf Guéliz</a>
+      <a href="/investissement-immobilier-marrakech">Investissement immobilier Marrakech</a>
     </div>
-    <div class="footer-col">
-      <div class="footer-title">Programmes</div>
-      <a href="/residences-honest-678/">Honest Signature 7</a>
       <a href="/#nos-réalisations">Résidence Honest 5</a>
       <a href="/#nos-réalisations">Résidences livrées</a>
       <a href="https://www.honestsignature.com" target="_blank" rel="noopener">Honest Signature</a>

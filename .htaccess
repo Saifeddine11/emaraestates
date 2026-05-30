@@ -11,16 +11,46 @@ AddDefaultCharset UTF-8
 RewriteEngine On
 RewriteBase /
 
-# Force a single canonical host: redirect www to non-www
+# Backend/API: no SEO redirects
+RewriteRule ^(?:api/contact|contact\.php)$ - [L]
+
+# --- Canonical host: non-www + HTTPS (proxy-safe) ---
 RewriteCond %{HTTP_HOST} ^www\.emaraestates\.com$ [NC]
 RewriteRule ^ https://emaraestates.com%{REQUEST_URI} [R=301,L,NE]
 
-# Redirect /page.html to /page
-RewriteCond %{THE_REQUEST} \s/+(.+?)\.html(?:[\s?]|$) [NC]
-RewriteCond %{REQUEST_URI} !/$
+RewriteCond %{HTTPS} !=on
+RewriteCond %{HTTP:X-Forwarded-Proto} !https [NC]
+RewriteCond %{HTTP_HOST} ^emaraestates\.com$ [NC]
+RewriteRule ^ https://emaraestates.com%{REQUEST_URI} [R=301,L,NE]
+
+# --- 301 vers les URLs canoniques ---
+RewriteCond %{THE_REQUEST} \s/+residences-honest-678\.html[\s?] [NC]
+RewriteRule ^ /residences-honest-678/ [R=301,L,NE]
+
+RewriteCond %{THE_REQUEST} \s/+residences-honest-678[\s?] [NC]
+RewriteRule ^ /residences-honest-678/ [R=301,L,NE]
+
+RewriteCond %{THE_REQUEST} \s/+contact/[\s?] [NC]
+RewriteRule ^ /contact [R=301,L,NE]
+
+RewriteCond %{THE_REQUEST} \s/+contact\.html[\s?] [NC]
+RewriteRule ^ /contact [R=301,L,NE]
+
+RewriteCond %{THE_REQUEST} \s/+formulaire\.html[\s?] [NC]
+RewriteRule ^ /formulaire [R=301,L,NE]
+
+RewriteCond %{THE_REQUEST} \s/+index\.html[\s?] [NC]
+RewriteRule ^ / [R=301,L,NE]
+
+# Autres .html publics → URL propre (404.html exclu)
+RewriteCond %{THE_REQUEST} \s/+(.+?)\.html[\s?] [NC]
+RewriteCond %{REQUEST_URI} !^/404\.html$ [NC]
 RewriteRule ^(.+)\.html$ /$1 [R=301,L,NE]
 
-# Internally rewrite /page to /page.html
+# --- Réécritures internes vers les fichiers canoniques ---
+RewriteRule ^contact$ contact.html [L]
+RewriteRule ^formulaire$ formulaire.html [L]
+
 RewriteCond %{REQUEST_FILENAME} !-f
 RewriteCond %{REQUEST_FILENAME} !-d
 RewriteCond %{DOCUMENT_ROOT}/$1.html -f
