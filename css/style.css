@@ -909,18 +909,29 @@ section { padding: 130px 60px; }
   padding-bottom: 10px;
 }
 .animated-field--select select {
+  display: block;
   height: var(--form-field-height);
+  min-height: var(--form-field-height);
   padding-right: 48px;
-  -webkit-appearance: none;
-  appearance: none;
-  background-image:
-    linear-gradient(45deg, transparent 50%, rgba(45,58,45,.62) 50%),
-    linear-gradient(135deg, rgba(45,58,45,.62) 50%, transparent 50%);
-  background-position:
-    calc(100% - 24px) 50%,
-    calc(100% - 18px) 50%;
-  background-size: 6px 6px, 6px 6px;
-  background-repeat: no-repeat;
+  -webkit-appearance: none !important;
+  appearance: none !important;
+  background-image: none !important;
+}
+.animated-field--select::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  right: 21px;
+  width: 8px;
+  height: 8px;
+  border-right: 1.5px solid rgba(45,58,45,.58);
+  border-bottom: 1.5px solid rgba(45,58,45,.58);
+  pointer-events: none;
+  transform: translateY(-62%) rotate(45deg);
+}
+.animated-field--select .field-label-animated {
+  top: 50%;
+  transform: translateY(-50%);
 }
 .animated-field--textarea textarea {
   padding-top: 34px;
@@ -2143,10 +2154,15 @@ footer,
   }
   .animated-field--select select {
     padding-right: 42px;
-    background-position:
-      calc(100% - 22px) 50%,
-      calc(100% - 16px) 50%;
-    background-size: 6px 6px, 6px 6px;
+  }
+  .animated-field--select::after {
+    right: 20px;
+    width: 7px;
+    height: 7px;
+  }
+  .animated-field--select .field-label-animated {
+    top: 50%;
+    transform: translateY(-50%);
   }
   .field-label-animated {
     top: 17px;

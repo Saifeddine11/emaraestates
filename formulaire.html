@@ -27,7 +27,7 @@
   <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;500&amp;family=Jost:wght@300;400;500&amp;display=swap">
   <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;500&amp;family=Jost:wght@300;400;500&amp;display=swap" rel="stylesheet" media="print" onload="this.media='all'">
   <noscript><link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;500&amp;family=Jost:wght@300;400;500&amp;display=swap" rel="stylesheet"></noscript>
-  <link rel="stylesheet" href="css/style.css?v=2026052804">
+  <link rel="stylesheet" href="css/style.css?v=2026052901">
   <style>
     html {
       max-width: 100%;
@@ -549,16 +549,20 @@
 
       .ads-form-panel .contact-form select {
         padding-right: 42px;
-        -webkit-appearance: none;
-        appearance: none;
-        background-image:
-          linear-gradient(45deg, transparent 50%, rgba(45, 58, 45, .58) 50%),
-          linear-gradient(135deg, rgba(45, 58, 45, .58) 50%, transparent 50%);
-        background-position:
-          calc(100% - 22px) 50%,
-          calc(100% - 16px) 50%;
-        background-size: 6px 6px, 6px 6px;
-        background-repeat: no-repeat;
+        -webkit-appearance: none !important;
+        appearance: none !important;
+        background-image: none !important;
+      }
+
+      .ads-form-panel .animated-field--select::after {
+        right: 20px;
+        width: 7px;
+        height: 7px;
+      }
+
+      .ads-form-panel .animated-field--select .field-label-animated {
+        top: 50%;
+        transform: translateY(-50%);
       }
 
       .ads-form-panel .phone-country-control {
