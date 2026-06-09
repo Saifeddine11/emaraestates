@@ -371,14 +371,15 @@
       <div class="section-label">Galerie Immersive</div>
       <h2 class="section-title">Un aperçu du style, des ambiances et des détails</h2>
     </div>
-    <div class="photo-ribbon project-gallery-ribbon" aria-label="Galerie du projet Honest Signature 7">
-      <div class="photo-ribbon-track">
-        <figure class="photo-ribbon-card"><img width="1536" height="1024" src="/img/honest006.webp" alt="Façade contemporaine d'Honest Signature 7 à Guéliz Marrakech" loading="lazy" decoding="async"></figure>
-        <figure class="photo-ribbon-card"><img width="1600" height="1067" src="/img/honest002.webp" alt="Sauna et jacuzzi de la résidence Honest Signature 7 à Marrakech" loading="lazy" decoding="async"></figure>
-        <figure class="photo-ribbon-card"><img width="1600" height="1066" src="/img/honest003.webp" alt="Rooftop avec salon cinéma et vue sur Marrakech depuis Honest Signature 7" loading="lazy" decoding="async"></figure>
-        <figure class="photo-ribbon-card"><img width="1600" height="900" src="/img/honest004.webp" alt="Piscine intérieure de la résidence Honest Signature 7 à Guéliz" loading="lazy" decoding="async"></figure>
-        <figure class="photo-ribbon-card"><img width="1280" height="720" src="/img/honest005.webp" alt="Salle de sport équipée dans Honest Signature 7 à Marrakech" loading="lazy" decoding="async"></figure>
-        <figure class="photo-ribbon-card"><img width="1600" height="900" src="/img/honest007.webp" alt="Perspective de façade d'Honest Signature 7 à Guéliz" loading="lazy" decoding="async"></figure>
+    <div class="photo-ribbon project-gallery-ribbon emara-gallery" data-emara-gallery="slides" aria-label="Galerie du projet Honest Signature 7">
+      <div class="photo-ribbon-viewport emara-gallery__viewport">
+      <div class="photo-ribbon-track emara-gallery__track">
+        <figure class="photo-ribbon-card emara-gallery__slide"><img class="emara-gallery__image" width="1536" height="1024" src="/img/honest006.webp" alt="Façade contemporaine d'Honest Signature 7 à Guéliz Marrakech" loading="lazy" decoding="async"></figure>
+        <figure class="photo-ribbon-card emara-gallery__slide"><img class="emara-gallery__image" width="1600" height="1067" src="/img/honest002.webp" alt="Sauna et jacuzzi de la résidence Honest Signature 7 à Marrakech" loading="lazy" decoding="async"></figure>
+        <figure class="photo-ribbon-card emara-gallery__slide"><img class="emara-gallery__image" width="1600" height="1066" src="/img/honest003.webp" alt="Rooftop avec salon cinéma et vue sur Marrakech depuis Honest Signature 7" loading="lazy" decoding="async"></figure>
+        <figure class="photo-ribbon-card emara-gallery__slide"><img class="emara-gallery__image" width="1600" height="900" src="/img/honest004.webp" alt="Piscine intérieure de la résidence Honest Signature 7 à Guéliz" loading="lazy" decoding="async"></figure>
+        <figure class="photo-ribbon-card emara-gallery__slide"><img class="emara-gallery__image" width="1280" height="720" src="/img/honest005.webp" alt="Salle de sport équipée dans Honest Signature 7 à Marrakech" loading="lazy" decoding="async"></figure>
+        <figure class="photo-ribbon-card emara-gallery__slide"><img class="emara-gallery__image" width="1600" height="900" src="/img/honest007.webp" alt="Perspective de façade d'Honest Signature 7 à Guéliz" loading="lazy" decoding="async"></figure>
 
         <figure class="photo-ribbon-card" aria-hidden="true"><img width="1536" height="1024" src="/img/honest006.webp" alt="" loading="lazy" decoding="async"></figure>
         <figure class="photo-ribbon-card" aria-hidden="true"><img width="1600" height="1067" src="/img/honest002.webp" alt="" loading="lazy" decoding="async"></figure>
@@ -386,6 +387,20 @@
         <figure class="photo-ribbon-card" aria-hidden="true"><img width="1600" height="900" src="/img/honest004.webp" alt="" loading="lazy" decoding="async"></figure>
         <figure class="photo-ribbon-card" aria-hidden="true"><img width="1280" height="720" src="/img/honest005.webp" alt="" loading="lazy" decoding="async"></figure>
         <figure class="photo-ribbon-card" aria-hidden="true"><img width="1600" height="900" src="/img/honest007.webp" alt="" loading="lazy" decoding="async"></figure>
+      </div>
+      </div>
+      <div class="project-gallery-carousel-ui emara-gallery__controls" aria-label="Navigation de la galerie">
+        <button class="project-gallery-carousel-btn emara-gallery__button emara-gallery__button--prev project-gallery-carousel-btn--prev" type="button" aria-label="Image précédente">
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M14.5 5.5L8 12l6.5 6.5"></path>
+          </svg>
+        </button>
+        <span class="emara-gallery__counter" id="projectGalleryStatus" aria-live="polite">1 / 6</span>
+        <button class="project-gallery-carousel-btn emara-gallery__button emara-gallery__button--next project-gallery-carousel-btn--next" type="button" aria-label="Image suivante">
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M9.5 5.5L16 12l-6.5 6.5"></path>
+          </svg>
+        </button>
       </div>
     </div>
   </section>
@@ -538,6 +553,7 @@
 </div>
 
 <script src="/js/nav.js"></script>
+<script src="/js/emara-gallery.js?v=2026060918" defer></script>
 <script>
 (function(){
   var pre = document.getElementById('preloader');

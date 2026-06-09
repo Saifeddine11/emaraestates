@@ -521,8 +521,19 @@
     .smap-carousel__controls {
       display: flex;
       align-items: center;
-      gap: 10px;
+      justify-content: center;
+      gap: 28px;
       margin-top: 28px;
+    }
+
+    .smap-carousel__counter {
+      min-width: 56px;
+      text-align: center;
+      font-family: "Jost", sans-serif;
+      font-size: 12px;
+      letter-spacing: 2px;
+      color: rgba(245, 240, 232, .86);
+      font-variant-numeric: lining-nums tabular-nums;
     }
 
     .smap-carousel__button {
@@ -796,13 +807,19 @@
         flex-direction: column;
       }
 
-      .smap-carousel__viewport,
-      .smap-carousel__slide img {
+      .smap-carousel__viewport {
+        aspect-ratio: auto;
+        height: clamp(260px, 58vw, 360px);
         min-height: 0;
       }
 
-      .smap-carousel__viewport {
-        aspect-ratio: 4 / 3;
+      .smap-carousel__slide img {
+        width: 100%;
+        height: clamp(260px, 58vw, 360px);
+        max-height: clamp(260px, 58vw, 360px);
+        object-fit: cover;
+        object-position: center;
+        transform: none;
       }
 
     }
@@ -985,8 +1002,9 @@
             <h3>Appartement témoin, détails premium</h3>
             <p>Parcourez les espaces Honest avant le salon et réservez un échange privé pour recevoir plans, surfaces et disponibilités.</p>
             <div class="smap-carousel__controls">
-              <button class="smap-carousel__button" type="button" data-carousel-prev aria-label="Photo précédente">‹</button>
-              <button class="smap-carousel__button" type="button" data-carousel-next aria-label="Photo suivante">›</button>
+              <button class="smap-carousel__button" type="button" data-carousel-prev aria-label="Image précédente">‹</button>
+              <span class="smap-carousel__counter" id="smapCarouselStatus" aria-live="polite">1 / 8</span>
+              <button class="smap-carousel__button" type="button" data-carousel-next aria-label="Image suivante">›</button>
             </div>
           </div>
         </aside>
@@ -1203,12 +1221,15 @@
         var delay = 5800;
         var reduceMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
+        var status = document.getElementById('smapCarouselStatus');
+
         function setSlide(index) {
           current = (index + slides.length) % slides.length;
           track.style.transform = 'translateX(' + (-current * 100) + '%)';
           slides.forEach(function(slide, slideIndex) {
             slide.classList.toggle('is-active', slideIndex === current);
           });
+          if (status) status.textContent = (current + 1) + ' / ' + slides.length;
           carousel.classList.remove('is-playing');
           void carousel.offsetWidth;
           if (!reduceMotion) carousel.classList.add('is-playing');

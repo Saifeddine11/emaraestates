@@ -244,17 +244,31 @@
     </div>
   </section>
 
-  <section class="seo-gallery" aria-label="Galerie Honest Signature 7 à Guéliz">
+  <section class="seo-gallery emara-gallery" data-emara-gallery="slides-active" aria-label="Galerie Honest Signature 7 à Guéliz">
     <div class="seo-gallery__header reveal">
       <div class="section-label">Honest Signature 7</div>
       <h2 class="section-title">Un programme neuf au cœur de Guéliz</h2>
     </div>
-    <div class="seo-gallery__grid">
-      <figure class="image-reveal reveal-up reveal-delay-1"><img src="img/honest-signature-7/honest-signature-7-gueliz-marrakech-facade-01.webp" alt="Façade du programme Honest Signature 7 à Guéliz Marrakech" width="1600" height="1067" loading="lazy" decoding="async"></figure>
-      <figure class="image-reveal reveal-up reveal-delay-2"><img src="img/honest-signature-7/honest-signature-7-gueliz-marrakech-interieur-01.webp" alt="Intérieur d'un appartement neuf à Guéliz Marrakech" width="1600" height="1066" loading="lazy" decoding="async"></figure>
-      <figure class="image-reveal reveal-up reveal-delay-3"><img src="img/honest-signature-7/honest-signature-7-gueliz-marrakech-espace-de-vie-01.webp" alt="Espace de vie d'un appartement neuf à Guéliz" width="1600" height="1066" loading="lazy" decoding="async"></figure>
-      <figure class="image-reveal reveal-up reveal-delay-4"><img src="img/honest-signature-7/honest-signature-7-gueliz-marrakech-interieur-02.webp" alt="Intérieur d'un appartement neuf Honest Signature 7 à Marrakech" width="1600" height="900" loading="lazy" decoding="async"></figure>
-      <figure class="image-reveal reveal-up reveal-delay-5"><img src="img/honest-signature-7/honest-signature-7-gueliz-marrakech-appartement-02.webp" alt="Appartement neuf haut standing à Honest Signature 7 Marrakech" width="1600" height="1066" loading="lazy" decoding="async"></figure>
+    <div class="seo-gallery__viewport emara-gallery__viewport">
+      <div class="seo-gallery__grid emara-gallery__track">
+        <figure class="image-reveal reveal-up reveal-delay-1 emara-gallery__slide"><img class="emara-gallery__image" src="img/honest-signature-7/honest-signature-7-gueliz-marrakech-facade-01.webp" alt="Façade du programme Honest Signature 7 à Guéliz Marrakech" width="1600" height="1067" loading="lazy" decoding="async"></figure>
+        <figure class="image-reveal reveal-up reveal-delay-2 emara-gallery__slide"><img class="emara-gallery__image" src="img/honest-signature-7/honest-signature-7-gueliz-marrakech-espace-de-vie-01.webp" alt="Espace de vie d'un appartement neuf à Guéliz" width="1600" height="1066" loading="lazy" decoding="async"></figure>
+        <figure class="image-reveal reveal-up reveal-delay-3 emara-gallery__slide"><img class="emara-gallery__image" src="img/honest-signature-7/honest-signature-7-gueliz-marrakech-interieur-02.webp" alt="Intérieur d'un appartement neuf Honest Signature 7 à Marrakech" width="1600" height="900" loading="lazy" decoding="async"></figure>
+        <figure class="image-reveal reveal-up reveal-delay-4 emara-gallery__slide"><img class="emara-gallery__image" src="img/honest-signature-7/honest-signature-7-gueliz-marrakech-appartement-02.webp" alt="Appartement neuf haut standing à Honest Signature 7 Marrakech" width="1600" height="1066" loading="lazy" decoding="async"></figure>
+      </div>
+    </div>
+    <div class="seo-gallery-carousel-ui emara-gallery__controls" aria-label="Navigation de la galerie">
+      <button class="seo-gallery-carousel-btn emara-gallery__button emara-gallery__button--prev seo-gallery-carousel-btn--prev" type="button" aria-label="Image précédente">
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M14.5 5.5L8 12l6.5 6.5"></path>
+        </svg>
+      </button>
+      <span class="emara-gallery__counter" id="seoGalleryStatus" aria-live="polite">1 / 4</span>
+      <button class="seo-gallery-carousel-btn emara-gallery__button emara-gallery__button--next seo-gallery-carousel-btn--next" type="button" aria-label="Image suivante">
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M9.5 5.5L16 12l-6.5 6.5"></path>
+        </svg>
+      </button>
     </div>
   </section>
 
@@ -408,6 +422,7 @@
 </a>
 
 <script src="/js/nav.js"></script>
+<script src="/js/emara-gallery.js?v=2026060918" defer></script>
 <script>
 (function(){
   var pre = document.getElementById('preloader');

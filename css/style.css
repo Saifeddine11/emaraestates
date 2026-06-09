@@ -279,7 +279,9 @@ nav .links a:hover::after { width: 100%; }
   display: block;
   filter: saturate(.96) contrast(1.02);
 }
-.photo-ribbon-carousel-ui { display: none; }
+.photo-ribbon-carousel-ui,
+.project-gallery-carousel-ui,
+.seo-gallery-carousel-ui { display: none; }
 
 @keyframes photoRibbonScroll {
   from { transform: translateX(0); }
@@ -2207,79 +2209,160 @@ footer,
   .photo-ribbon::after {
     display: none;
   }
+  .mobile-gallery-carousel__viewport,
   .photo-ribbon-viewport,
-  .project-gallery-ribbon {
-    width: 100%;
+  .seo-gallery__viewport {
+    width: calc(100% - 48px);
     max-width: 100%;
-    margin: 0;
-    overflow-x: auto;
-    overflow-y: hidden;
+    margin: 0 auto;
+    overflow: hidden;
     border-radius: 0;
-    scroll-snap-type: x mandatory;
-    scroll-behavior: smooth;
-    scrollbar-width: none;
-    -webkit-overflow-scrolling: touch;
-    overscroll-behavior-x: contain;
-    scroll-padding-inline: 24px;
     touch-action: pan-x pan-y;
   }
-  .photo-ribbon-viewport::-webkit-scrollbar,
-  .project-gallery-ribbon::-webkit-scrollbar {
-    display: none;
-  }
-  .estates-photo-ribbon .photo-ribbon-viewport {
-    margin-inline: -24px;
-    max-width: calc(100% + 48px);
-    padding-inline: 24px;
+  .project-gallery-ribbon .photo-ribbon-viewport {
+    width: 100%;
+    margin: 0;
+    padding: 0 24px;
     box-sizing: border-box;
   }
-  .project-gallery-ribbon {
-    margin-inline: -24px;
-    max-width: calc(100% + 48px);
-    padding-inline: 24px;
-    box-sizing: border-box;
-    background: transparent;
-  }
-  .photo-ribbon-track {
+  .mobile-gallery-carousel__track,
+  .photo-ribbon-track,
+  .seo-gallery__grid {
     display: flex;
     flex-wrap: nowrap;
-    align-items: stretch;
-    gap: 16px;
-    width: max-content;
-    min-width: 0;
+    gap: 0;
+    width: 100%;
     margin: 0;
-    padding: 0 0 2px;
+    padding: 0;
     overflow: visible;
     animation: none;
-    transform: none;
-    transition: none;
-    will-change: auto;
-    flex: none;
+    transform: translateX(calc(var(--mobile-carousel-index, 0) * -100%));
+    transition: transform .45s cubic-bezier(.23, 1, .32, 1);
+    will-change: transform;
   }
-  .photo-ribbon-card {
-    flex: 0 0 82vw;
-    width: 82vw;
-    max-width: 360px;
+  .mobile-gallery-carousel__slide,
+  .photo-ribbon-card:not([aria-hidden="true"]),
+  .seo-gallery__grid > figure {
+    flex: 0 0 100%;
+    width: 100%;
+    max-width: 100%;
     min-width: 0;
     aspect-ratio: auto;
     margin: 0;
-    border-radius: 14px;
-    scroll-snap-align: start;
-    scroll-snap-stop: always;
+    border-radius: 20px;
+    overflow: hidden;
   }
-  .photo-ribbon-card img {
+  .mobile-gallery-carousel__slide img,
+  .photo-ribbon-card img,
+  .seo-gallery__grid img {
     width: 100%;
-    height: 280px;
-    max-height: 280px;
+    height: clamp(260px, 58vw, 360px);
+    max-height: clamp(260px, 58vw, 360px);
     object-fit: cover;
     object-position: center;
     display: block;
+    aspect-ratio: auto;
   }
   .photo-ribbon-card:nth-child(n+7) {
     display: none;
   }
-  .photo-ribbon-carousel-ui {
-    display: none;
+  .mobile-gallery-carousel__controls,
+  .photo-ribbon-carousel-ui,
+  .project-gallery-carousel-ui,
+  .seo-gallery-carousel-ui {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 28px;
+    margin-top: 24px;
+    padding: 0 24px;
+  }
+  .mobile-gallery-carousel__counter,
+  .photo-ribbon-carousel-ui span,
+  .project-gallery-carousel-ui span,
+  .seo-gallery-carousel-ui span {
+    min-width: 56px;
+    text-align: center;
+    font-family: 'Jost', sans-serif;
+    font-size: 12px;
+    font-weight: 400;
+    letter-spacing: 2px;
+    color: rgba(245,240,232,.86);
+    font-variant-numeric: lining-nums tabular-nums;
+  }
+  .seo-gallery-carousel-ui span,
+  .project-gallery-carousel-ui span {
+    color: rgba(45,58,45,.82);
+  }
+  .project-gallery-carousel-btn {
+    background: rgba(45,58,45,.06);
+    color: var(--vf);
+    border-color: rgba(155,112,64,.28);
+  }
+  .mobile-gallery-carousel__button,
+  .photo-ribbon-carousel-btn,
+  .project-gallery-carousel-btn,
+  .seo-gallery-carousel-btn {
+    width: 52px;
+    height: 52px;
+    border: 1px solid rgba(200,187,168,.3);
+    border-radius: 50%;
+    background: rgba(245,240,232,.08);
+    color: var(--cr);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: background .25s ease, border-color .25s ease, opacity .25s ease, transform .25s ease;
+    touch-action: manipulation;
+  }
+  .seo-gallery-carousel-btn {
+    background: rgba(45,58,45,.06);
+    color: var(--vf);
+    border-color: rgba(155,112,64,.28);
+  }
+  .mobile-gallery-carousel__button svg,
+  .photo-ribbon-carousel-btn svg,
+  .project-gallery-carousel-btn svg,
+  .seo-gallery-carousel-btn svg {
+    width: 18px;
+    height: 18px;
+    stroke: currentColor;
+    stroke-width: 1.8;
+    fill: none;
+  }
+  .mobile-gallery-carousel__button:hover,
+  .mobile-gallery-carousel__button:focus-visible,
+  .photo-ribbon-carousel-btn:hover,
+  .photo-ribbon-carousel-btn:focus-visible,
+  .project-gallery-carousel-btn:hover,
+  .project-gallery-carousel-btn:focus-visible,
+  .seo-gallery-carousel-btn:hover,
+  .seo-gallery-carousel-btn:focus-visible {
+    background: var(--mr);
+    border-color: var(--mr);
+    color: var(--cr);
+    transform: translateY(-1px);
+    outline: none;
+  }
+  .mobile-gallery-carousel__button[disabled],
+  .photo-ribbon-carousel-btn[disabled],
+  .project-gallery-carousel-btn[disabled],
+  .seo-gallery-carousel-btn[disabled] {
+    opacity: .38;
+    cursor: default;
+    transform: none;
+  }
+  .project-gallery-carousel-ui {
+    margin-top: 22px;
+  }
+  .seo-gallery__grid {
+    display: flex;
+    grid-template-columns: none;
+    gap: 0;
+  }
+  .seo-gallery__grid > figure {
+    box-shadow: 0 16px 40px rgba(24,29,24,.08);
   }
   .realisations {
     display: flex;
@@ -2302,41 +2385,43 @@ footer,
     order: 3;
     display: flex;
     align-items: center;
-    justify-content: space-between;
-    gap: 18px;
+    justify-content: center;
+    gap: 28px;
     margin: 0 0 18px;
     padding: 0 24px;
     position: relative;
     z-index: 6;
   }
   .realisations-carousel-copy {
-    display: flex;
-    align-items: baseline;
-    gap: 12px;
-    min-width: 0;
+    display: block;
+    order: 2;
   }
   .realisations-carousel-copy span {
-    font-size: 10px;
-    letter-spacing: 3px;
-    text-transform: uppercase;
-    color: rgba(122,139,104,.9);
+    display: none;
+  }
+  .realisations-carousel-btn--prev {
+    order: 1;
+  }
+  .realisations-carousel-btn--next {
+    order: 3;
   }
   .realisations-carousel-copy strong {
     font-family: 'Jost', sans-serif;
-    font-size: 13px;
-    font-weight: 500;
+    font-size: 12px;
+    font-weight: 400;
+    letter-spacing: 2px;
     color: var(--vf);
     font-variant-numeric: lining-nums tabular-nums;
     white-space: nowrap;
+    min-width: 56px;
+    text-align: center;
   }
   .realisations-carousel-actions {
-    display: inline-flex;
-    align-items: center;
-    gap: 10px;
+    display: contents;
   }
   .realisations-carousel-btn {
-    width: 46px;
-    height: 46px;
+    width: 52px;
+    height: 52px;
     border: 1px solid rgba(155,112,64,.36);
     border-radius: 50%;
     background: rgba(45,58,45,.92);
@@ -2399,36 +2484,25 @@ footer,
     background: linear-gradient(to left, rgba(245,240,232,.98), rgba(245,240,232,.7), rgba(245,240,232,0));
   }
   .Estates-grid.realisations-grid {
-    display: flex;
-    flex-wrap: nowrap;
-    gap: 18px;
-    overflow-x: auto;
-    overflow-y: hidden;
+    display: block;
+    overflow: hidden;
     width: 100%;
     max-width: 100%;
-    padding: 6px 24px 18px;
+    padding: 0 24px 18px;
     margin: 0;
-    scroll-snap-type: x mandatory;
-    scroll-behavior: smooth;
-    scrollbar-width: none;
-    scroll-padding-left: 24px;
-    scroll-padding-right: 24px;
-    -webkit-overflow-scrolling: touch;
-    overscroll-behavior-x: contain;
-    will-change: scroll-position;
     touch-action: pan-x pan-y;
   }
-  .Estates-grid.realisations-grid::-webkit-scrollbar { display: none; }
   .Estates-grid.realisations-grid > .property-card,
   .Estates-grid.realisations-grid > .property-card:nth-child(4),
   .Estates-grid.realisations-grid > .property-card:nth-child(5) {
+    display: none;
+    width: 100%;
+    max-width: 100%;
     min-width: 0;
-    width: min(82vw, 360px);
-    max-width: min(82vw, 360px);
-    flex: 0 0 min(82vw, 360px);
-    scroll-snap-align: start;
-    scroll-snap-stop: always;
-    align-self: stretch;
+    margin: 0;
+  }
+  .Estates-grid.realisations-grid > .property-card.is-active {
+    display: block;
   }
   .realisations .property-card {
     border-radius: 22px;
@@ -2748,25 +2822,18 @@ footer,
     margin-bottom: 20px;
     padding: 0 18px;
   }
+  .mobile-gallery-carousel__viewport,
   .photo-ribbon-viewport,
-  .project-gallery-ribbon {
-    scroll-padding-inline: 18px;
+  .seo-gallery__viewport {
+    width: calc(100% - 36px);
   }
-  .estates-photo-ribbon .photo-ribbon-viewport,
-  .project-gallery-ribbon {
-    margin-inline: -18px;
-    max-width: calc(100% + 36px);
-    padding-inline: 18px;
+  .project-gallery-ribbon .photo-ribbon-viewport {
+    padding: 0 18px;
   }
-  .photo-ribbon-card {
-    flex-basis: min(84vw, 320px);
-    width: min(84vw, 320px);
-    max-width: 320px;
-    border-radius: 12px;
-  }
-  .photo-ribbon-card img {
-    height: 260px;
-    max-height: 260px;
+  .mobile-gallery-carousel__slide,
+  .photo-ribbon-card:not([aria-hidden="true"]),
+  .seo-gallery__grid > figure {
+    border-radius: 18px;
   }
   body { padding-bottom: calc(88px + env(safe-area-inset-bottom, 0px)); }
   nav { padding: 14px 18px; }
@@ -2807,31 +2874,8 @@ footer,
     padding: 0 18px;
     margin-bottom: 14px;
   }
-  .realisations-carousel-copy {
-    gap: 9px;
-  }
-  .realisations-carousel-copy span {
-    letter-spacing: 2px;
-  }
-  .realisations-carousel-btn {
-    width: 42px;
-    height: 42px;
-  }
   .Estates-grid.realisations-grid {
-    gap: 16px;
-    padding: 6px 18px 16px;
-    margin: 0;
-    scroll-padding-left: 18px;
-    scroll-padding-right: 18px;
-    overflow-x: auto;
-    touch-action: pan-x pan-y;
-  }
-  .Estates-grid.realisations-grid > .property-card,
-  .Estates-grid.realisations-grid > .property-card:nth-child(4),
-  .Estates-grid.realisations-grid > .property-card:nth-child(5) {
-    width: min(84vw, 320px);
-    max-width: min(84vw, 320px);
-    flex-basis: min(84vw, 320px);
+    padding: 0 18px 16px;
   }
   .property-card--featured .img-wrap { min-height: 240px; }
   .project-summary .property-card--featured .img-wrap { min-height: 280px; }
@@ -3124,6 +3168,7 @@ footer,
   padding-right: 60px;
 }
 .seo-gallery__header { margin-bottom: 32px; max-width: 720px; }
+.seo-gallery__viewport { width: 100%; }
 .seo-gallery__grid {
   display: grid;
   grid-template-columns: repeat(12, 1fr);
@@ -3289,6 +3334,84 @@ footer,
   color: var(--vf);
   border-color: var(--cr);
   background: var(--cr);
+}
+
+@media (max-width: 768px) {
+  .show-apartment-section,
+  .show-apartment-section--teaser {
+    padding-left: 24px;
+    padding-right: 24px;
+    overflow: hidden;
+    box-sizing: border-box;
+  }
+
+  .show-apartment-layout,
+  .show-apartment-layout--compact {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 24px;
+    width: 100%;
+    max-width: 100%;
+  }
+
+  .show-apartment-media,
+  .show-apartment-card {
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+    position: relative;
+    left: auto;
+    right: auto;
+    transform: none;
+    box-sizing: border-box;
+  }
+
+  .show-apartment-section.scroll-anim-ready .show-apartment-media.reveal-left:not(.visible),
+  .show-apartment-section.scroll-anim-ready .show-apartment-card.reveal-right:not(.visible),
+  .seo-page.scroll-anim-ready .show-apartment-media.reveal-left:not(.visible),
+  .seo-page.scroll-anim-ready .show-apartment-card.reveal-right:not(.visible) {
+    transform: none;
+  }
+
+  .show-apartment-media img {
+    width: 100%;
+    height: clamp(260px, 58vw, 360px);
+    max-height: clamp(260px, 58vw, 360px);
+    object-fit: cover;
+    object-position: center;
+    display: block;
+    border-radius: 20px;
+  }
+
+  .show-apartment-layout--compact .show-apartment-media img {
+    height: clamp(260px, 58vw, 360px);
+    max-height: clamp(260px, 58vw, 360px);
+  }
+
+  .show-apartment-card {
+    margin-top: 0;
+    padding: 28px 24px;
+    border-radius: 20px;
+  }
+
+  .show-apartment-points {
+    grid-template-columns: 1fr;
+  }
+
+  .show-apartment-actions {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 12px;
+    width: 100%;
+  }
+
+  .show-apartment-actions .btn-primary,
+  .show-apartment-actions .btn-outline {
+    width: 100%;
+    min-width: 0;
+    justify-content: center;
+    box-sizing: border-box;
+  }
 }
 
 .seo-program-section {
@@ -3637,7 +3760,7 @@ footer,
   }
 }
 
-@media (max-width: 900px) {
+@media (min-width: 769px) and (max-width: 900px) {
   .seo-gallery__grid { grid-template-columns: 1fr 1fr; }
   .seo-gallery__grid figure { grid-column: span 1 !important; }
   .seo-gallery__grid figure:first-child { grid-column: span 2 !important; }
@@ -4162,5 +4285,260 @@ footer,
   }
   .pinned-bg-card .section-title {
     font-size: clamp(26px, 6vw, 34px);
+  }
+}
+
+/* ═══ EMARA GALLERY — mobile carousel (after SEO grid rules) ═══ */
+.emara-gallery__controls,
+.photo-ribbon-carousel-ui,
+.project-gallery-carousel-ui,
+.seo-gallery-carousel-ui { display: none; }
+
+@media (max-width: 768px) {
+  .emara-gallery__viewport,
+  .seo-gallery__viewport,
+  .photo-ribbon-viewport {
+    width: calc(100% - 48px);
+    max-width: 100%;
+    margin: 0 auto;
+    overflow: hidden;
+    touch-action: pan-x pan-y;
+  }
+
+  .project-gallery-ribbon .photo-ribbon-viewport {
+    width: 100%;
+    padding: 0 24px;
+    box-sizing: border-box;
+  }
+
+  .emara-gallery__track,
+  .seo-gallery .seo-gallery__grid,
+  .photo-ribbon-track {
+    display: flex !important;
+    flex-wrap: nowrap !important;
+    grid-template-columns: none !important;
+    grid-template-rows: none !important;
+    gap: 0 !important;
+    width: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    animation: none !important;
+    transform: translateX(calc(var(--emara-gallery-index, var(--mobile-carousel-index, 0)) * -100%)) !important;
+    transition: transform .45s cubic-bezier(.23, 1, .32, 1);
+    will-change: transform;
+  }
+
+  .emara-gallery__slide,
+  .seo-gallery__grid > figure,
+  .photo-ribbon-card:not([aria-hidden="true"]) {
+    display: block !important;
+    flex: 0 0 100% !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+    grid-column: auto !important;
+    grid-row: auto !important;
+    aspect-ratio: auto !important;
+    margin: 0 !important;
+    border-radius: 20px;
+    overflow: hidden;
+  }
+
+  .emara-gallery__image,
+  .emara-gallery__slide img,
+  .seo-gallery__grid img,
+  .photo-ribbon-card img {
+    width: 100% !important;
+    height: clamp(260px, 58vw, 360px) !important;
+    max-height: clamp(260px, 58vw, 360px) !important;
+    aspect-ratio: auto !important;
+    object-fit: cover !important;
+    object-position: center !important;
+    display: block !important;
+  }
+
+  .emara-gallery__controls,
+  .photo-ribbon-carousel-ui,
+  .project-gallery-carousel-ui,
+  .seo-gallery-carousel-ui {
+    display: flex !important;
+    align-items: center;
+    justify-content: center;
+    gap: 28px;
+    margin-top: 24px;
+    padding: 0 24px;
+  }
+
+  .emara-gallery__counter,
+  .photo-ribbon-carousel-ui span,
+  .project-gallery-carousel-ui span,
+  .seo-gallery-carousel-ui span {
+    min-width: 56px;
+    text-align: center;
+    font-family: 'Jost', sans-serif;
+    font-size: 12px;
+    font-weight: 400;
+    letter-spacing: 2px;
+    font-variant-numeric: lining-nums tabular-nums;
+  }
+
+  .seo-gallery-carousel-ui span,
+  .project-gallery-carousel-ui span {
+    color: rgba(45,58,45,.82);
+  }
+
+  .photo-ribbon-carousel-ui span,
+  .emara-gallery--ribbon .emara-gallery__counter {
+    color: rgba(245,240,232,.86);
+  }
+
+  .emara-gallery__button,
+  .photo-ribbon-carousel-btn,
+  .project-gallery-carousel-btn,
+  .seo-gallery-carousel-btn {
+    width: 52px;
+    height: 52px;
+    border: 1px solid rgba(200,187,168,.3);
+    border-radius: 50%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    touch-action: manipulation;
+    transition: background .25s ease, border-color .25s ease, opacity .25s ease, transform .25s ease;
+  }
+
+  .emara-gallery__button svg,
+  .photo-ribbon-carousel-btn svg,
+  .project-gallery-carousel-btn svg,
+  .seo-gallery-carousel-btn svg {
+    width: 18px;
+    height: 18px;
+    stroke: currentColor;
+    stroke-width: 1.8;
+    fill: none;
+  }
+
+  .seo-gallery-carousel-btn,
+  .project-gallery-carousel-btn {
+    background: rgba(45,58,45,.06);
+    color: var(--vf);
+    border-color: rgba(155,112,64,.28);
+  }
+
+  .photo-ribbon-carousel-btn,
+  .emara-gallery--ribbon .emara-gallery__button {
+    background: rgba(245,240,232,.08);
+    color: var(--cr);
+  }
+
+  .emara-gallery__button:hover,
+  .emara-gallery__button:focus-visible,
+  .photo-ribbon-carousel-btn:hover,
+  .photo-ribbon-carousel-btn:focus-visible,
+  .project-gallery-carousel-btn:hover,
+  .project-gallery-carousel-btn:focus-visible,
+  .seo-gallery-carousel-btn:hover,
+  .seo-gallery-carousel-btn:focus-visible {
+    background: var(--mr);
+    border-color: var(--mr);
+    color: var(--cr);
+    outline: none;
+  }
+
+  .emara-gallery__button[disabled],
+  .photo-ribbon-carousel-btn[disabled],
+  .project-gallery-carousel-btn[disabled],
+  .seo-gallery-carousel-btn[disabled] {
+    opacity: .38;
+    cursor: default;
+    transform: none;
+  }
+
+  .emara-gallery--cards .realisations-grid {
+    display: block !important;
+    overflow: hidden;
+    width: 100%;
+    max-width: 100%;
+    padding: 0 24px 18px;
+    margin: 0;
+  }
+
+  .emara-gallery--cards .realisations-grid > .property-card {
+    display: none !important;
+    width: 100% !important;
+    max-width: 100% !important;
+  }
+
+  .emara-gallery--cards .realisations-grid > .property-card.is-active {
+    display: block !important;
+  }
+
+  .emara-gallery--cards .realisations-grid > .property-card .img-wrap {
+    height: clamp(240px, 56vw, 300px);
+    max-height: 300px;
+    aspect-ratio: auto;
+  }
+
+  /* SEO Guéliz gallery: one slide at a time, no transform peek */
+  .seo-gallery.emara-gallery {
+    padding-left: 24px;
+    padding-right: 24px;
+    box-sizing: border-box;
+    overflow: hidden;
+  }
+
+  .seo-gallery.emara-gallery .seo-gallery__viewport,
+  .seo-gallery.emara-gallery .emara-gallery__viewport {
+    width: 100% !important;
+    max-width: 100% !important;
+    margin: 0 !important;
+    overflow: hidden !important;
+  }
+
+  .seo-gallery.emara-gallery .seo-gallery__grid.emara-gallery__track {
+    display: block !important;
+    transform: none !important;
+    width: 100% !important;
+    max-width: 100% !important;
+  }
+
+  .seo-gallery.emara-gallery .seo-gallery__grid > figure {
+    display: none !important;
+    flex: none !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+  }
+
+  .seo-gallery.emara-gallery .seo-gallery__grid > figure.is-active {
+    display: block !important;
+  }
+
+  .seo-gallery.emara-gallery .image-reveal img {
+    transform: none !important;
+  }
+
+  .seo-gallery.emara-gallery .seo-gallery-carousel-ui {
+    max-width: 100%;
+    box-sizing: border-box;
+  }
+}
+
+@media (max-width: 480px) {
+  .emara-gallery__viewport,
+  .seo-gallery__viewport,
+  .photo-ribbon-viewport {
+    width: calc(100% - 36px);
+  }
+
+  .project-gallery-ribbon .photo-ribbon-viewport {
+    padding: 0 18px;
+  }
+
+  .emara-gallery__slide,
+  .seo-gallery__grid > figure,
+  .photo-ribbon-card:not([aria-hidden="true"]) {
+    border-radius: 18px;
   }
 }
