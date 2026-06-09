@@ -1006,20 +1006,23 @@ var photoRibbonPrev = document.querySelector('.photo-ribbon-carousel-btn--prev')
 var photoRibbonNext = document.querySelector('.photo-ribbon-carousel-btn--next');
 var photoRibbonStatus = document.getElementById('photoRibbonStatus');
 var photoRibbonIndex = 0;
-var photoRibbonTouchStartX = 0;
-var photoRibbonTouchStartY = 0;
-var photoRibbonTouchMode = '';
 
 function getPhotoRibbonSlides() {
   if (!photoRibbonTrack) return [];
   return Array.prototype.slice.call(photoRibbonTrack.querySelectorAll('.photo-ribbon-card:not([aria-hidden="true"])'));
 }
 
+function isPhotoRibbonMobileCarousel() {
+  return window.innerWidth <= 768;
+}
+
 function updatePhotoRibbonCarousel(nextIndex) {
   var slides = getPhotoRibbonSlides();
   if (!photoRibbon || !photoRibbonTrack || !slides.length) return;
   photoRibbonIndex = Math.max(0, Math.min(nextIndex, slides.length - 1));
-  photoRibbon.style.setProperty('--photo-ribbon-index', photoRibbonIndex);
+  if (!isPhotoRibbonMobileCarousel()) {
+    photoRibbon.style.setProperty('--photo-ribbon-index', photoRibbonIndex);
+  }
   if (photoRibbonStatus) photoRibbonStatus.textContent = (photoRibbonIndex + 1) + ' / ' + slides.length;
   if (photoRibbonPrev) photoRibbonPrev.disabled = photoRibbonIndex === 0;
   if (photoRibbonNext) photoRibbonNext.disabled = photoRibbonIndex >= slides.length - 1;
@@ -1035,40 +1038,7 @@ if (photoRibbonNext) {
     updatePhotoRibbonCarousel(photoRibbonIndex + 1);
   });
 }
-if (photoRibbonTrack) {
-  photoRibbonTrack.addEventListener('touchstart', function(event){
-    if (window.innerWidth > 768) return;
-    var touch = event.touches && event.touches[0];
-    if (!touch) return;
-    photoRibbonTouchStartX = touch.clientX;
-    photoRibbonTouchStartY = touch.clientY;
-    photoRibbonTouchMode = '';
-  }, { passive: true });
-  photoRibbonTrack.addEventListener('touchmove', function(event){
-    if (window.innerWidth > 768) return;
-    var touch = event.touches && event.touches[0];
-    if (!touch) return;
-    var deltaX = touch.clientX - photoRibbonTouchStartX;
-    var deltaY = touch.clientY - photoRibbonTouchStartY;
-    var absX = Math.abs(deltaX);
-    var absY = Math.abs(deltaY);
-    if (!photoRibbonTouchMode && Math.max(absX, absY) > 8) {
-      photoRibbonTouchMode = absX > absY * 1.25 ? 'horizontal' : 'vertical';
-    }
-    if (photoRibbonTouchMode === 'horizontal') event.preventDefault();
-  }, { passive: false });
-  photoRibbonTrack.addEventListener('touchend', function(event){
-    if (window.innerWidth > 768 || photoRibbonTouchMode !== 'horizontal') {
-      photoRibbonTouchMode = '';
-      return;
-    }
-    var touch = event.changedTouches && event.changedTouches[0];
-    if (!touch) return;
-    var deltaX = touch.clientX - photoRibbonTouchStartX;
-    if (Math.abs(deltaX) > 44) updatePhotoRibbonCarousel(photoRibbonIndex + (deltaX < 0 ? 1 : -1));
-    photoRibbonTouchMode = '';
-  }, { passive: true });
-}
+/* Mobile photo ribbon uses native horizontal scroll in CSS (max-width: 768px). */
 window.addEventListener('resize', function(){
   updatePhotoRibbonCarousel(photoRibbonIndex);
 });
