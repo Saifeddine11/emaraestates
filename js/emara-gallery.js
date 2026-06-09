@@ -21,23 +21,12 @@
       || track.parentElement;
     var slideSelector = mode === 'cards'
       ? '.property-card'
-      : '.emara-gallery__slide:not([aria-hidden="true"]), .photo-ribbon-card:not([aria-hidden="true"]), .seo-gallery__grid > figure';
-    var prev = root.querySelector('.emara-gallery__button--prev')
-      || root.querySelector('.photo-ribbon-carousel-btn--prev')
-      || root.querySelector('.project-gallery-carousel-btn--prev')
-      || root.querySelector('.seo-gallery-carousel-btn--prev')
-      || root.querySelector('.realisations-carousel-btn--prev');
-    var next = root.querySelector('.emara-gallery__button--next')
-      || root.querySelector('.photo-ribbon-carousel-btn--next')
-      || root.querySelector('.project-gallery-carousel-btn--next')
-      || root.querySelector('.seo-gallery-carousel-btn--next')
-      || root.querySelector('.realisations-carousel-btn--next');
-    var counter = root.querySelector('.emara-gallery__counter')
-      || root.querySelector('#photoRibbonStatus')
-      || root.querySelector('#projectGalleryStatus')
-      || root.querySelector('#seoGalleryStatus')
-      || root.querySelector('#realisationsCarouselStatus');
-    var useActiveClass = mode === 'cards' || mode === 'slides-active';
+      : '.emara-gallery__slide:not([aria-hidden="true"])';
+    var prev = root.querySelector('.emara-gallery__button--prev');
+    var next = root.querySelector('.emara-gallery__button--next');
+    var counter = root.querySelector('.emara-gallery__counter');
+    var singleViewport = root.classList.contains('smap-emara-gallery') || root.classList.contains('emara-gallery--single');
+    var useActiveClass = mode === 'cards' || mode === 'slides' || mode === 'slides-active' || singleViewport;
     var indexHost = viewport || root;
 
     var state = {
@@ -55,7 +44,7 @@
       var slides = getSlides();
       if (!slides.length) return;
 
-      if (!isMobile()) {
+      if (!isMobile() && !singleViewport) {
         indexHost.style.removeProperty('--emara-gallery-index');
         indexHost.style.removeProperty('--mobile-carousel-index');
         track.style.transform = '';
@@ -87,13 +76,13 @@
 
     if (prev) {
       prev.addEventListener('click', function () {
-        if (!isMobile()) return;
+        if (!isMobile() && !singleViewport) return;
         update(state.index - 1);
       });
     }
     if (next) {
       next.addEventListener('click', function () {
-        if (!isMobile()) return;
+        if (!isMobile() && !singleViewport) return;
         update(state.index + 1);
       });
     }
@@ -147,7 +136,7 @@
   }
 
   var galleries = Array.prototype.slice.call(
-    document.querySelectorAll('[data-emara-gallery], .emara-gallery')
+    document.querySelectorAll('[data-emara-gallery]')
   ).map(initEmaraGallery).filter(Boolean);
 
   window.EmaraGalleries = galleries;

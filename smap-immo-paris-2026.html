@@ -27,7 +27,7 @@
   <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400&amp;family=Jost:wght@300;400;500&amp;display=swap">
   <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400&amp;family=Jost:wght@300;400;500&amp;display=swap" rel="stylesheet" media="print" onload="this.media='all'">
   <noscript><link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400&amp;family=Jost:wght@300;400;500&amp;display=swap" rel="stylesheet"></noscript>
-  <link rel="stylesheet" href="/css/style.css?v=2026060906">
+  <link rel="stylesheet" href="/css/style.css?v=2026060919">
   <style>
     body.smap-page {
       background: #0f120f;
@@ -442,16 +442,24 @@
       padding: clamp(78px, 9vw, 118px) clamp(22px, 4vw, 56px);
     }
 
-    .smap-carousel {
-      position: relative;
-      display: grid;
-      grid-template-columns: minmax(0, 1fr) minmax(260px, 360px);
-      gap: clamp(18px, 3vw, 32px);
-      align-items: center;
+    .smap-emara-gallery {
       margin-top: 46px;
     }
 
-    .smap-carousel__viewport {
+    .smap-emara-gallery .smap-carousel__stage {
+      display: grid;
+      gap: clamp(18px, 3vw, 32px);
+      align-items: center;
+    }
+
+    @media (min-width: 769px) {
+      .smap-emara-gallery .smap-carousel__stage {
+        grid-template-columns: minmax(0, 1fr) minmax(260px, 360px);
+      }
+    }
+
+    .smap-emara-gallery .emara-gallery__viewport,
+    .smap-emara-gallery .smap-carousel__viewport {
       position: relative;
       aspect-ratio: 16 / 10;
       min-height: 0;
@@ -462,34 +470,12 @@
         #0b0f0b;
     }
 
-    .smap-carousel__track {
-      height: 100%;
-      display: flex;
-      transition: transform .82s cubic-bezier(.22, 1, .36, 1);
-      will-change: transform;
-    }
-
-    .smap-carousel__slide {
-      position: relative;
-      display: grid;
-      place-items: center;
-      min-width: 100%;
-      height: 100%;
-      overflow: hidden;
-    }
-
-    .smap-carousel__slide img {
+    .smap-emara-gallery .emara-gallery__slide img {
       width: 100%;
       height: 100%;
       display: block;
-      object-fit: contain;
+      object-fit: cover;
       object-position: center;
-      transform: scale(.992);
-      transition: transform 5s ease;
-    }
-
-    .smap-carousel__slide.is-active img {
-      transform: scale(1.01);
     }
 
     .smap-carousel__panel {
@@ -518,15 +504,11 @@
       line-height: 1.75;
     }
 
-    .smap-carousel__controls {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 28px;
-      margin-top: 28px;
+    .smap-emara-gallery .emara-gallery__controls {
+      margin-top: 0;
     }
 
-    .smap-carousel__counter {
+    .smap-emara-gallery .emara-gallery__counter {
       min-width: 56px;
       text-align: center;
       font-family: "Jost", sans-serif;
@@ -730,13 +712,8 @@
       }
 
       .smap-info-grid,
-      .smap-carousel,
       .smap-benefits {
         grid-template-columns: 1fr;
-      }
-
-      .smap-carousel__panel {
-        order: -1;
       }
 
       .smap-benefit,
@@ -807,19 +784,18 @@
         flex-direction: column;
       }
 
-      .smap-carousel__viewport {
+      .smap-emara-gallery .emara-gallery__viewport,
+      .smap-emara-gallery .smap-carousel__viewport {
         aspect-ratio: auto;
         height: clamp(260px, 58vw, 360px);
         min-height: 0;
       }
 
-      .smap-carousel__slide img {
-        width: 100%;
+      .smap-emara-gallery .emara-gallery__slide img {
         height: clamp(260px, 58vw, 360px);
         max-height: clamp(260px, 58vw, 360px);
         object-fit: cover;
         object-position: center;
-        transform: none;
       }
 
     }
@@ -967,47 +943,40 @@
         <p class="smap-section__text">Une sélection animée des ambiances Honest Signature : volumes, matières, bien-être et espaces de vie pensés pour Guéliz.</p>
       </div>
 
-      <div class="smap-carousel smap-reveal" data-smap-carousel>
-        <div class="smap-carousel__viewport">
-          <div class="smap-carousel__track">
-            <article class="smap-carousel__slide is-active">
-              <img src="img/temoins/appartement-temoin-honest-01.webp" alt="Appartement témoin Honest Signature à Guéliz Marrakech - vue 1" width="1600" height="886" loading="eager" decoding="async">
-            </article>
-            <article class="smap-carousel__slide">
-              <img src="img/temoins/appartement-temoin-honest-02.webp" alt="Appartement témoin Honest Signature à Guéliz Marrakech - vue 2" width="1600" height="899" loading="lazy" decoding="async">
-            </article>
-            <article class="smap-carousel__slide">
-              <img src="img/temoins/appartement-temoin-honest-03.webp" alt="Appartement témoin Honest Signature à Guéliz Marrakech - vue 3" width="1600" height="1099" loading="lazy" decoding="async">
-            </article>
-            <article class="smap-carousel__slide">
-              <img src="img/temoins/appartement-temoin-honest-04.webp" alt="Appartement témoin Honest Signature à Guéliz Marrakech - vue 4" width="1600" height="1062" loading="lazy" decoding="async">
-            </article>
-            <article class="smap-carousel__slide">
-              <img src="img/temoins/appartement-temoin-honest-05.webp" alt="Appartement témoin Honest Signature à Guéliz Marrakech - vue 5" width="1600" height="899" loading="lazy" decoding="async">
-            </article>
-            <article class="smap-carousel__slide">
-              <img src="img/temoins/appartement-temoin-honest-06.webp" alt="Appartement témoin Honest Signature à Guéliz Marrakech - vue 6" width="1600" height="1070" loading="lazy" decoding="async">
-            </article>
-            <article class="smap-carousel__slide">
-              <img src="img/temoins/appartement-temoin-honest-07.webp" alt="Appartement témoin Honest Signature à Guéliz Marrakech - vue 7" width="1600" height="900" loading="lazy" decoding="async">
-            </article>
-            <article class="smap-carousel__slide">
-              <img src="img/temoins/appartement-temoin-honest-08.webp" alt="Appartement témoin Honest Signature à Guéliz Marrakech - vue 8" width="1600" height="879" loading="lazy" decoding="async">
-            </article>
-          </div>
-        </div>
-        <aside class="smap-carousel__panel" aria-label="Navigation carousel appartements témoins">
-          <div>
-            <div class="smap-kicker">Visite privée</div>
-            <h3>Appartement témoin, détails premium</h3>
-            <p>Parcourez les espaces Honest avant le salon et réservez un échange privé pour recevoir plans, surfaces et disponibilités.</p>
-            <div class="smap-carousel__controls">
-              <button class="smap-carousel__button" type="button" data-carousel-prev aria-label="Image précédente">‹</button>
-              <span class="smap-carousel__counter" id="smapCarouselStatus" aria-live="polite">1 / 8</span>
-              <button class="smap-carousel__button" type="button" data-carousel-next aria-label="Image suivante">›</button>
+      <div class="smap-emara-gallery emara-gallery smap-reveal" data-emara-gallery="slides" aria-label="Galerie appartement témoin Honest Signature">
+        <div class="smap-carousel__stage">
+          <div class="photo-ribbon-viewport emara-gallery__viewport smap-carousel__viewport">
+            <div class="photo-ribbon-track emara-gallery__track smap-carousel__track">
+              <figure class="photo-ribbon-card emara-gallery__slide"><img class="emara-gallery__image" src="img/temoins/appartement-temoin-honest-01.webp" alt="Appartement témoin Honest Signature à Guéliz Marrakech - salon" width="1600" height="886" loading="eager" decoding="async"></figure>
+              <figure class="photo-ribbon-card emara-gallery__slide"><img class="emara-gallery__image" src="img/temoins/appartement-temoin-honest-03.webp" alt="Appartement témoin Honest Signature à Guéliz Marrakech - cuisine" width="1600" height="1099" loading="lazy" decoding="async"></figure>
+              <figure class="photo-ribbon-card emara-gallery__slide"><img class="emara-gallery__image" src="img/temoins/appartement-temoin-honest-04.webp" alt="Appartement témoin Honest Signature à Guéliz Marrakech - chambre" width="1600" height="1062" loading="lazy" decoding="async"></figure>
+              <figure class="photo-ribbon-card emara-gallery__slide"><img class="emara-gallery__image" src="img/temoins/appartement-temoin-honest-05.webp" alt="Appartement témoin Honest Signature à Guéliz Marrakech - salle de bain" width="1600" height="899" loading="lazy" decoding="async"></figure>
+              <figure class="photo-ribbon-card emara-gallery__slide"><img class="emara-gallery__image" src="img/temoins/appartement-temoin-honest-06.webp" alt="Appartement témoin Honest Signature à Guéliz Marrakech - détail intérieur" width="1600" height="1070" loading="lazy" decoding="async"></figure>
+              <figure class="photo-ribbon-card emara-gallery__slide"><img class="emara-gallery__image" src="img/temoins/appartement-temoin-honest-07.webp" alt="Appartement témoin Honest Signature à Guéliz Marrakech - espace de vie" width="1600" height="900" loading="lazy" decoding="async"></figure>
+              <figure class="photo-ribbon-card emara-gallery__slide"><img class="emara-gallery__image" src="img/temoins/appartement-temoin-honest-08.webp" alt="Appartement témoin Honest Signature à Guéliz Marrakech - finitions" width="1600" height="879" loading="lazy" decoding="async"></figure>
             </div>
           </div>
-        </aside>
+          <aside class="smap-carousel__panel" aria-label="Informations appartement témoin">
+            <div>
+              <div class="smap-kicker">Visite privée</div>
+              <h3>Appartement témoin, détails premium</h3>
+              <p>Parcourez les espaces Honest avant le salon et réservez un échange privé pour recevoir plans, surfaces et disponibilités.</p>
+            </div>
+          </aside>
+        </div>
+        <div class="photo-ribbon-carousel-ui emara-gallery__controls smap-carousel__controls" aria-label="Navigation de la galerie">
+          <button class="photo-ribbon-carousel-btn emara-gallery__button emara-gallery__button--prev" type="button" aria-label="Image précédente">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M14.5 5.5L8 12l6.5 6.5"></path>
+            </svg>
+          </button>
+          <span class="emara-gallery__counter" aria-live="polite">1 / 7</span>
+          <button class="photo-ribbon-carousel-btn emara-gallery__button emara-gallery__button--next" type="button" aria-label="Image suivante">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M9.5 5.5L16 12l-6.5 6.5"></path>
+            </svg>
+          </button>
+        </div>
       </div>
     </section>
 
@@ -1211,55 +1180,8 @@
         });
       }
 
-      document.querySelectorAll('[data-smap-carousel]').forEach(function(carousel) {
-        var track = carousel.querySelector('.smap-carousel__track');
-        var slides = Array.prototype.slice.call(carousel.querySelectorAll('.smap-carousel__slide'));
-        var prev = carousel.querySelector('[data-carousel-prev]');
-        var next = carousel.querySelector('[data-carousel-next]');
-        var current = 0;
-        var interval = null;
-        var delay = 5800;
-        var reduceMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-
-        var status = document.getElementById('smapCarouselStatus');
-
-        function setSlide(index) {
-          current = (index + slides.length) % slides.length;
-          track.style.transform = 'translateX(' + (-current * 100) + '%)';
-          slides.forEach(function(slide, slideIndex) {
-            slide.classList.toggle('is-active', slideIndex === current);
-          });
-          if (status) status.textContent = (current + 1) + ' / ' + slides.length;
-          carousel.classList.remove('is-playing');
-          void carousel.offsetWidth;
-          if (!reduceMotion) carousel.classList.add('is-playing');
-        }
-
-        function stop() {
-          if (interval) window.clearInterval(interval);
-          interval = null;
-          carousel.classList.remove('is-playing');
-        }
-
-        function play() {
-          if (reduceMotion) return;
-          stop();
-          carousel.classList.add('is-playing');
-          interval = window.setInterval(function() {
-            setSlide(current + 1);
-          }, delay);
-        }
-
-        if (prev) prev.addEventListener('click', function() { setSlide(current - 1); play(); });
-        if (next) next.addEventListener('click', function() { setSlide(current + 1); play(); });
-        carousel.addEventListener('mouseenter', stop);
-        carousel.addEventListener('mouseleave', play);
-        carousel.addEventListener('focusin', stop);
-        carousel.addEventListener('focusout', play);
-        setSlide(0);
-        play();
-      });
     })();
   </script>
+  <script src="/js/emara-gallery.js?v=2026060919" defer></script>
 </body>
 </html>
