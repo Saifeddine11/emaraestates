@@ -195,11 +195,11 @@
     <div class="property-card property-card--featured reveal">
       <div class="img-wrap property-slider" data-slider-delay="3800">
         <img class="slider-image is-active" src="/img/honest006.webp" alt="Façade contemporaine d'Honest Signature 7 à Guéliz Marrakech" data-lightbox-title="Façade contemporaine - Honest Signature 7 à Guéliz Marrakech" width="1536" height="1024" loading="eager" decoding="async">
-        <img class="slider-image" src="/img/honest002.webp" alt="Sauna et jacuzzi de la résidence Honest Signature 7 à Marrakech" data-lightbox-title="Sauna et jacuzzi premium - Honest Signature 7 Marrakech" width="1600" height="1067" loading="lazy" decoding="async">
-        <img class="slider-image" src="/img/honest003.webp" alt="Rooftop avec salon cinéma et vue sur Marrakech depuis Honest Signature 7" data-lightbox-title="Rooftop avec cinéma privé et vue Marrakech - Honest Signature 7" width="1600" height="1066" loading="lazy" decoding="async">
-        <img class="slider-image" src="/img/honest004.webp" alt="Piscine intérieure de la résidence Honest Signature 7 à Guéliz" data-lightbox-title="Piscine intérieure haut standing - Honest Signature 7 Guéliz" width="1600" height="900" loading="lazy" decoding="async">
-        <img class="slider-image" src="/img/honest005.webp" alt="Salle de sport équipée dans la résidence Honest Signature 7 à Marrakech" data-lightbox-title="Salle de sport équipée - Résidence Honest Signature 7 Marrakech" width="1280" height="720" loading="lazy" decoding="async">
-        <img class="slider-image" src="/img/honest007.webp" alt="Perspective de façade d'Honest Signature 7 à Guéliz" data-lightbox-title="Perspective de façade - Honest Signature 7 Guéliz" width="1600" height="900" loading="lazy" decoding="async">
+        <img class="slider-image" data-src="/img/honest002.webp" alt="Sauna et jacuzzi de la résidence Honest Signature 7 à Marrakech" data-lightbox-title="Sauna et jacuzzi premium - Honest Signature 7 Marrakech" width="1600" height="1067" loading="lazy" decoding="async">
+        <img class="slider-image" data-src="/img/honest003.webp" alt="Rooftop avec salon cinéma et vue sur Marrakech depuis Honest Signature 7" data-lightbox-title="Rooftop avec cinéma privé et vue Marrakech - Honest Signature 7" width="1600" height="1066" loading="lazy" decoding="async">
+        <img class="slider-image" data-src="/img/honest004.webp" alt="Piscine intérieure de la résidence Honest Signature 7 à Guéliz" data-lightbox-title="Piscine intérieure haut standing - Honest Signature 7 Guéliz" width="1600" height="900" loading="lazy" decoding="async">
+        <img class="slider-image" data-src="/img/honest005.webp" alt="Salle de sport équipée dans la résidence Honest Signature 7 à Marrakech" data-lightbox-title="Salle de sport équipée - Résidence Honest Signature 7 Marrakech" width="1280" height="720" loading="lazy" decoding="async">
+        <img class="slider-image" data-src="/img/honest007.webp" alt="Perspective de façade d'Honest Signature 7 à Guéliz" data-lightbox-title="Perspective de façade - Honest Signature 7 Guéliz" width="1600" height="900" loading="lazy" decoding="async">
         <div class="badge badge-dispo">Disponible</div>
         <div class="badge-construction">Lancement 2026 · Première livraison 2028</div>
       </div>
@@ -575,9 +575,19 @@ var activeLightboxIndex = 0;
 var lastFocusedTrigger = null;
 var lightboxHideTimer = null;
 
+function ensureSliderImageLoaded(slide) {
+  if (!slide || slide.dataset.slideLoaded === 'true') return;
+  if (slide.dataset.src) {
+    slide.src = slide.dataset.src;
+    slide.removeAttribute('data-src');
+  }
+  slide.dataset.slideLoaded = 'true';
+}
+
 function updateLightbox(slider, slides, index) {
   var slide = slides[index];
   if (!lightbox || !slide) return;
+  ensureSliderImageLoaded(slide);
   var slideTitle = slide.getAttribute('data-lightbox-title') || slide.alt || 'Photo du projet';
   lightboxImage.src = slide.currentSrc || slide.src;
   lightboxImage.alt = slide.alt || '';
@@ -634,6 +644,7 @@ document.querySelectorAll('.property-slider').forEach(function(slider){
   if (slides.length < 2) return;
 
   function showSlide(nextIndex) {
+    ensureSliderImageLoaded(slides[nextIndex]);
     slides.forEach(function(slide, slideIndex){
       slide.classList.remove('is-active', 'is-exit');
       if (slideIndex === nextIndex) {

@@ -27,7 +27,7 @@
   <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400&amp;family=Jost:wght@300;400;500&amp;display=swap">
   <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400&amp;family=Jost:wght@300;400;500&amp;display=swap" rel="stylesheet" media="print" onload="this.media='all'">
   <noscript><link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400&amp;family=Jost:wght@300;400;500&amp;display=swap" rel="stylesheet"></noscript>
-  <link rel="stylesheet" href="css/style.css?v=2026053005">
+  <link rel="stylesheet" href="/css/style.css?v=2026060906">
   <style>
     body.smap-page {
       background: #0f120f;
@@ -169,6 +169,41 @@
 
     .smap-hero__content .contact-social {
       margin-top: 20px;
+      max-width: 100%;
+    }
+
+    .smap-hero__content .contact-social__links {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+      max-width: 100%;
+    }
+
+    .smap-hero__content .contact-social__link,
+    .smap-hero__content .contact-social__link:visited {
+      width: 46px;
+      height: 46px;
+      min-width: 46px;
+      max-width: 46px;
+      flex: 0 0 46px;
+      border-radius: 999px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      text-decoration: none;
+    }
+
+    .smap-hero__content .contact-social__icon,
+    .smap-hero__content .contact-social__link svg {
+      width: 20px;
+      height: 20px;
+      min-width: 20px;
+      max-width: 20px;
+      max-height: 20px;
+      display: block;
+      flex: 0 0 auto;
     }
 
     .smap-actions {
@@ -715,6 +750,24 @@
 
       .smap-hero__content .contact-social {
         margin-top: 18px;
+      }
+
+      .smap-hero__content .contact-social__link,
+      .smap-hero__content .contact-social__link:visited {
+        width: 44px;
+        height: 44px;
+        min-width: 44px;
+        max-width: 44px;
+        flex-basis: 44px;
+      }
+
+      .smap-hero__content .contact-social__icon,
+      .smap-hero__content .contact-social__link svg {
+        width: 19px;
+        height: 19px;
+        min-width: 19px;
+        max-width: 19px;
+        max-height: 19px;
       }
 
       .smap-hero__image {
