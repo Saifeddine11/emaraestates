@@ -1,10 +1,12 @@
 const http = require('http');
 const fs = require('fs');
 const path = require('path');
+const tls = require('tls');
 
 loadEnvFile(path.join(__dirname, '.env'));
 
-const PORT = Number(process.env.PORT || 5601);
+const PORT = Number(process.env.PORT || 5502);
+const HOST = process.env.HOST || '0.0.0.0';
 const ROOT = __dirname;
 const TURNSTILE_SECRET = process.env.TURNSTILE_SECRET || '';
 const CONTACT_WEBHOOK_URL = process.env.CONTACT_WEBHOOK_URL || 'https://hooks.zapier.com/hooks/catch/27111467/ujcbawh/';
@@ -266,6 +268,8 @@ function validatePayload(input) {
     phoneNumber: phonePayload.phoneNumber,
     budget: sanitize(input.budget, 30),
     message: sanitize(input.message, 1200),
+    jour_visite: sanitize(input.jour_visite, 80),
+    source: sanitize(input.source, 120),
     company_website: sanitize(input.company_website, 120),
     form_token: sanitize(input.form_token, 128),
     cf_turnstile_response: sanitize(input['cf-turnstile-response'] || input.cf_turnstile_response, 2048),
@@ -365,13 +369,151 @@ async function forwardLead(payload) {
       phoneNumber: escapeHtml(payload.phoneNumber),
       budget: escapeHtml(payload.budget),
       message: escapeHtml(payload.message),
+      jour_visite: escapeHtml(payload.jour_visite),
       company_website: escapeHtml(payload.company_website),
       form_token: escapeHtml(payload.form_token),
       elapsed_ms: payload.elapsed_ms,
-      source: 'emaraestates.com'
+      source: escapeHtml(payload.source || 'emaraestates.com')
     })
   });
   if (!response.ok) throw new Error(`Zapier webhook failed: ${response.status}`);
+}
+
+const NEWSLETTER_SUCCESS = 'Merci. Votre inscription à la newsletter Emara Estates a bien été prise en compte.';
+const NEWSLETTER_INVALID = 'Veuillez entrer une adresse email valide.';
+const NEWSLETTER_ERROR = 'Une erreur est survenue. Veuillez réessayer ou nous contacter directement.';
+
+function newsletterEmailBody(email, pageUrl) {
+  const dateStr = new Date().toLocaleString('fr-FR', { timeZone: 'Africa/Casablanca' });
+  return [
+    'Nouvelle inscription à la newsletter Emara Estates.',
+    '',
+    'Email abonné :',
+    email,
+    '',
+    'Page :',
+    pageUrl,
+    '',
+    'Date :',
+    dateStr
+  ].join('\r\n');
+}
+
+function smtpReadResponse(socket) {
+  return new Promise(function(resolve, reject) {
+    let data = '';
+    function onData(chunk) {
+      data += chunk;
+      const lines = data.split(/\r?\n/).filter(Boolean);
+      const lastLine = lines[lines.length - 1] || '';
+      if (lastLine.length >= 4 && lastLine[3] === ' ') {
+        socket.removeListener('data', onData);
+        socket.removeListener('error', reject);
+        resolve(data);
+      }
+    }
+    socket.on('data', onData);
+    socket.on('error', reject);
+  });
+}
+
+async function smtpCommand(socket, command, expectedCodes) {
+  if (command) socket.write(command + '\r\n');
+  const response = await smtpReadResponse(socket);
+  const code = Number(response.slice(0, 3));
+  if (!expectedCodes.includes(code)) {
+    throw new Error('SMTP command failed: ' + code);
+  }
+  return response;
+}
+
+async function sendNewsletterEmail(email, pageUrl) {
+  const host = process.env.SMTP_HOST || 'smtp.gmail.com';
+  const port = Number(process.env.SMTP_PORT || 465);
+  const user = process.env.SMTP_USER || '';
+  const pass = process.env.SMTP_PASS || '';
+  const to = process.env.CONTACT_TO || 'contact@emaraestates.com';
+  const from = process.env.CONTACT_FROM || user;
+
+  if (!host || !port || !user || !pass || !from) {
+    throw new Error('SMTP configuration missing.');
+  }
+
+  const subject = 'Nouvelle inscription newsletter — Emara Estates';
+  const body = newsletterEmailBody(email, pageUrl);
+  const message = [
+    'From: Emara Estates <' + from + '>',
+    'To: ' + to,
+    'Reply-To: ' + email,
+    'Subject: ' + subject,
+    'MIME-Version: 1.0',
+    'Content-Type: text/plain; charset=UTF-8',
+    'Content-Transfer-Encoding: 8bit',
+    'Date: ' + new Date().toUTCString(),
+    '',
+    body,
+    ''
+  ].join('\r\n').replace(/\r\n\./g, '\r\n..');
+
+  const socket = tls.connect({ host, port, servername: host });
+  await new Promise(function(resolve, reject) {
+    socket.once('secureConnect', resolve);
+    socket.once('error', reject);
+  });
+
+  try {
+    await smtpCommand(socket, null, [220]);
+    await smtpCommand(socket, 'EHLO emaraestates.com', [250]);
+    await smtpCommand(socket, 'AUTH LOGIN', [334]);
+    await smtpCommand(socket, Buffer.from(user).toString('base64'), [334]);
+    await smtpCommand(socket, Buffer.from(pass).toString('base64'), [235]);
+    await smtpCommand(socket, 'MAIL FROM:<' + from + '>', [250]);
+    await smtpCommand(socket, 'RCPT TO:<' + to + '>', [250, 251]);
+    await smtpCommand(socket, 'DATA', [354]);
+    socket.write(message + '\r\n.\r\n');
+    await smtpCommand(socket, null, [250]);
+    await smtpCommand(socket, 'QUIT', [221]);
+  } finally {
+    socket.end();
+  }
+}
+
+async function handleNewsletter(req, res) {
+  const ip = clientIp(req);
+  let input;
+  try {
+    input = await readJsonBody(req);
+  } catch (error) {
+    sendJson(res, 400, { success: false, message: NEWSLETTER_ERROR });
+    return;
+  }
+
+  const honeypot = sanitize(input.website, 120);
+  if (honeypot) {
+    sendJson(res, 200, { success: true, message: NEWSLETTER_SUCCESS });
+    return;
+  }
+
+  const email = sanitize(input.email, 254);
+  const pageUrl = sanitize(input.page_url || req.headers.referer || '', 500) || 'emaraestates.com';
+
+  if (!looksLikeEmail(email)) {
+    sendJson(res, 422, { success: false, message: NEWSLETTER_INVALID });
+    return;
+  }
+
+  if (isRateLimited(ip)) {
+    sendJson(res, 429, { success: false, message: NEWSLETTER_ERROR });
+    return;
+  }
+
+  try {
+    await sendNewsletterEmail(email, pageUrl);
+    sendJson(res, 200, { success: true, message: NEWSLETTER_SUCCESS });
+  } catch (error) {
+    console.error('Newsletter send failed:', error.message);
+    sendJson(res, 500, { success: false, message: NEWSLETTER_ERROR });
+  }
 }
 
 async function handleContact(req, res) {
@@ -417,14 +559,22 @@ const CANONICAL_REDIRECTS = {
   '/residences-honest-678.html': '/residences-honest-678/',
   '/contact/': '/contact',
   '/contact.html': '/contact',
+  '/formulaire/': '/formulaire',
   '/formulaire.html': '/formulaire',
-  '/index.html': '/'
+  '/index.html': '/',
+  '/immobilier-luxe-marrakech.html': '/immobilier-luxe-marrakech',
+  '/appartement-neuf-gueliz-marrakech.html': '/appartement-neuf-gueliz-marrakech',
+  '/investissement-immobilier-marrakech.html': '/investissement-immobilier-marrakech'
 };
 
 const CANONICAL_PAGES = {
+  '/': 'index.html',
   '/contact': 'contact.html',
   '/formulaire': 'formulaire.html',
-  '/residences-honest-678/': path.join('residences-honest-678', 'index.html')
+  '/residences-honest-678/': path.join('residences-honest-678', 'index.html'),
+  '/immobilier-luxe-marrakech': 'immobilier-luxe-marrakech.html',
+  '/appartement-neuf-gueliz-marrakech': 'appartement-neuf-gueliz-marrakech.html',
+  '/investissement-immobilier-marrakech': 'investissement-immobilier-marrakech.html'
 };
 
 function redirectTo(res, location) {
@@ -445,9 +595,7 @@ function serveStatic(req, res) {
     return;
   }
   let filePath;
-  if (urlPath === '/') {
-    filePath = path.join(ROOT, 'index.html');
-  } else if (CANONICAL_PAGES[urlPath]) {
+  if (CANONICAL_PAGES[urlPath]) {
     filePath = path.join(ROOT, CANONICAL_PAGES[urlPath]);
   } else {
     const requestedPath = path.resolve(ROOT, urlPath.slice(1));
@@ -492,6 +640,10 @@ const server = http.createServer(function(req, res) {
     handleContact(req, res);
     return;
   }
+  if (req.method === 'POST' && (req.url === '/newsletter.php' || req.url === '/api/newsletter')) {
+    handleNewsletter(req, res);
+    return;
+  }
   if (req.method === 'GET' || req.method === 'HEAD') {
     serveStatic(req, res);
     return;
@@ -500,6 +652,6 @@ const server = http.createServer(function(req, res) {
   res.end('Method Not Allowed');
 });
 
-server.listen(PORT, function() {
-  console.log(`Emara Estates server running on http://localhost:${PORT}`);
+server.listen(PORT, HOST, function() {
+  console.log(`Emara Estates server running on http://127.0.0.1:${PORT}`);
 });

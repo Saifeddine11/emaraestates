@@ -42,6 +42,10 @@
       overflow-x: hidden;
     }
 
+    body.formulaire-page .ads-shell {
+      padding-top: clamp(80px, calc(4vw + 56px), 104px);
+    }
+
     .ads-landing {
       position: relative;
       min-height: 100vh;
@@ -703,6 +707,57 @@
   </style>
 </head>
 <body class="formulaire-page">
+
+<!-- Preloader -->
+<div class="preloader" id="preloader">
+  <img src="/img/logo.webp" alt="Emara" width="1250" height="625" decoding="async">
+  <div class="pre-line"></div>
+  <div class="pre-text">Estates</div>
+</div>
+
+<!-- Mobile Menu -->
+<div class="mobile-menu" id="mobileMenu">
+  <button class="close-menu" onclick="closeMobileMenu()" aria-label="Fermer le menu">✕</button>
+  <a href="/" onclick="closeMobileMenu()">Accueil</a>
+  <a href="/residences-honest-678/" onclick="closeMobileMenu()">Nos projets sur plan</a>
+  <a href="/residences-honest-678/" class="mobile-menu__sub" onclick="closeMobileMenu()">Honest Signature 7</a>
+  <a href="/#appartement-temoin-honest" onclick="closeMobileMenu()">Nos réalisations</a>
+  <a href="/#appartement-temoin-honest" class="mobile-menu__sub" onclick="closeMobileMenu()">Honest 1</a>
+  <a href="/#appartement-temoin-honest" class="mobile-menu__sub" onclick="closeMobileMenu()">Honest 2</a>
+  <a href="/#appartement-temoin-honest" class="mobile-menu__sub" onclick="closeMobileMenu()">Honest 3</a>
+  <a href="/#appartement-temoin-honest" class="mobile-menu__sub" onclick="closeMobileMenu()">Honest 4</a>
+  <a href="/#faq" onclick="closeMobileMenu()">FAQ</a>
+  <a href="/contact" onclick="closeMobileMenu()">Contact</a>
+</div>
+
+<!-- Nav -->
+<nav id="nav">
+  <div class="logo"><a href="/"><img src="/img/logo.webp" alt="Emara Estates" width="1250" height="625" decoding="async"></a></div>
+  <div class="links">
+    <a href="/">Accueil</a>
+    <div class="nav-dropdown">
+      <a href="/residences-honest-678/" class="nav-dropdown__trigger">Nos projets sur plan</a>
+      <div class="nav-dropdown__panel">
+        <a href="/residences-honest-678/">Honest Signature 7</a>
+      </div>
+    </div>
+    <div class="nav-dropdown">
+      <a href="/#appartement-temoin-honest" class="nav-dropdown__trigger">Nos réalisations</a>
+      <div class="nav-dropdown__panel">
+        <a href="/#appartement-temoin-honest">Honest 1</a>
+        <a href="/#appartement-temoin-honest">Honest 2</a>
+        <a href="/#appartement-temoin-honest">Honest 3</a>
+        <a href="/#appartement-temoin-honest">Honest 4</a>
+      </div>
+    </div>
+    <a href="/#faq">FAQ</a>
+    <a href="/contact" class="cta-nav">Contact</a>
+  </div>
+  <button class="nav-burger" type="button" onclick="toggleMobileMenu()" aria-label="Ouvrir le menu" aria-controls="mobileMenu" aria-expanded="false">
+    <span></span><span></span><span></span>
+  </button>
+</nav>
+
   <main class="ads-landing">
     <img class="ads-landing__bg" src="img/hero-optimized.webp" alt="Vue de Marrakech et immobilier de prestige par Emara Estates" width="1280" height="855" fetchpriority="high" decoding="async">
 
@@ -839,6 +894,59 @@
     <div class="ads-bottom-bar">Emara Estates, Business center Paul, Guéliz Marrakech</div>
   </main>
 
+  <footer>
+    <div class="footer-top">
+      <div class="footer-brand">
+        <img src="/img/logo.webp" alt="Emara Estates" width="1250" height="625" loading="lazy" decoding="async">
+        <p>Promotion et vente immobilière en hyper-centre de Guéliz, Marrakech. Appartements neufs de haut standing.</p>
+      </div>
+      <div class="footer-col">
+        <div class="footer-title">Navigation</div>
+        <a href="/">Accueil</a>
+        <a href="/residences-honest-678/">Nos projets sur plans</a>
+        <a href="/#services">Notre accompagnement</a>
+        <a href="/#nos-réalisations">Résidences livrées</a>
+        <a href="/contact">Prendre contact</a>
+      </div>
+      <div class="footer-col">
+        <div class="footer-title">Immobilier à Marrakech</div>
+        <a href="/immobilier-luxe-marrakech">Immobilier luxe Marrakech</a>
+        <a href="/appartement-neuf-gueliz-marrakech">Appartement neuf Guéliz</a>
+        <a href="/investissement-immobilier-marrakech">Investissement immobilier Marrakech</a>
+        <a href="/residences-honest-678/">Honest Signature 7</a>
+      </div>
+      <div class="footer-col">
+        <div class="footer-title">Programmes</div>
+        <a href="/residences-honest-678/">Honest Signature 7</a>
+        <a href="/#nos-réalisations">Résidence Honest 5</a>
+        <a href="/#nos-réalisations">Résidences livrées</a>
+        <div class="footer-title">Suivez-nous</div>
+        <a href="https://www.instagram.com/emara.estates" target="_blank" rel="noopener">Instagram</a>
+        <a href="https://www.tiktok.com/@emara.estates?_r=1&amp;_t=ZS-95VFqI78Wjw" target="_blank" rel="noopener">TikTok</a>
+        <a href="https://snapchat.com/t/kQce8jwo" target="_blank" rel="noopener">Snapchat</a>
+      </div>
+      <div class="footer-map">
+        <div class="footer-title">Notre Bureau</div>
+        <p>2ème etage, Business center Paul,<br>Rue Mouatamid Ibn Abaad, Marrakech 40000</p>
+        <div class="footer-map-frame">
+          <iframe title="Carte du bureau Emara Estates à Marrakech" src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d875.8418635332205!2d-8.00738759783571!3d31.6316639507953!2m3!1f0!2f0!3f0!2m2!1i1024!2i768!4f13.1!3m3!1m2!1s0xdafefb6dcc86ea1%3A0x6ae3814ee3fb96d0!2sEMARA%20ESTATES%20Marrakech!5e0!3m2!1sfr!2sma!4v1776019628621!5m2!1sfr!2sma" width="600" height="450" style="border:0;" allowfullscreen="" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
+        </div>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <span>© 2026 Emara Estates. Tous droits réservés.</span>
+    </div>
+  </footer>
+
+  <script src="/js/nav.js"></script>
+  <script>
+  (function(){
+    var pre = document.getElementById('preloader');
+    if (!pre) return;
+    setTimeout(function(){ pre.style.opacity = '0'; pre.style.pointerEvents = 'none'; }, 900);
+    setTimeout(function(){ pre.style.display = 'none'; }, 1500);
+  })();
+  </script>
   <script src="js/phone-input-country.js?v=20260528"></script>
   <script src="js/contact-form.js?v=20260528"></script>
 </body>

@@ -75,6 +75,7 @@
     var tokenInput = document.getElementById('contactFormToken');
     var turnstileInput = document.getElementById('cfTurnstileResponse');
     var submitButton = form.querySelector('.btn-submit');
+    var defaultSubmitText = submitButton ? submitButton.textContent : '';
     var phoneInput = window.PhoneInputWithCountryCode || null;
     var turnstileWidgetId = null;
     var startedAt = Date.now();
@@ -107,7 +108,7 @@
     function setSubmitting(isSubmitting) {
       if (!submitButton) return;
       submitButton.disabled = isSubmitting;
-      submitButton.textContent = isSubmitting ? 'Envoi...' : 'Envoyer la demande';
+      submitButton.textContent = isSubmitting ? 'Envoi...' : defaultSubmitText;
     }
 
     function setFieldError(name, message, showErrors) {
@@ -229,6 +230,8 @@
           phoneNumber: phoneDetails.phoneNumber || formData.get('phoneNumber'),
           budget: formData.get('budget'),
           message: formData.get('message'),
+          jour_visite: formData.get('jour_visite'),
+          source: formData.get('source'),
           company_website: formData.get('company_website'),
           form_token: formData.get('form_token'),
           'cf-turnstile-response': turnstileResponse,

@@ -1,6 +1,7 @@
 {
   "scripts": {
-    "start": "node server.js"
+    "start": "node server.js",
+    "dev": "PORT=5502 node server.js"
   },
   "dependencies": {
     "bootstrap": "^5.3.8"
