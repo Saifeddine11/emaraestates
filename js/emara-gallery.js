@@ -1,12 +1,37 @@
 (function () {
+  'use strict';
+
   var MOBILE_MAX = 768;
 
   function isMobile() {
     return window.innerWidth <= MOBILE_MAX;
   }
 
+  function controlsAreVisible(root) {
+    var controls = root.querySelector(
+      '.emara-gallery__controls, .photo-ribbon-carousel-ui, .project-gallery-carousel-ui, .seo-gallery-carousel-ui, .realisations-carousel-ui'
+    );
+    if (!controls) return false;
+    return window.getComputedStyle(controls).display !== 'none';
+  }
+
+  function shouldRunCarousel(root) {
+    return isMobile()
+      || root.classList.contains('smap-emara-gallery')
+      || root.classList.contains('emara-gallery--single')
+      || controlsAreVisible(root);
+  }
+
+  function usesTrackTransform(root, mode) {
+    return mode === 'slides' && (
+      root.classList.contains('emara-gallery--ribbon')
+      || root.classList.contains('project-gallery-ribbon')
+    );
+  }
+
   function initEmaraGallery(root) {
-    if (!root) return null;
+    if (!root || root.__emaraGalleryBound) return null;
+    root.__emaraGalleryBound = true;
 
     var mode = root.getAttribute('data-emara-gallery') || 'slides';
     var track = root.querySelector('.emara-gallery__track')
@@ -19,14 +44,25 @@
       || root.querySelector('.photo-ribbon-viewport')
       || root.querySelector('.seo-gallery__viewport')
       || track.parentElement;
-    var slideSelector = mode === 'cards'
-      ? '.property-card'
-      : '.emara-gallery__slide:not([aria-hidden="true"])';
-    var prev = root.querySelector('.emara-gallery__button--prev');
-    var next = root.querySelector('.emara-gallery__button--next');
+
+    var prev = root.querySelector('.emara-gallery__button--prev')
+      || root.querySelector('.photo-ribbon-carousel-btn--prev')
+      || root.querySelector('.project-gallery-carousel-btn--prev')
+      || root.querySelector('.seo-gallery-carousel-btn--prev')
+      || root.querySelector('.realisations-carousel-btn--prev');
+
+    var next = root.querySelector('.emara-gallery__button--next')
+      || root.querySelector('.photo-ribbon-carousel-btn--next')
+      || root.querySelector('.project-gallery-carousel-btn--next')
+      || root.querySelector('.seo-gallery-carousel-btn--next')
+      || root.querySelector('.realisations-carousel-btn--next');
+
     var counter = root.querySelector('.emara-gallery__counter');
-    var singleViewport = root.classList.contains('smap-emara-gallery') || root.classList.contains('emara-gallery--single');
-    var useActiveClass = mode === 'cards' || mode === 'slides' || mode === 'slides-active' || singleViewport;
+    var useTransform = usesTrackTransform(root, mode);
+    var useActiveClass = mode === 'cards'
+      || mode === 'slides-active'
+      || root.classList.contains('smap-emara-gallery')
+      || (mode === 'slides' && !useTransform);
     var indexHost = viewport || root;
 
     var state = {
@@ -37,34 +73,71 @@
     };
 
     function getSlides() {
-      return Array.prototype.slice.call(track.querySelectorAll(slideSelector));
+      var selector = mode === 'cards'
+        ? ':scope > .property-card'
+        : '.emara-gallery__slide:not([aria-hidden="true"])';
+      return Array.prototype.slice.call(track.querySelectorAll(selector)).filter(function (slide) {
+        return slide.getAttribute('aria-hidden') !== 'true';
+      });
+    }
+
+    function setIndexVars(index) {
+      var value = String(index);
+      indexHost.style.setProperty('--emara-gallery-index', value);
+      indexHost.style.setProperty('--mobile-carousel-index', value);
+      track.style.setProperty('--emara-gallery-index', value);
+      track.style.setProperty('--mobile-carousel-index', value);
+      root.style.setProperty('--emara-gallery-index', value);
+      root.style.setProperty('--mobile-carousel-index', value);
+    }
+
+    function clearIndexVars() {
+      indexHost.style.removeProperty('--emara-gallery-index');
+      indexHost.style.removeProperty('--mobile-carousel-index');
+      track.style.removeProperty('--emara-gallery-index');
+      track.style.removeProperty('--mobile-carousel-index');
+      track.style.removeProperty('transform');
+      root.style.removeProperty('--emara-gallery-index');
+      root.style.removeProperty('--mobile-carousel-index');
+    }
+
+    function applyTransform() {
+      setIndexVars(state.index);
+    }
+
+    function resetDesktopState(slides) {
+      clearIndexVars();
+      slides.forEach(function (slide) {
+        slide.classList.remove('is-active');
+      });
+      if (counter) counter.textContent = '';
+      if (prev) prev.disabled = false;
+      if (next) next.disabled = false;
     }
 
     function update(nextIndex) {
       var slides = getSlides();
       if (!slides.length) return;
 
-      if (!isMobile() && !singleViewport) {
-        indexHost.style.removeProperty('--emara-gallery-index');
-        indexHost.style.removeProperty('--mobile-carousel-index');
-        track.style.transform = '';
-        slides.forEach(function (slide) {
-          slide.classList.remove('is-active');
-        });
-        if (counter) counter.textContent = '';
-        if (prev) prev.disabled = false;
-        if (next) next.disabled = false;
+      if (!shouldRunCarousel(root)) {
+        resetDesktopState(slides);
         return;
       }
 
       state.index = Math.max(0, Math.min(nextIndex, slides.length - 1));
 
-      if (useActiveClass) {
+      if (useTransform) {
+        applyTransform();
+        slides.forEach(function (slide, slideIndex) {
+          slide.classList.toggle('is-active', slideIndex === state.index);
+        });
+      } else if (useActiveClass) {
+        clearIndexVars();
         slides.forEach(function (slide, slideIndex) {
           slide.classList.toggle('is-active', slideIndex === state.index);
         });
       } else {
-        indexHost.style.setProperty('--emara-gallery-index', String(state.index));
+        setIndexVars(state.index);
       }
 
       if (counter) {
@@ -74,23 +147,34 @@
       if (next) next.disabled = state.index >= slides.length - 1;
     }
 
+    function goNext() {
+      if (!shouldRunCarousel(root)) return;
+      update(state.index + 1);
+    }
+
+    function goPrev() {
+      if (!shouldRunCarousel(root)) return;
+      update(state.index - 1);
+    }
+
     if (prev) {
-      prev.addEventListener('click', function () {
-        if (!isMobile() && !singleViewport) return;
-        update(state.index - 1);
+      prev.addEventListener('click', function (event) {
+        event.preventDefault();
+        goPrev();
       });
     }
+
     if (next) {
-      next.addEventListener('click', function () {
-        if (!isMobile() && !singleViewport) return;
-        update(state.index + 1);
+      next.addEventListener('click', function (event) {
+        event.preventDefault();
+        goNext();
       });
     }
 
     var swipeTarget = viewport || track;
     if (swipeTarget && swipeTarget.addEventListener) {
       swipeTarget.addEventListener('touchstart', function (event) {
-        if (!isMobile()) return;
+        if (!shouldRunCarousel(root)) return;
         var touch = event.touches && event.touches[0];
         if (!touch) return;
         state.touchStartX = touch.clientX;
@@ -99,7 +183,7 @@
       }, { passive: true });
 
       swipeTarget.addEventListener('touchmove', function (event) {
-        if (!isMobile()) return;
+        if (!shouldRunCarousel(root)) return;
         var touch = event.touches && event.touches[0];
         if (!touch) return;
         var deltaX = touch.clientX - state.touchStartX;
@@ -111,7 +195,7 @@
       }, { passive: false });
 
       swipeTarget.addEventListener('touchend', function (event) {
-        if (!isMobile() || state.touchMode !== 'horizontal') {
+        if (!shouldRunCarousel(root) || state.touchMode !== 'horizontal') {
           state.touchMode = '';
           return;
         }
@@ -125,19 +209,37 @@
       }, { passive: true });
     }
 
+    var resizeTimer;
     function refresh() {
-      update(state.index);
+      window.clearTimeout(resizeTimer);
+      resizeTimer = window.setTimeout(function () {
+        update(state.index);
+      }, 80);
     }
 
     window.addEventListener('resize', refresh);
+    if (typeof ResizeObserver !== 'undefined') {
+      var resizeObserver = new ResizeObserver(refresh);
+      resizeObserver.observe(track);
+      if (viewport && viewport !== track) resizeObserver.observe(viewport);
+    }
+
     update(0);
 
     return { root: root, refresh: refresh, update: update };
   }
 
-  var galleries = Array.prototype.slice.call(
-    document.querySelectorAll('[data-emara-gallery]')
-  ).map(initEmaraGallery).filter(Boolean);
+  function bootEmaraGalleries() {
+    var galleries = Array.prototype.slice.call(
+      document.querySelectorAll('[data-emara-gallery]')
+    ).map(initEmaraGallery).filter(Boolean);
+    window.EmaraGalleries = galleries;
+    return galleries;
+  }
 
-  window.EmaraGalleries = galleries;
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', bootEmaraGalleries);
+  } else {
+    bootEmaraGalleries();
+  }
 })();
