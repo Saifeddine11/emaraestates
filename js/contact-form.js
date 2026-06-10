@@ -246,13 +246,16 @@
             try {
               payload = text ? JSON.parse(text) : {};
             } catch (parseError) {
-              payload = {
-                message: response.ok
-                  ? 'Votre demande a bien été envoyée. Merci, notre équipe vous contactera dans les plus brefs délais.'
-                  : 'Le serveur de contact ne répond pas correctement. Contactez-nous directement par WhatsApp.'
+              throw {
+                message: 'Le serveur de contact ne répond pas correctement. Contactez-nous directement par WhatsApp.'
               };
             }
             if (!response.ok) throw payload;
+            if (!payload || typeof payload.message !== 'string') {
+              throw {
+                message: 'Le serveur de contact ne répond pas correctement. Contactez-nous directement par WhatsApp.'
+              };
+            }
             return payload;
           });
         })
