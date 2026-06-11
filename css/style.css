@@ -1139,8 +1139,30 @@ section { padding: 130px 60px; }
   flex-direction: column;
   gap: 18px;
 }
-.form-row { display: flex; gap: 18px; }
-.form-row > * { flex: 1; }
+.form-row { display: flex; flex-wrap: wrap; gap: 18px; }
+.form-row > * { flex: 1 1 0; min-width: 0; }
+@media (min-width: 769px) {
+  .form-row > * { flex-basis: 220px; }
+}
+.form-row:has(.phone-country-field) {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 18px;
+}
+.form-row:has(.phone-country-field) > * {
+  flex: unset;
+  min-width: 0;
+}
+.contact-panel .form-row:has(.phone-country-field),
+.ads-form-panel .form-row:has(.phone-country-field) {
+  grid-template-columns: minmax(0, 1fr);
+}
+@media (min-width: 720px) {
+  .contact > .contact-form .form-row:has(.phone-country-field),
+  .smap-form-panel .form-row:has(.phone-country-field) {
+    grid-template-columns: minmax(220px, 1fr) minmax(320px, 1.35fr);
+  }
+}
 .field-wrap {
   position: relative;
   display: flex;
@@ -1157,9 +1179,11 @@ section { padding: 130px 60px; }
 .phone-country-control {
   position: relative;
   display: grid;
-  grid-template-columns: minmax(142px, 164px) minmax(0, 1fr);
+  grid-template-columns: minmax(150px, 170px) minmax(200px, 1fr);
   gap: 10px;
   align-items: stretch;
+  width: 100%;
+  min-width: 0;
 }
 .phone-country-control select:not(.phone-native-select),
 .phone-country-control input {
@@ -1227,8 +1251,8 @@ section { padding: 130px 60px; }
   font-size: 14px;
 }
 .phone-country-field .field-label-animated {
-  left: calc(164px + 10px + 20px);
-  max-width: calc(100% - 164px - 10px - 40px);
+  left: calc(170px + 10px + 20px);
+  max-width: calc(100% - 170px - 10px - 40px);
 }
 .phone-country-dropdown {
   position: absolute;
