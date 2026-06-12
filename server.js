@@ -291,16 +291,7 @@ function validatePayload(input) {
     company_website: sanitize(input.company_website, 120),
     elapsed_ms: Number(input.elapsed_ms || 0)
   };
-  const errors = {};
-
-  if (payload.email && !looksLikeEmail(payload.email)) {
-    errors.email = 'Indiquez une adresse email valide.';
-  }
-  if (payload.telephone && !looksLikePhone(payload.telephone)) {
-    errors.telephone = 'Indiquez un vrai numéro de téléphone.';
-  }
-
-  return { payload, errors };
+  return { payload, errors: {} };
 }
 
 function readJsonBody(req) {

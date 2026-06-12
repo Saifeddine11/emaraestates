@@ -330,16 +330,7 @@ function validatePayload(array $input, array $validBudgets, array $blockedTerms)
         'company_website' => sanitizeValue($input['company_website'] ?? '', 120),
         'elapsed_ms' => (int) ($input['elapsed_ms'] ?? 0),
     ];
-    $errors = [];
-
-    if ($payload['email'] !== '' && !looksLikeEmail($payload['email'])) {
-        $errors['email'] = 'Indiquez une adresse email valide.';
-    }
-    if ($payload['telephone'] !== '' && !looksLikePhone($payload['telephone'])) {
-        $errors['telephone'] = 'Indiquez un vrai numéro de téléphone.';
-    }
-
-    return [$payload, $errors];
+    return [$payload, []];
 }
 
 function clientIp(): string

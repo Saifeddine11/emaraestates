@@ -7,18 +7,6 @@
     return ['localhost', '127.0.0.1', '::1'].indexOf(window.location.hostname) !== -1;
   }
 
-  function looksLikeEmail(value) {
-    return /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/i.test(String(value || '').trim());
-  }
-
-  function looksLikePhone(value) {
-    var raw = String(value || '').trim();
-    var digits = raw.replace(/\D/g, '');
-    if (digits.length < 8 || digits.length > 15) return false;
-    if (!/^\+?[0-9][0-9\s().-]{6,}[0-9]$/.test(raw)) return false;
-    return !/^(\d)\1+$/.test(digits);
-  }
-
   function init(form) {
     if (!form || form.dataset.contactFormBound === 'true') return;
     form.dataset.contactFormBound = 'true';
@@ -51,47 +39,23 @@
       submitButton.textContent = isSubmitting ? 'Envoi...' : defaultSubmitText;
     }
 
-    function setFieldError(name, message, showErrors) {
-      var field = form.elements[name];
-      var error = form.querySelector('[data-error-for="' + name + '"]');
-      var fields = name === 'telephone'
-        ? Array.prototype.slice.call(form.querySelectorAll('[data-phone-button], [data-phone-code], [data-phone-number], [data-phone-legacy]'))
-        : (field ? [field] : []);
-      if (!fields.length || !error) return;
-      fields.forEach(function(input) {
-        if (input.type !== 'hidden') {
-          input.classList.toggle('is-invalid', Boolean(message && showErrors));
-        }
-        input.setAttribute('aria-invalid', message ? 'true' : 'false');
-      });
-      error.textContent = showErrors ? message : '';
-      error.classList.toggle('is-visible', Boolean(message && showErrors));
-    }
-
     function clearFieldErrors() {
       ['nom_complet', 'email', 'telephone', 'budget', 'message'].forEach(function(name) {
-        setFieldError(name, '', true);
+        var error = form.querySelector('[data-error-for="' + name + '"]');
+        var fields = name === 'telephone'
+          ? Array.prototype.slice.call(form.querySelectorAll('[data-phone-button], [data-phone-code], [data-phone-number], [data-phone-legacy]'))
+          : (form.elements[name] ? [form.elements[name]] : []);
+        fields.forEach(function(input) {
+          if (input && input.type !== 'hidden') {
+            input.classList.remove('is-invalid');
+            input.setAttribute('aria-invalid', 'false');
+          }
+        });
+        if (error) {
+          error.textContent = '';
+          error.classList.remove('is-visible');
+        }
       });
-    }
-
-    function validateContactForm(showErrors) {
-      syncPhoneInput();
-      var formData = new FormData(form);
-      var errors = {};
-      var email = String(formData.get('email') || '').trim();
-      var phone = String(formData.get('telephone') || '').trim();
-
-      if (email && !looksLikeEmail(email)) {
-        errors.email = 'Indiquez une adresse email valide.';
-      }
-      if (phone && !looksLikePhone(phone)) {
-        errors.telephone = 'Indiquez un vrai numéro de téléphone.';
-      }
-
-      ['nom_complet', 'email', 'telephone', 'budget', 'message'].forEach(function(fieldName) {
-        setFieldError(fieldName, errors[fieldName], showErrors);
-      });
-      return errors;
     }
 
     function submitContactForm() {
@@ -151,14 +115,10 @@
           clearFieldErrors();
         })
         .catch(function(error) {
-          if (error && error.errors) {
-            Object.keys(error.errors).forEach(function(name) {
-              setFieldError(name, error.errors[name], true);
-            });
-          }
           if (isLocalPreview() && (!error || !error.errors)) {
             error = { message: 'Tu es sur Live Server. Lance php -S localhost:5601 dans le terminal, puis ouvre http://localhost:5601 pour tester le formulaire.' };
           }
+          clearFieldErrors();
           setFormFeedback((error && error.message) || 'Votre demande n’a pas pu être envoyée. Contactez-nous directement par WhatsApp.', true);
         })
         .finally(function() {
@@ -184,15 +144,10 @@
       var formData = new FormData(form);
       var trap = String(formData.get('company_website') || '').trim();
 
+      clearFieldErrors();
+
       if (trap) {
         setFormFeedback(successMessage, false);
-        return;
-      }
-
-      clearFieldErrors();
-      var errors = validateContactForm(true);
-      if (Object.keys(errors).length) {
-        setFormFeedback('Votre demande n’a pas pu être envoyée. Contactez-nous directement par WhatsApp.', true);
         return;
       }
 
