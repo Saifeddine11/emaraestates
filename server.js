@@ -8,8 +8,9 @@ loadEnvFile(path.join(__dirname, '.env'));
 const PORT = Number(process.env.PORT || 5502);
 const HOST = process.env.HOST || '0.0.0.0';
 const ROOT = __dirname;
-const TURNSTILE_SECRET = process.env.TURNSTILE_SECRET || '';
 const CONTACT_WEBHOOK_URL = process.env.CONTACT_WEBHOOK_URL || 'https://hooks.zapier.com/hooks/catch/27111467/ujcbawh/';
+const CONTACT_SUCCESS_MESSAGE = 'Votre demande a bien été envoyée. Merci, notre équipe vous contactera dans les plus brefs délais.';
+const MIN_SUBMIT_MS = 3000;
 const MAX_BODY_BYTES = 16 * 1024;
 const RATE_LIMIT_WINDOW_MS = 60 * 60 * 1000;
 const RATE_LIMIT_MAX = 20;
@@ -255,6 +256,24 @@ function hasSpamContent(payload) {
   return hasBlockedTerm || hasLink;
 }
 
+function hasLeadContent(payload) {
+  return Boolean(
+    payload.nom_complet ||
+    payload.email ||
+    payload.telephone ||
+    payload.budget ||
+    payload.message
+  );
+}
+
+function shouldSilentlyAccept(payload) {
+  if (payload.company_website) return true;
+  if (!payload.form_token || payload.form_token.length < 16) return true;
+  if (payload.elapsed_ms > 0 && payload.elapsed_ms < MIN_SUBMIT_MS) return true;
+  if (!hasLeadContent(payload)) return true;
+  return false;
+}
+
 function validatePayload(input) {
   const phonePayload = normalizePhonePayload(input);
   const payload = {
@@ -272,23 +291,31 @@ function validatePayload(input) {
     source: sanitize(input.source, 120),
     company_website: sanitize(input.company_website, 120),
     form_token: sanitize(input.form_token, 128),
-    cf_turnstile_response: sanitize(input['cf-turnstile-response'] || input.cf_turnstile_response, 2048),
     elapsed_ms: Number(input.elapsed_ms || 0)
   };
   const errors = {};
 
-  if (payload.company_website) errors.form = 'Soumission refusée.';
-  if (!payload.form_token || payload.form_token.length < 16) errors.form = 'Soumission refusée.';
-  if (!payload.elapsed_ms || payload.elapsed_ms < 4000) errors.form = 'Soumission trop rapide.';
-  if (!looksLikeName(payload.nom_complet)) errors.nom_complet = 'Indiquez un vrai nom complet, sans email ni numéro.';
-  if (!looksLikeEmail(payload.email)) errors.email = 'Indiquez une adresse email valide.';
-  if (looksLikePhone(payload.email)) errors.email = 'Le téléphone doit être dans le champ Téléphone.';
-  if (!looksLikePhone(payload.telephone)) errors.telephone = 'Indiquez un vrai numéro de téléphone.';
-  if (looksLikeEmail(payload.telephone)) errors.telephone = 'L’email doit être dans le champ Email.';
-  if (!validBudgets.has(payload.budget)) errors.budget = 'Choisissez un budget dans la liste.';
-  if (isWeakMessage(payload.message)) errors.message = 'Décrivez votre projet en au moins 20 caractères.';
-  if (hasSpamContent(payload)) errors.message = 'Ce message ressemble à une prospection ou contient un lien non autorisé.';
-  if (!payload.cf_turnstile_response) errors.form = 'Vérification anti-robot requise.';
+  if (payload.nom_complet && !looksLikeName(payload.nom_complet)) {
+    errors.nom_complet = 'Indiquez un vrai nom complet, sans email ni numéro.';
+  }
+  if (payload.email && !looksLikeEmail(payload.email)) {
+    errors.email = 'Indiquez une adresse email valide.';
+  }
+  if (payload.email && looksLikePhone(payload.email)) {
+    errors.email = 'Le téléphone doit être dans le champ Téléphone.';
+  }
+  if (payload.telephone && !looksLikePhone(payload.telephone)) {
+    errors.telephone = 'Indiquez un vrai numéro de téléphone.';
+  }
+  if (payload.telephone && looksLikeEmail(payload.telephone)) {
+    errors.telephone = 'L’email doit être dans le champ Email.';
+  }
+  if (payload.budget && !validBudgets.has(payload.budget)) {
+    errors.budget = 'Choisissez un budget dans la liste.';
+  }
+  if (hasLeadContent(payload) && hasSpamContent(payload)) {
+    errors.message = 'Ce message ressemble à une prospection ou contient un lien non autorisé.';
+  }
 
   return { payload, errors };
 }
@@ -334,23 +361,6 @@ function isRateLimited(ip) {
 
 function isLocalIp(ip) {
   return ip === '127.0.0.1' || ip === '::1' || ip === '::ffff:127.0.0.1';
-}
-
-async function verifyTurnstile(token, ip) {
-  if (token === '__local_turnstile_bypass__' && isLocalIp(ip)) return true;
-  if (!TURNSTILE_SECRET) return false;
-  const body = new URLSearchParams({
-    secret: TURNSTILE_SECRET,
-    response: token,
-    remoteip: ip
-  });
-  const response = await fetch('https://challenges.cloudflare.com/turnstile/v0/siteverify', {
-    method: 'POST',
-    body
-  });
-  const result = await response.json();
-  console.log('Turnstile siteverify response:', result);
-  return Boolean(result.success);
 }
 
 async function forwardLead(payload) {
@@ -527,17 +537,18 @@ async function handleContact(req, res) {
   }
 
   const result = validatePayload(input);
+
+  if (shouldSilentlyAccept(result.payload)) {
+    sendJson(res, 200, { message: CONTACT_SUCCESS_MESSAGE });
+    return;
+  }
+
   if (Object.keys(result.errors).length) {
     sendJson(res, 422, { message: 'Corrigez les champs indiqués.', errors: result.errors });
     return;
   }
 
   try {
-    const turnstileOk = await verifyTurnstile(result.payload.cf_turnstile_response, ip);
-    if (!turnstileOk) {
-      sendJson(res, 403, { message: 'Vérification anti-robot refusée.' });
-      return;
-    }
     if (isRateLimited(ip)) {
       sendJson(res, 429, { message: 'Trop de demandes envoyées. Réessayez plus tard.' });
       return;
@@ -548,7 +559,7 @@ async function handleContact(req, res) {
       console.error('Contact form Zapier error:', error.message);
       throw error;
     }
-    sendJson(res, 200, { message: 'Votre demande a bien été envoyée. Merci, notre équipe vous contactera dans les plus brefs délais.' });
+    sendJson(res, 200, { message: CONTACT_SUCCESS_MESSAGE });
   } catch (error) {
     sendJson(res, 500, { message: 'Erreur serveur. Contactez-nous directement par WhatsApp.' });
   }

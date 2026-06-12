@@ -8,8 +8,9 @@ header('Cache-Control: no-store');
 const MAX_BODY_BYTES = 16384;
 const RATE_LIMIT_WINDOW = 3600;
 const RATE_LIMIT_MAX = 20;
-const TURNSTILE_SECRET_FALLBACK = '0x4AAAAAAC8jSxGLqAltGhC5jvWNSGSMy4c';
+const MIN_SUBMIT_MS = 3000;
 const CONTACT_DEBUG_KEY = 'emara-contact-debug-20260413';
+const CONTACT_SUCCESS_MESSAGE = 'Votre demande a bien été envoyée. Merci, notre équipe vous contactera dans les plus brefs délais.';
 const CONTACT_WEBHOOK_URL_FALLBACK = 'https://hooks.zapier.com/hooks/catch/27111467/ujcbawh/';
 
 $validBudgets = ['1M - 1.5M MAD', '2M - 3M MAD', '+3M MAD'];
@@ -27,7 +28,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && ($_GET['debug'] ?? '') === CONTACT_D
     sendJson(200, [
         'php' => PHP_VERSION,
         'env_loaded' => is_file(__DIR__ . '/.env'),
-        'turnstile_secret_configured' => trim($env['TURNSTILE_SECRET'] ?? '') !== '' || TURNSTILE_SECRET_FALLBACK !== '',
         'smtp_host' => $env['SMTP_HOST'] ?? 'smtp.gmail.com',
         'smtp_user_configured' => trim($env['SMTP_USER'] ?? '') !== '',
         'smtp_pass_configured' => trim($env['SMTP_PASS'] ?? '') !== '',
@@ -44,13 +44,13 @@ $input = readJsonInput();
 $ip = clientIp();
 
 [$payload, $errors] = validatePayload($input, $validBudgets, $blockedTerms);
-if ($errors) {
-    sendJson(422, ['message' => 'Corrigez les champs indiqués.', 'errors' => $errors]);
+
+if (shouldSilentlyAccept($payload)) {
+    sendJson(200, ['message' => CONTACT_SUCCESS_MESSAGE]);
 }
 
-$turnstileSecret = trim($env['TURNSTILE_SECRET'] ?? '') ?: TURNSTILE_SECRET_FALLBACK;
-if (!verifyTurnstile($payload['cf_turnstile_response'], $ip, $turnstileSecret)) {
-    sendJson(403, ['message' => 'Vérification anti-robot refusée.']);
+if ($errors) {
+    sendJson(422, ['message' => 'Corrigez les champs indiqués.', 'errors' => $errors]);
 }
 
 if (isRateLimited($ip)) {
@@ -66,7 +66,7 @@ try {
         error_log('Contact form email skipped after Zapier success: ' . $emailError->getMessage());
     }
 
-    sendJson(200, ['message' => 'Votre demande a bien été envoyée. Merci, notre équipe vous contactera dans les plus brefs délais.']);
+    sendJson(200, ['message' => CONTACT_SUCCESS_MESSAGE]);
 } catch (Throwable $error) {
     error_log('Contact form Zapier error: ' . $error->getMessage());
     sendJson(500, ['message' => 'La demande n’a pas été envoyée vers Zapier. Contactez-nous directement par WhatsApp.']);
@@ -289,6 +289,30 @@ function hasSpamContent(array $payload, array $blockedTerms): bool
     return (bool) preg_match('/(https?:\/\/|www\.|\.ru\b|\.xyz\b|\.top\b|\.click\b)/i', $text);
 }
 
+function hasLeadContent(array $payload): bool
+{
+    return $payload['nom_complet'] !== ''
+        || $payload['email'] !== ''
+        || $payload['telephone'] !== ''
+        || $payload['budget'] !== ''
+        || $payload['message'] !== '';
+}
+
+function shouldSilentlyAccept(array $payload): bool
+{
+    if ($payload['company_website'] !== '') return true;
+    if (mb_strlen($payload['form_token']) < 16) return true;
+    if ($payload['elapsed_ms'] > 0 && $payload['elapsed_ms'] < MIN_SUBMIT_MS) return true;
+    if (!hasLeadContent($payload)) return true;
+
+    return false;
+}
+
+function fieldOrDefault(string $value): string
+{
+    return $value !== '' ? $value : 'Non renseigné';
+}
+
 function validatePayload(array $input, array $validBudgets, array $blockedTerms): array
 {
     $phonePayload = normalizePhonePayload($input);
@@ -306,24 +330,34 @@ function validatePayload(array $input, array $validBudgets, array $blockedTerms)
         'source' => sanitizeValue($input['source'] ?? '', 120),
         'company_website' => sanitizeValue($input['company_website'] ?? '', 120),
         'form_token' => sanitizeValue($input['form_token'] ?? '', 128),
-        'cf_turnstile_response' => sanitizeValue($input['cf-turnstile-response'] ?? $input['cf_turnstile_response'] ?? '', 2048),
         'elapsed_ms' => (int) ($input['elapsed_ms'] ?? 0),
     ];
     $errors = [];
 
-    if ($payload['company_website'] !== '') $errors['form'] = 'Soumission refusée.';
-    if (mb_strlen($payload['form_token']) < 16) $errors['form'] = 'Soumission refusée.';
-    if ($payload['elapsed_ms'] < 4000) $errors['form'] = 'Soumission trop rapide.';
-    if (!looksLikeName($payload['nom_complet'])) $errors['nom_complet'] = 'Indiquez un vrai nom complet, sans email ni numéro.';
-    if (!looksLikeEmail($payload['email'])) $errors['email'] = 'Indiquez une adresse email valide.';
-    if (looksLikePhone($payload['email'])) $errors['email'] = 'Le téléphone doit être dans le champ Téléphone.';
-    if (!looksLikePhone($payload['telephone'])) $errors['telephone'] = 'Indiquez un vrai numéro de téléphone.';
-    if (looksLikeEmail($payload['telephone'])) $errors['telephone'] = 'L’email doit être dans le champ Email.';
-    if (!isset(phoneCountryOptions()[$payload['phoneCountryCode']])) $errors['telephone'] = 'Choisissez un indicatif pays valide.';
-    if (!in_array($payload['budget'], $validBudgets, true)) $errors['budget'] = 'Choisissez un budget dans la liste.';
-    if (isWeakMessage($payload['message'])) $errors['message'] = 'Décrivez votre projet en au moins 20 caractères.';
-    if (hasSpamContent($payload, $blockedTerms)) $errors['message'] = 'Ce message ressemble à une prospection ou contient un lien non autorisé.';
-    if ($payload['cf_turnstile_response'] === '') $errors['form'] = 'Vérification anti-robot requise.';
+    if ($payload['nom_complet'] !== '' && !looksLikeName($payload['nom_complet'])) {
+        $errors['nom_complet'] = 'Indiquez un vrai nom complet, sans email ni numéro.';
+    }
+    if ($payload['email'] !== '' && !looksLikeEmail($payload['email'])) {
+        $errors['email'] = 'Indiquez une adresse email valide.';
+    }
+    if ($payload['email'] !== '' && looksLikePhone($payload['email'])) {
+        $errors['email'] = 'Le téléphone doit être dans le champ Téléphone.';
+    }
+    if ($payload['telephone'] !== '' && !looksLikePhone($payload['telephone'])) {
+        $errors['telephone'] = 'Indiquez un vrai numéro de téléphone.';
+    }
+    if ($payload['telephone'] !== '' && looksLikeEmail($payload['telephone'])) {
+        $errors['telephone'] = 'L’email doit être dans le champ Email.';
+    }
+    if ($payload['telephone'] !== '' && !isset(phoneCountryOptions()[$payload['phoneCountryCode']])) {
+        $errors['telephone'] = 'Choisissez un indicatif pays valide.';
+    }
+    if ($payload['budget'] !== '' && !in_array($payload['budget'], $validBudgets, true)) {
+        $errors['budget'] = 'Choisissez un budget dans la liste.';
+    }
+    if (hasLeadContent($payload) && hasSpamContent($payload, $blockedTerms)) {
+        $errors['message'] = 'Ce message ressemble à une prospection ou contient un lien non autorisé.';
+    }
 
     return [$payload, $errors];
 }
@@ -357,46 +391,6 @@ function isRateLimited(string $ip): bool
     file_put_contents($filePath, json_encode($entry), LOCK_EX);
 
     return $entry['count'] > RATE_LIMIT_MAX;
-}
-
-function verifyTurnstile(string $token, string $ip, string $secret): bool
-{
-    if ($token === '__local_turnstile_bypass__' && isLocalIp($ip)) return true;
-    if ($secret === '') {
-        error_log('Turnstile verification failed: missing TURNSTILE_SECRET in .env');
-        return false;
-    }
-
-    $body = http_build_query([
-        'secret' => $secret,
-        'response' => $token,
-        'remoteip' => $ip,
-    ]);
-    $context = stream_context_create([
-        'http' => [
-            'method' => 'POST',
-            'header' => "Content-Type: application/x-www-form-urlencoded\r\n",
-            'content' => $body,
-            'timeout' => 8,
-        ],
-    ]);
-    $response = file_get_contents('https://challenges.cloudflare.com/turnstile/v0/siteverify', false, $context);
-    if ($response === false) {
-        $error = error_get_last();
-        error_log('Turnstile verification failed: Cloudflare request failed' . ($error ? ' - ' . $error['message'] : ''));
-        return false;
-    }
-    $result = json_decode($response, true);
-    if (!is_array($result)) return false;
-    error_log('Turnstile siteverify response: ' . json_encode($result, JSON_UNESCAPED_UNICODE));
-    if (empty($result['success'])) {
-        $codes = isset($result['error-codes']) && is_array($result['error-codes'])
-            ? implode(', ', $result['error-codes'])
-            : 'unknown';
-        error_log('Turnstile verification failed: ' . $codes);
-        return false;
-    }
-    return true;
 }
 
 function contactWebhookUrl(array $env): string
@@ -503,18 +497,28 @@ function leadPageUrl(array $payload): string
 function leadEmailBody(array $payload): string
 {
     return implode("\r\n", [
-        'Nouvelle demande depuis emaraestates.com',
+        'Nouvelle demande — Emara Estates',
         '',
-        'Nom complet : ' . $payload['nom_complet'],
-        'Email : ' . $payload['email'],
-        'Téléphone : ' . $payload['telephone'],
-        'Budget : ' . $payload['budget'],
+        'Nom complet :',
+        fieldOrDefault($payload['nom_complet']),
         '',
-        'Message / projet :',
-        $payload['message'],
+        'Email :',
+        fieldOrDefault($payload['email']),
         '',
-        'Page source : ' . leadPageUrl($payload),
-        'Date : ' . date('d/m/Y H:i'),
+        'Téléphone :',
+        fieldOrDefault($payload['telephone']),
+        '',
+        'Budget :',
+        fieldOrDefault($payload['budget']),
+        '',
+        'Message :',
+        fieldOrDefault($payload['message']),
+        '',
+        'Page source :',
+        leadPageUrl($payload),
+        '',
+        'Date :',
+        date('d/m/Y H:i'),
     ]);
 }
 
@@ -525,7 +529,9 @@ function sendLeadEmailWithPhpMail(array $payload, array $env): void
     $subject = 'Nouvelle demande — Emara Estates';
     $headers = [
         'From: Emara Estates <' . $from . '>',
-        'Reply-To: ' . encodeHeader($payload['nom_complet']) . ' <' . $payload['email'] . '>',
+        'Reply-To: ' . ($payload['email'] !== ''
+            ? encodeHeader($payload['nom_complet'] !== '' ? $payload['nom_complet'] : 'Visiteur') . ' <' . $payload['email'] . '>'
+            : 'Emara Estates <contact@emaraestates.com>'),
         'MIME-Version: 1.0',
         'Content-Type: text/plain; charset=UTF-8',
         'Content-Transfer-Encoding: 8bit',
@@ -555,7 +561,9 @@ function sendLeadEmailWithSmtp(array $payload, array $env): void
     $headers = [
         'From: Emara Estates <' . $from . '>',
         'To: ' . $to,
-        'Reply-To: ' . encodeHeader($payload['nom_complet']) . ' <' . $payload['email'] . '>',
+        'Reply-To: ' . ($payload['email'] !== ''
+            ? encodeHeader($payload['nom_complet'] !== '' ? $payload['nom_complet'] : 'Visiteur') . ' <' . $payload['email'] . '>'
+            : 'Emara Estates <contact@emaraestates.com>'),
         'Subject: ' . encodeHeader($subject),
         'MIME-Version: 1.0',
         'Content-Type: text/plain; charset=UTF-8',

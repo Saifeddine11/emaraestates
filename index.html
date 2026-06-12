@@ -720,7 +720,7 @@
     </div>
   </div>
   <div class="contact-form reveal-right">
-    <form id="contactForm" action="/contact.php" method="post" novalidate data-form-start="" data-turnstile-sitekey="0x4AAAAAAC8jSxwtSDcvCJvV">
+    <form id="contactForm" action="/contact.php" method="post" novalidate data-form-start="">
       <div class="form-trap" aria-hidden="true">
         <label for="company-website">Site web</label>
         <input id="company-website" type="text" name="company_website" tabindex="-1" autocomplete="off">
@@ -731,7 +731,7 @@
           <label class="field-label-animated" for="contact-name" aria-hidden="true">
             <span style="--i:0">N</span><span style="--i:1">o</span><span style="--i:2">m</span><span style="--i:3">&nbsp;</span><span style="--i:4">c</span><span style="--i:5">o</span><span style="--i:6">m</span><span style="--i:7">p</span><span style="--i:8">l</span><span style="--i:9">e</span><span style="--i:10">t</span>
           </label>
-          <input id="contact-name" type="text" name="nom_complet" placeholder=" " aria-label="Nom complet" autocomplete="name" minlength="3" maxlength="80" required>
+          <input id="contact-name" type="text" name="nom_complet" placeholder=" " aria-label="Nom complet" autocomplete="name" minlength="3" maxlength="80">
           <span class="field-error" data-error-for="nom_complet"></span>
         </div>
       </div>
@@ -740,7 +740,7 @@
           <label class="field-label-animated" for="contact-email" aria-hidden="true">
             <span style="--i:0">E</span><span style="--i:1">m</span><span style="--i:2">a</span><span style="--i:3">i</span><span style="--i:4">l</span>
           </label>
-          <input id="contact-email" type="email" name="email" placeholder=" " aria-label="Email" autocomplete="email" maxlength="120" required>
+          <input id="contact-email" type="email" name="email" placeholder=" " aria-label="Email" autocomplete="email" maxlength="120">
           <span class="field-error" data-error-for="email"></span>
         </div>
         <div class="field-wrap animated-field phone-country-field" data-phone-country-field>
@@ -748,7 +748,7 @@
             <span style="--i:0">T</span><span style="--i:1">é</span><span style="--i:2">l</span><span style="--i:3">é</span><span style="--i:4">p</span><span style="--i:5">h</span><span style="--i:6">o</span><span style="--i:7">n</span><span style="--i:8">e</span>
           </label>
           <div class="phone-country-control">
-            <select id="contact-phone-code" name="phoneCode" aria-label="Indicatif pays" autocomplete="tel-country-code" data-phone-code required>
+            <select id="contact-phone-code" name="phoneCode" aria-label="Indicatif pays" autocomplete="tel-country-code" data-phone-code>
               <option value="+212" selected>Maroc +212</option>
               <option value="+33">France +33</option>
               <option value="+32">Belgique +32</option>
@@ -760,7 +760,7 @@
               <option value="+39">Italie +39</option>
               <option value="+1">Etats-Unis / Canada +1</option>
             </select>
-            <input id="contact-phone" type="tel" name="phoneNumber" placeholder=" " aria-label="Téléphone" autocomplete="tel-national" inputmode="tel" minlength="6" maxlength="20" required data-phone-number>
+            <input id="contact-phone" type="tel" name="phoneNumber" placeholder=" " aria-label="Téléphone" autocomplete="tel-national" inputmode="tel" minlength="6" maxlength="20" data-phone-number>
           </div>
           <input type="hidden" name="telephone" data-phone-legacy value="">
           <input type="hidden" name="phoneFull" data-phone-full value="">
@@ -773,7 +773,7 @@
         <label class="field-label-animated" for="budget-select" aria-hidden="true">
           <span style="--i:0">B</span><span style="--i:1">u</span><span style="--i:2">d</span><span style="--i:3">g</span><span style="--i:4">e</span><span style="--i:5">t</span>
         </label>
-        <select id="budget-select" name="budget" aria-label="Budget" autocomplete="off" required>
+        <select id="budget-select" name="budget" aria-label="Budget" autocomplete="off">
           <option value="" selected></option>
           <option value="1M - 1.5M MAD">1M - 1.5M MAD</option>
           <option value="2M - 3M MAD">2M - 3M MAD</option>
@@ -785,11 +785,9 @@
         <label class="field-label-animated" for="contact-message" aria-hidden="true">
           <span style="--i:0">D</span><span style="--i:1">é</span><span style="--i:2">c</span><span style="--i:3">r</span><span style="--i:4">i</span><span style="--i:5">v</span><span style="--i:6">e</span><span style="--i:7">z</span><span style="--i:8">&nbsp;</span><span style="--i:9">v</span><span style="--i:10">o</span><span style="--i:11">t</span><span style="--i:12">r</span><span style="--i:13">e</span><span style="--i:14">&nbsp;</span><span style="--i:15">p</span><span style="--i:16">r</span><span style="--i:17">o</span><span style="--i:18">j</span><span style="--i:19">e</span><span style="--i:20">t</span>
         </label>
-        <textarea id="contact-message" name="message" placeholder=" " aria-label="Décrivez votre projet" minlength="20" maxlength="1200" required></textarea>
+        <textarea id="contact-message" name="message" placeholder=" " aria-label="Décrivez votre projet" minlength="20" maxlength="1200"></textarea>
         <span class="field-error" data-error-for="message"></span>
       </div>
-      <input type="hidden" name="cf-turnstile-response" id="cfTurnstileResponse" value="">
-      <div id="contactTurnstile" class="turnstile-holder"></div>
       <button type="submit" class="btn-submit">Envoyer la demande</button>
       <div id="form-feedback" role="status" aria-live="polite"></div>
     </form>
