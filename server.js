@@ -499,6 +499,175 @@ async function handleNewsletter(req, res) {
   }
 }
 
+function parseSimulatorBudget(value) {
+  const normalized = String(value || '').replace(/[^\d.,]/g, '').replace(',', '.');
+  const budget = Number(normalized);
+  return Number.isFinite(budget) && budget > 0 ? budget : 0;
+}
+
+function formatFrenchNumber(value) {
+  return Math.round(value).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
+}
+
+function calculateSimulatorApport(budget, currency) {
+  if (currency === 'EUR') {
+    const apportEur = Math.round(budget * 0.3);
+    const apportMad = Math.round(apportEur * 10);
+    return { apportMad, apportEur };
+  }
+  const apportMad = Math.round(budget * 0.3);
+  const apportEur = Math.round(apportMad / 10);
+  return { apportMad, apportEur };
+}
+
+function apportSimulatorEmailBody(payload) {
+  const dateStr = new Date().toLocaleString('fr-FR', { timeZone: 'Africa/Casablanca' });
+  return [
+    'Nouvelle simulation d’apport.',
+    '',
+    'Email :',
+    payload.email,
+    '',
+    'Budget saisi :',
+    payload.budget_display,
+    '',
+    'Typologie :',
+    payload.typologie || 'Non renseigné',
+    '',
+    'Apport estimé :',
+    payload.apport_mad_display + ' / ' + payload.apport_eur_display,
+    '',
+    'Source :',
+    payload.source_page,
+    '',
+    'Date :',
+    dateStr
+  ].join('\r\n');
+}
+
+async function sendApportSimulatorEmail(payload) {
+  const host = process.env.SMTP_HOST || 'smtp.gmail.com';
+  const port = Number(process.env.SMTP_PORT || 465);
+  const user = process.env.SMTP_USER || '';
+  const pass = process.env.SMTP_PASS || '';
+  const to = process.env.CONTACT_TO || 'contact@emaraestates.com';
+  const from = process.env.CONTACT_FROM || user;
+
+  if (!host || !port || !user || !pass || !from) {
+    throw new Error('SMTP configuration missing.');
+  }
+
+  const subject = 'Nouveau lead simulateur d’apport — Emara Estates';
+  const body = apportSimulatorEmailBody(payload);
+  const message = [
+    'From: Emara Estates <' + from + '>',
+    'To: ' + to,
+    'Reply-To: ' + payload.email,
+    'Subject: ' + subject,
+    'MIME-Version: 1.0',
+    'Content-Type: text/plain; charset=UTF-8',
+    'Content-Transfer-Encoding: 8bit',
+    'Date: ' + new Date().toUTCString(),
+    '',
+    body,
+    ''
+  ].join('\r\n').replace(/\r\n\./g, '\r\n..');
+
+  const socket = tls.connect({ host, port, servername: host });
+  await new Promise(function(resolve, reject) {
+    socket.once('secureConnect', resolve);
+    socket.once('error', reject);
+  });
+
+  try {
+    await smtpCommand(socket, null, [220]);
+    await smtpCommand(socket, 'EHLO emaraestates.com', [250]);
+    await smtpCommand(socket, 'AUTH LOGIN', [334]);
+    await smtpCommand(socket, Buffer.from(user).toString('base64'), [334]);
+    await smtpCommand(socket, Buffer.from(pass).toString('base64'), [235]);
+    await smtpCommand(socket, 'MAIL FROM:<' + from + '>', [250]);
+    await smtpCommand(socket, 'RCPT TO:<' + to + '>', [250, 251]);
+    await smtpCommand(socket, 'DATA', [354]);
+    socket.write(message + '\r\n.\r\n');
+    await smtpCommand(socket, null, [250]);
+    await smtpCommand(socket, 'QUIT', [221]);
+  } finally {
+    socket.end();
+  }
+}
+
+async function handleApportSimulator(req, res, input, ip) {
+  const honeypot = sanitize(input.company_website, 120);
+  if (honeypot) {
+    sendJson(res, 200, {
+      message: 'Estimation calculée.',
+      result: {
+        budget_display: '0 MAD',
+        apport_mad_display: '0 MAD',
+        apport_eur_display: '0 €'
+      }
+    });
+    return;
+  }
+
+  if (isRateLimited(ip)) {
+    sendJson(res, 429, { message: 'Trop de demandes envoyées. Réessayez plus tard.' });
+    return;
+  }
+
+  const email = sanitize(input.email, 120);
+  let currency = sanitize(input.currency, 3).toUpperCase();
+  if (currency !== 'EUR') currency = 'MAD';
+  const budget = parseSimulatorBudget(input.budget_value);
+  const typologie = sanitize(input.typologie, 60);
+  const errors = {};
+
+  if (!budget) {
+    errors.budget = 'Indiquez votre budget pour calculer l’apport.';
+  }
+  if (!email) {
+    errors.email = 'Indiquez votre email pour recevoir votre estimation.';
+  } else if (!looksLikeEmail(email)) {
+    errors.email = 'Indiquez une adresse email valide.';
+  }
+
+  if (Object.keys(errors).length) {
+    sendJson(res, 422, { message: 'Corrigez les champs indiqués.', errors });
+    return;
+  }
+
+  const { apportMad, apportEur } = calculateSimulatorApport(budget, currency);
+  const budgetDisplay = formatFrenchNumber(budget) + ' ' + currency;
+  const payload = {
+    email,
+    budget_display: budgetDisplay,
+    typologie,
+    apport_mad_display: formatFrenchNumber(apportMad) + ' MAD',
+    apport_eur_display: formatFrenchNumber(apportEur) + ' €',
+    source_page: sanitize(input.source_page || req.headers.referer || '', 500) || 'emaraestates.com'
+  };
+
+  try {
+    await sendApportSimulatorEmail(payload);
+  } catch (error) {
+    console.error('Apport simulator send failed:', error.message);
+    sendJson(res, 500, { message: 'L’estimation n’a pas pu être envoyée. Réessayez ou contactez-nous directement.' });
+    return;
+  }
+
+  sendJson(res, 200, {
+    message: 'Estimation calculée.',
+    result: {
+      budget_display: budgetDisplay,
+      apport_mad: apportMad,
+      apport_eur: apportEur,
+      apport_mad_display: payload.apport_mad_display,
+      apport_eur_display: payload.apport_eur_display,
+      typologie
+    }
+  });
+}
+
 async function handleContact(req, res) {
   const ip = clientIp(req);
   let input;
@@ -506,6 +675,11 @@ async function handleContact(req, res) {
     input = await readJsonBody(req);
   } catch (error) {
     sendJson(res, 400, { message: 'Données invalides.' });
+    return;
+  }
+
+  if (sanitize(input.form_type, 40) === 'apport_simulator') {
+    await handleApportSimulator(req, res, input, ip);
     return;
   }
 

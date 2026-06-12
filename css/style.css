@@ -4689,3 +4689,256 @@ footer,
     border-radius: 18px;
   }
 }
+
+/* ═══ SIMULATEUR D'APPORT ═══ */
+.apport-simulator {
+  position: relative;
+  overflow: hidden;
+  padding: clamp(72px, 8vw, 96px) clamp(24px, 5vw, 60px);
+  background: linear-gradient(165deg, var(--vf) 0%, #243024 52%, #1e281e 100%);
+  border-top: 1px solid rgba(200, 187, 168, 0.18);
+}
+.apport-simulator::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(ellipse at 14% 22%, rgba(155, 112, 64, 0.14), transparent 46%),
+    radial-gradient(ellipse at 88% 78%, rgba(245, 240, 232, 0.06), transparent 42%);
+  pointer-events: none;
+}
+.apport-simulator__inner {
+  position: relative;
+  z-index: 1;
+  width: min(100%, 1180px);
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: minmax(280px, 0.95fr) minmax(320px, 1.05fr);
+  gap: clamp(36px, 5vw, 72px);
+  align-items: start;
+}
+.apport-simulator__content .section-label {
+  color: var(--bg);
+  margin-bottom: 16px;
+  letter-spacing: 4px;
+}
+.apport-simulator__content .section-label::before {
+  background: var(--mr);
+}
+.apport-simulator__content .section-title {
+  color: var(--cr);
+  max-width: 520px;
+  margin: 0 0 18px;
+  font-family: 'Cormorant Garamond', serif;
+  font-weight: 300;
+  font-size: clamp(32px, 3.8vw, 50px);
+  line-height: 1.06;
+  text-wrap: balance;
+}
+.apport-simulator__content .section-text,
+.apport-simulator__subtitle {
+  color: rgba(245, 240, 232, 0.82);
+  max-width: 500px;
+  margin: 0 0 14px;
+  font-size: clamp(15px, 1.35vw, 17px);
+  font-weight: 300;
+  line-height: 1.85;
+}
+.apport-simulator__subtitle {
+  margin-bottom: 0;
+  font-size: clamp(14px, 1.2vw, 16px);
+  color: rgba(200, 187, 168, 0.92);
+}
+.apport-simulator__panel {
+  min-width: 0;
+  padding: clamp(24px, 3vw, 34px);
+  border-radius: 22px;
+  border: 1px solid rgba(200, 187, 168, 0.34);
+  background: linear-gradient(180deg, rgba(250, 248, 244, 0.98), rgba(245, 240, 232, 0.94));
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.9) inset,
+    0 24px 56px rgba(0, 0, 0, 0.22);
+}
+.apport-simulator__form {
+  display: grid;
+  gap: 16px;
+}
+.apport-simulator__field label {
+  display: block;
+  margin-bottom: 8px;
+  font-size: 13px;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--vf);
+}
+.apport-simulator__optional {
+  font-size: 11px;
+  font-weight: 400;
+  letter-spacing: 0.02em;
+  text-transform: none;
+  color: var(--vo);
+}
+.apport-simulator__budget-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 96px;
+  gap: 10px;
+  align-items: stretch;
+}
+.apport-simulator__input,
+.apport-simulator__select {
+  display: block;
+  width: 100%;
+  min-height: 54px;
+  margin: 0;
+  padding: 0 16px;
+  border: 1px solid rgba(200, 187, 168, 0.72);
+  border-radius: 14px;
+  background: var(--ow);
+  color: var(--bk);
+  font: inherit;
+  font-size: 16px;
+  line-height: 1.4;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  appearance: none;
+  -webkit-appearance: none;
+}
+.apport-simulator__select {
+  padding-right: 36px;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath fill='%232D3A2D' d='M1 1l5 5 5-5'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 14px center;
+  cursor: pointer;
+}
+.apport-simulator__select--full {
+  width: 100%;
+}
+.apport-simulator__input:focus,
+.apport-simulator__select:focus {
+  outline: none;
+  border-color: var(--mr);
+  box-shadow: 0 0 0 3px rgba(155, 112, 64, 0.16);
+}
+.apport-simulator__input.is-invalid,
+.apport-simulator__select.is-invalid {
+  border-color: #b4533c;
+}
+.apport-simulator__error,
+.apport-simulator__form-error {
+  margin: 8px 0 0;
+  font-size: 13px;
+  line-height: 1.5;
+  color: #9a3f2f;
+}
+.apport-simulator__actions {
+  padding-top: 4px;
+}
+.apport-simulator__submit {
+  width: 100%;
+  justify-content: center;
+}
+.apport-simulator__notice {
+  margin: 0;
+  font-size: 12px;
+  line-height: 1.65;
+  color: var(--vo);
+}
+.apport-simulator__result {
+  margin-top: 8px;
+  padding-top: 20px;
+  border-top: 1px solid rgba(200, 187, 168, 0.5);
+}
+.apport-simulator__result-title {
+  margin: 0 0 12px;
+  font-family: 'Cormorant Garamond', serif;
+  font-size: clamp(26px, 3vw, 34px);
+  font-weight: 400;
+  line-height: 1.1;
+  color: var(--vf);
+}
+.apport-simulator__result-text {
+  margin: 0 0 16px;
+  font-size: 16px;
+  line-height: 1.7;
+  color: var(--bk);
+}
+.apport-simulator__result-details {
+  display: grid;
+  gap: 10px;
+  margin: 0 0 16px;
+}
+.apport-simulator__result-details > div {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 12px;
+  align-items: baseline;
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: rgba(45, 58, 45, 0.05);
+}
+.apport-simulator__result-details dt {
+  margin: 0;
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--vo);
+}
+.apport-simulator__result-details dd {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 500;
+  color: var(--vf);
+  text-align: right;
+}
+.apport-simulator__disclaimer {
+  margin: 0 0 18px;
+  font-size: 12px;
+  line-height: 1.65;
+  color: var(--vo);
+}
+.apport-simulator__result-ctas {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+.apport-simulator__result-ctas .btn-primary,
+.apport-simulator__result-ctas .btn-outline {
+  flex: 1 1 180px;
+  justify-content: center;
+  text-align: center;
+}
+
+@media (max-width: 900px) {
+  .apport-simulator__inner {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 480px) {
+  .apport-simulator {
+    padding: 64px 18px;
+  }
+  .apport-simulator__panel {
+    padding: 20px;
+    border-radius: 18px;
+  }
+  .apport-simulator__budget-row {
+    grid-template-columns: 1fr;
+  }
+  .apport-simulator__result-details > div {
+    grid-template-columns: 1fr;
+    gap: 4px;
+  }
+  .apport-simulator__result-details dd {
+    text-align: left;
+  }
+  .apport-simulator__result-ctas {
+    flex-direction: column;
+  }
+  .apport-simulator__result-ctas .btn-primary,
+  .apport-simulator__result-ctas .btn-outline {
+    flex: 1 1 auto;
+    width: 100%;
+  }
+}

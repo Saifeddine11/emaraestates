@@ -43,6 +43,11 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
 $input = readJsonInput();
 $ip = clientIp();
 
+$formType = sanitizeValue($input['form_type'] ?? '', 40);
+if ($formType === 'apport_simulator') {
+    handleApportSimulator($input, $env, $ip);
+}
+
 [$payload, $errors] = validatePayload($input, $validBudgets, $blockedTerms);
 
 if (shouldSilentlyAccept($payload)) {
@@ -577,4 +582,162 @@ function sendLeadEmailWithSmtp(array $payload, array $env): void
     } finally {
         fclose($socket);
     }
+}
+
+function formatFrenchNumber(int $value): string
+{
+    return number_format($value, 0, ',', ' ');
+}
+
+function parseSimulatorBudget(mixed $value): float
+{
+    $normalized = preg_replace('/[^\d.,]/', '', (string) ($value ?? '')) ?? '';
+    $normalized = str_replace(',', '.', $normalized);
+    if ($normalized === '' || !is_numeric($normalized)) {
+        return 0.0;
+    }
+    $budget = (float) $normalized;
+    return $budget > 0 ? $budget : 0.0;
+}
+
+function calculateSimulatorApport(float $budget, string $currency): array
+{
+    if ($currency === 'EUR') {
+        $apportEur = (int) round($budget * 0.30);
+        $apportMad = (int) round($apportEur * 10);
+        return [$apportMad, $apportEur];
+    }
+
+    $apportMad = (int) round($budget * 0.30);
+    $apportEur = (int) round($apportMad / 10);
+    return [$apportMad, $apportEur];
+}
+
+function simulatorBudgetDisplay(float $budget, string $currency): string
+{
+    return formatFrenchNumber((int) round($budget)) . ' ' . $currency;
+}
+
+function simulatorSourcePage(array $input): string
+{
+    $source = sanitizeValue($input['source_page'] ?? '', 500);
+    if ($source !== '') {
+        return $source;
+    }
+    $referer = sanitizeValue($_SERVER['HTTP_REFERER'] ?? '', 500);
+    return $referer !== '' ? $referer : 'emaraestates.com';
+}
+
+function simulatorEmailBody(array $payload): string
+{
+    return implode("\r\n", [
+        'Nouvelle simulation d’apport.',
+        '',
+        'Email :',
+        $payload['email'],
+        '',
+        'Budget saisi :',
+        $payload['budget_display'],
+        '',
+        'Typologie :',
+        fieldOrDefault($payload['typologie']),
+        '',
+        'Apport estimé :',
+        $payload['apport_mad_display'] . ' / ' . $payload['apport_eur_display'],
+        '',
+        'Source :',
+        $payload['source_page'],
+        '',
+        'Date :',
+        date('d/m/Y H:i'),
+    ]);
+}
+
+function sendSimulatorEmail(array $payload, array $env): void
+{
+    $to = contactToEmail($env);
+    $from = trim($env['CONTACT_FROM'] ?? '') ?: contactToEmail($env);
+    $subject = 'Nouveau lead simulateur d’apport — Emara Estates';
+    $headers = [
+        'From: Emara Estates <' . $from . '>',
+        'Reply-To: ' . encodeHeader('Visiteur') . ' <' . $payload['email'] . '>',
+        'MIME-Version: 1.0',
+        'Content-Type: text/plain; charset=UTF-8',
+        'Content-Transfer-Encoding: 8bit',
+    ];
+
+    $sent = mail($to, encodeHeader($subject), simulatorEmailBody($payload), implode("\r\n", $headers));
+    if (!$sent) {
+        throw new RuntimeException('mail() returned false.');
+    }
+}
+
+function handleApportSimulator(array $input, array $env, string $ip): never
+{
+    if (sanitizeValue($input['company_website'] ?? '', 120) !== '') {
+        sendJson(200, [
+            'message' => 'Estimation calculée.',
+            'result' => [
+                'budget_display' => '0 MAD',
+                'apport_mad_display' => '0 MAD',
+                'apport_eur_display' => '0 €',
+            ],
+        ]);
+    }
+
+    if (isRateLimited($ip)) {
+        sendJson(429, ['message' => 'Trop de demandes envoyées. Réessayez plus tard.']);
+    }
+
+    $email = sanitizeValue($input['email'] ?? '', 120);
+    $currency = strtoupper(sanitizeValue($input['currency'] ?? 'MAD', 3));
+    if (!in_array($currency, ['MAD', 'EUR'], true)) {
+        $currency = 'MAD';
+    }
+
+    $budget = parseSimulatorBudget($input['budget_value'] ?? '');
+    $typologie = sanitizeValue($input['typologie'] ?? '', 60);
+
+    $errors = [];
+    if ($budget <= 0) {
+        $errors['budget'] = 'Indiquez votre budget pour calculer l’apport.';
+    }
+    if ($email === '') {
+        $errors['email'] = 'Indiquez votre email pour recevoir votre estimation.';
+    } elseif (!looksLikeEmail($email)) {
+        $errors['email'] = 'Indiquez une adresse email valide.';
+    }
+
+    if ($errors) {
+        sendJson(422, ['message' => 'Corrigez les champs indiqués.', 'errors' => $errors]);
+    }
+
+    [$apportMad, $apportEur] = calculateSimulatorApport($budget, $currency);
+    $payload = [
+        'email' => $email,
+        'budget_display' => simulatorBudgetDisplay($budget, $currency),
+        'typologie' => $typologie,
+        'apport_mad_display' => formatFrenchNumber($apportMad) . ' MAD',
+        'apport_eur_display' => formatFrenchNumber($apportEur) . ' €',
+        'source_page' => simulatorSourcePage($input),
+    ];
+
+    try {
+        sendSimulatorEmail($payload, $env);
+    } catch (Throwable $error) {
+        error_log('Apport simulator email error: ' . $error->getMessage());
+        sendJson(500, ['message' => 'L’estimation n’a pas pu être envoyée. Réessayez ou contactez-nous directement.']);
+    }
+
+    sendJson(200, [
+        'message' => 'Estimation calculée.',
+        'result' => [
+            'budget_display' => $payload['budget_display'],
+            'apport_mad' => $apportMad,
+            'apport_eur' => $apportEur,
+            'apport_mad_display' => $payload['apport_mad_display'],
+            'apport_eur_display' => $payload['apport_eur_display'],
+            'typologie' => $typologie,
+        ],
+    ]);
 }

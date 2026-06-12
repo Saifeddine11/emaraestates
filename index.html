@@ -32,7 +32,7 @@
   <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400;1,500&family=Jost:wght@200;300;400;500&display=swap">
   <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400;1,500&family=Jost:wght@200;300;400;500&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
   <noscript><link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400;1,500&family=Jost:wght@200;300;400;500&display=swap" rel="stylesheet"></noscript>
-  <link rel="stylesheet" href="css/style.css?v=2026060922">
+  <link rel="stylesheet" href="css/style.css?v=20260612">
   <script type="application/ld+json">
     {
       "@context": "https://schema.org",
@@ -277,6 +277,69 @@
       </div>
     </div>
   </div>
+
+  <section class="apport-simulator" id="simulateur-apport" aria-labelledby="apport-simulator-title-home">
+    <div class="apport-simulator__inner">
+      <div class="apport-simulator__content reveal">
+        <div class="section-label">Estimation</div>
+        <h2 class="section-title" id="apport-simulator-title-home">Simulez votre apport pour Honest Signature 7</h2>
+        <p class="section-text">Entrez votre budget total et obtenez une estimation immédiate de l'apport à prévoir à la réservation.</p>
+        <p class="apport-simulator__subtitle">Indiquez votre budget et estimez l'apport à prévoir pour réserver votre appartement neuf à Guéliz.</p>
+      </div>
+      <div class="apport-simulator__panel reveal">
+        <form class="apport-simulator__form" data-apport-simulator-form novalidate>
+          <input type="text" name="company_website" class="form-trap" tabindex="-1" autocomplete="off" aria-hidden="true">
+          <div class="apport-simulator__field">
+            <label for="apport-budget-home">Budget du bien</label>
+            <div class="apport-simulator__budget-row">
+              <input type="text" inputmode="numeric" id="apport-budget-home" name="budget" class="apport-simulator__input" placeholder="Ex : 1 300 000" data-apport-budget autocomplete="off">
+              <select name="currency" class="apport-simulator__select" data-apport-currency aria-label="Devise">
+                <option value="MAD" selected>MAD</option>
+                <option value="EUR">EUR</option>
+              </select>
+            </div>
+            <p class="apport-simulator__error" data-error="budget" hidden></p>
+          </div>
+          <div class="apport-simulator__field">
+            <label for="apport-typologie-home">Typologie <span class="apport-simulator__optional">(optionnel)</span></label>
+            <select id="apport-typologie-home" name="typologie" class="apport-simulator__select apport-simulator__select--full" data-apport-typologie>
+              <option value="">Typologie</option>
+              <option value="Studio">Studio</option>
+              <option value="Appartement">Appartement</option>
+              <option value="Duplex">Duplex</option>
+              <option value="Commerce">Commerce</option>
+              <option value="Je ne sais pas encore">Je ne sais pas encore</option>
+            </select>
+          </div>
+          <div class="apport-simulator__field">
+            <label for="apport-email-home">Votre adresse email</label>
+            <input type="email" id="apport-email-home" name="email" class="apport-simulator__input" placeholder="Ex : contact@exemple.com" data-apport-email autocomplete="email">
+            <p class="apport-simulator__error" data-error="email" hidden></p>
+          </div>
+          <div class="apport-simulator__actions">
+            <button type="submit" class="btn-primary apport-simulator__submit"><span>Voir mon apport estimé</span></button>
+          </div>
+          <p class="apport-simulator__notice">Estimation indicative et non contractuelle. Le montant réel dépend du prix exact, de la typologie, de la surface, de l'étage et des disponibilités.</p>
+          <div class="apport-simulator__result" data-apport-result hidden>
+            <h3 class="apport-simulator__result-title">Votre estimation d'apport</h3>
+            <p class="apport-simulator__result-text" data-apport-result-text></p>
+            <dl class="apport-simulator__result-details">
+              <div><dt>Budget saisi</dt><dd data-apport-result-budget></dd></div>
+              <div><dt>Apport estimé (MAD)</dt><dd data-apport-result-mad></dd></div>
+              <div><dt>Apport estimé (EUR)</dt><dd data-apport-result-eur></dd></div>
+              <div data-apport-result-type-row hidden><dt>Typologie</dt><dd data-apport-result-type></dd></div>
+            </dl>
+            <p class="apport-simulator__disclaimer">Cette estimation est indicative et non contractuelle. Le montant réel dépend du prix exact, de la typologie, de la surface, de l'étage et des disponibilités au moment de la demande.</p>
+            <div class="apport-simulator__result-ctas">
+              <a href="/contact" class="btn-primary"><span>Recevoir les prix exacts</span></a>
+              <a href="/residences-honest-678/" class="btn-outline">Voir Honest Signature 7</a>
+            </div>
+          </div>
+          <p class="apport-simulator__form-error" data-apport-form-error hidden></p>
+        </form>
+      </div>
+    </div>
+  </section>
 
   <div class="virtual-tour-section reveal" id="visite-3d">
     <div class="virtual-tour-layout">
@@ -883,6 +946,7 @@
 <script src="js/phone-input-country.js?v=20260612"></script>
 <script src="js/contact-form.js?v=20260612"></script>
 <script src="/js/newsletter.js?v=2026060901" defer></script>
+<script src="/js/apport-simulator.js?v=20260612" defer></script>
 <script>
 // ═══ PRELOADER ═══
 (function(){
