@@ -3,6 +3,7 @@
   if (!forms.length) return;
 
   var EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/i;
+  var ERROR_MESSAGE = 'Une erreur est survenue. Vous pouvez nous contacter directement.';
 
   function parseBudget(raw) {
     var normalized = String(raw || '').replace(/\s/g, '').replace(/,/g, '.');
@@ -98,7 +99,7 @@
                 showFieldError(form, key, result.data.errors[key]);
               });
             } else {
-              showFormError(form, (result.data && result.data.message) || 'Une erreur est survenue. Réessayez.');
+              showFormError(form, ERROR_MESSAGE);
             }
             return;
           }
@@ -137,7 +138,7 @@
           resultEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
         })
         .catch(function () {
-          showFormError(form, 'Connexion impossible. Réessayez.');
+          showFormError(form, ERROR_MESSAGE);
         })
         .finally(function () {
           submitBtn.disabled = false;

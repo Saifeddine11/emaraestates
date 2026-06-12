@@ -523,9 +523,9 @@ function calculateSimulatorApport(budget, currency) {
 function apportSimulatorEmailBody(payload) {
   const dateStr = new Date().toLocaleString('fr-FR', { timeZone: 'Africa/Casablanca' });
   return [
-    'Nouvelle simulation d’apport.',
+    'Nouvelle simulation d’apport depuis le site Emara Estates.',
     '',
-    'Email :',
+    'Email client :',
     payload.email,
     '',
     'Budget saisi :',
@@ -537,7 +537,7 @@ function apportSimulatorEmailBody(payload) {
     'Apport estimé :',
     payload.apport_mad_display + ' / ' + payload.apport_eur_display,
     '',
-    'Source :',
+    'Page source :',
     payload.source_page,
     '',
     'Date :',
@@ -651,7 +651,7 @@ async function handleApportSimulator(req, res, input, ip) {
     await sendApportSimulatorEmail(payload);
   } catch (error) {
     console.error('Apport simulator send failed:', error.message);
-    sendJson(res, 500, { message: 'L’estimation n’a pas pu être envoyée. Réessayez ou contactez-nous directement.' });
+    sendJson(res, 500, { message: 'Une erreur est survenue. Vous pouvez nous contacter directement.' });
     return;
   }
 

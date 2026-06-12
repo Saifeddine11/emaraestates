@@ -631,9 +631,9 @@ function simulatorSourcePage(array $input): string
 function simulatorEmailBody(array $payload): string
 {
     return implode("\r\n", [
-        'Nouvelle simulation d’apport.',
+        'Nouvelle simulation d’apport depuis le site Emara Estates.',
         '',
-        'Email :',
+        'Email client :',
         $payload['email'],
         '',
         'Budget saisi :',
@@ -645,7 +645,7 @@ function simulatorEmailBody(array $payload): string
         'Apport estimé :',
         $payload['apport_mad_display'] . ' / ' . $payload['apport_eur_display'],
         '',
-        'Source :',
+        'Page source :',
         $payload['source_page'],
         '',
         'Date :',
@@ -653,7 +653,7 @@ function simulatorEmailBody(array $payload): string
     ]);
 }
 
-function sendSimulatorEmail(array $payload, array $env): void
+function sendSimulatorEmailWithPhpMail(array $payload, array $env): void
 {
     $to = contactToEmail($env);
     $from = trim($env['CONTACT_FROM'] ?? '') ?: contactToEmail($env);
@@ -670,6 +670,72 @@ function sendSimulatorEmail(array $payload, array $env): void
     if (!$sent) {
         throw new RuntimeException('mail() returned false.');
     }
+}
+
+function sendSimulatorEmailWithSmtp(array $payload, array $env): void
+{
+    $host = $env['SMTP_HOST'] ?? 'smtp.gmail.com';
+    $port = (int) ($env['SMTP_PORT'] ?? 465);
+    $user = $env['SMTP_USER'] ?? '';
+    $pass = $env['SMTP_PASS'] ?? '';
+    $to = contactToEmail($env);
+    $from = trim($env['CONTACT_FROM'] ?? '') ?: $user;
+
+    if ($host === '' || $port <= 0 || $user === '' || $pass === '' || $from === '') {
+        throw new RuntimeException('SMTP configuration missing.');
+    }
+
+    $subject = 'Nouveau lead simulateur d’apport — Emara Estates';
+    $body = simulatorEmailBody($payload);
+    $headers = [
+        'From: Emara Estates <' . $from . '>',
+        'To: ' . $to,
+        'Reply-To: ' . encodeHeader('Visiteur') . ' <' . $payload['email'] . '>',
+        'Subject: ' . encodeHeader($subject),
+        'MIME-Version: 1.0',
+        'Content-Type: text/plain; charset=UTF-8',
+        'Content-Transfer-Encoding: 8bit',
+        'Date: ' . date(DATE_RFC2822),
+    ];
+    $message = implode("\r\n", $headers) . "\r\n\r\n" . $body . "\r\n";
+
+    $socket = stream_socket_client('ssl://' . $host . ':' . $port, $errno, $errstr, 15, STREAM_CLIENT_CONNECT);
+    if (!$socket) {
+        throw new RuntimeException('SMTP connection failed: ' . $errstr);
+    }
+    stream_set_timeout($socket, 15);
+
+    try {
+        $greeting = smtpRead($socket);
+        if ((int) substr($greeting, 0, 3) !== 220) throw new RuntimeException('SMTP greeting failed.');
+        smtpCommand($socket, 'EHLO emaraestates.com', [250]);
+        smtpCommand($socket, 'AUTH LOGIN', [334]);
+        smtpCommand($socket, base64_encode($user), [334]);
+        smtpCommand($socket, base64_encode($pass), [235]);
+        smtpCommand($socket, 'MAIL FROM:<' . $from . '>', [250]);
+        smtpCommand($socket, 'RCPT TO:<' . $to . '>', [250, 251]);
+        smtpCommand($socket, 'DATA', [354]);
+        fwrite($socket, str_replace("\r\n.", "\r\n..", $message) . "\r\n.\r\n");
+        $dataResponse = smtpRead($socket);
+        if (!in_array((int) substr($dataResponse, 0, 3), [250], true)) {
+            throw new RuntimeException('SMTP data failed.');
+        }
+        smtpCommand($socket, 'QUIT', [221]);
+    } finally {
+        fclose($socket);
+    }
+}
+
+function sendSimulatorEmail(array $payload, array $env): void
+{
+    try {
+        sendSimulatorEmailWithPhpMail($payload, $env);
+        return;
+    } catch (Throwable $error) {
+        error_log('Apport simulator PHP mail fallback to SMTP: ' . $error->getMessage());
+    }
+
+    sendSimulatorEmailWithSmtp($payload, $env);
 }
 
 function handleApportSimulator(array $input, array $env, string $ip): never
@@ -726,7 +792,7 @@ function handleApportSimulator(array $input, array $env, string $ip): never
         sendSimulatorEmail($payload, $env);
     } catch (Throwable $error) {
         error_log('Apport simulator email error: ' . $error->getMessage());
-        sendJson(500, ['message' => 'L’estimation n’a pas pu être envoyée. Réessayez ou contactez-nous directement.']);
+        sendJson(500, ['message' => 'Une erreur est survenue. Vous pouvez nous contacter directement.']);
     }
 
     sendJson(200, [

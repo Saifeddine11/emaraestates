@@ -5149,3 +5149,74 @@ body.form-success-modal-open {
     flex: 1 1 auto;
   }
 }
+
+/* Popup & simulator CTAs: readable contrast on cream backgrounds */
+.form-success-modal__card .form-success-modal__close {
+  color: #243629;
+  border-color: rgba(36, 54, 41, 0.38);
+  background: #faf7ef;
+}
+.form-success-modal__card .form-success-modal__close:hover,
+.form-success-modal__card .form-success-modal__close:focus-visible {
+  color: #faf7ef;
+  background: #243629;
+  border-color: #243629;
+}
+.form-success-modal__card .form-success-modal__social-link {
+  color: #243629;
+  border-color: rgba(36, 54, 41, 0.28);
+  background: #fff;
+  font-weight: 500;
+}
+.form-success-modal__card .form-success-modal__social-link:hover,
+.form-success-modal__card .form-success-modal__social-link:focus-visible {
+  color: #243629;
+  border-color: #a9783d;
+  background: #faf7ef;
+}
+.form-success-modal__card .form-success-modal__dismiss.btn-outline {
+  color: #243629;
+  border-color: #243629;
+  background: #faf7ef;
+}
+.form-success-modal__card .form-success-modal__dismiss.btn-outline:hover,
+.form-success-modal__card .form-success-modal__dismiss.btn-outline:focus-visible {
+  color: #faf7ef;
+  background: #243629;
+  border-color: #243629;
+}
+.form-success-modal__card .form-success-modal__home.btn-primary {
+  background: #a9783d;
+  border-color: #a9783d;
+  color: #fff;
+}
+.form-success-modal__card .form-success-modal__home.btn-primary:hover {
+  background: #243629;
+  border-color: #243629;
+}
+.apport-simulator__panel .apport-simulator__result-ctas .btn-primary {
+  display: inline-flex;
+  align-items: center;
+  background: #a9783d;
+  border-color: #a9783d;
+  color: #fff;
+}
+.apport-simulator__panel .apport-simulator__result-ctas .btn-primary:hover,
+.apport-simulator__panel .apport-simulator__result-ctas .btn-primary:focus-visible {
+  background: #243629;
+  border-color: #243629;
+  color: #fff;
+}
+.apport-simulator__panel .apport-simulator__result-ctas .btn-outline {
+  display: inline-flex;
+  align-items: center;
+  color: #243629;
+  border-color: #243629;
+  background: #faf7ef;
+}
+.apport-simulator__panel .apport-simulator__result-ctas .btn-outline:hover,
+.apport-simulator__panel .apport-simulator__result-ctas .btn-outline:focus-visible {
+  color: #faf7ef;
+  background: #243629;
+  border-color: #243629;
+}
