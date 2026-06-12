@@ -1,26 +1,10 @@
 (function(window, document) {
   'use strict';
 
-  var validBudgets = ['1M - 1.5M MAD', '2M - 3M MAD', '+3M MAD'];
-  var blockedTerms = [
-    'refonte', 'refondre', 'seo', 'référencement', 'referencement', 'backlink',
-    'agence web', 'création de site', 'creation de site', 'site internet',
-    'marketing digital', 'audit gratuit', 'devis gratuit', 'visibilité',
-    'visibilite', 'ranking', 'google ads', 'wordpress', 'shopify',
-    'web design', 'webdesign', 'traffic', 'trafic', 'lead generation',
-    'guest post', 'link building'
-  ];
   var successMessage = 'Votre demande a bien été envoyée. Merci, notre équipe vous contactera dans les plus brefs délais.';
 
   function isLocalPreview() {
     return ['localhost', '127.0.0.1', '::1'].indexOf(window.location.hostname) !== -1;
-  }
-
-  function normalizeFormText(value) {
-    return String(value || '')
-      .toLowerCase()
-      .normalize('NFD')
-      .replace(/[\u0300-\u036f]/g, '');
   }
 
   function looksLikeEmail(value) {
@@ -35,58 +19,15 @@
     return !/^(\d)\1+$/.test(digits);
   }
 
-  function looksLikeName(value) {
-    var raw = String(value || '').trim();
-    var parts = raw.split(/\s+/).filter(Boolean);
-    if (raw.length < 3 || raw.length > 80) return false;
-    if (looksLikeEmail(raw) || looksLikePhone(raw)) return false;
-    if (/\d/.test(raw)) return false;
-    if (!/^[A-Za-zÀ-ÖØ-öø-ÿ' -]{3,}$/.test(raw)) return false;
-    if (parts.length < 2) return false;
-    return parts.every(function(part) { return part.replace(/[-']/g, '').length >= 2; });
-  }
-
-  function hasSpamContent(formData) {
-    var text = normalizeFormText([
-      formData.get('nom_complet'),
-      formData.get('email'),
-      formData.get('telephone'),
-      formData.get('budget'),
-      formData.get('message')
-    ].join(' '));
-    if (!text.trim()) return false;
-    var hasBlockedTerm = blockedTerms.some(function(term) {
-      return text.indexOf(normalizeFormText(term)) !== -1;
-    });
-    var hasLink = /(https?:\/\/|www\.|\.ru\b|\.xyz\b|\.top\b|\.click\b)/i.test(text);
-    return hasBlockedTerm || hasLink;
-  }
-
-  function hasLeadContent(formData) {
-    return ['nom_complet', 'email', 'telephone', 'budget', 'message'].some(function(name) {
-      return String(formData.get(name) || '').trim() !== '';
-    });
-  }
-
   function init(form) {
     if (!form || form.dataset.contactFormBound === 'true') return;
     form.dataset.contactFormBound = 'true';
 
     var feedback = document.getElementById('form-feedback');
-    var tokenInput = document.getElementById('contactFormToken');
     var submitButton = form.querySelector('.btn-submit');
     var defaultSubmitText = submitButton ? submitButton.textContent : '';
     var phoneInput = window.PhoneInputWithCountryCode || null;
     var startedAt = Date.now();
-
-    function refreshFormToken() {
-      if (!tokenInput || !window.crypto || !crypto.getRandomValues) return;
-      var tokenBytes = new Uint32Array(4);
-      crypto.getRandomValues(tokenBytes);
-      tokenInput.value = Array.prototype.map.call(tokenBytes, function(part) {
-        return part.toString(16);
-      }).join('');
-    }
 
     function syncPhoneInput() {
       return phoneInput ? phoneInput.sync(form) : null;
@@ -137,23 +78,14 @@
       syncPhoneInput();
       var formData = new FormData(form);
       var errors = {};
-      var name = String(formData.get('nom_complet') || '').trim();
       var email = String(formData.get('email') || '').trim();
       var phone = String(formData.get('telephone') || '').trim();
-      var budget = String(formData.get('budget') || '').trim();
-      var message = String(formData.get('message') || '').trim();
 
-      if (name && !looksLikeName(name)) errors.nom_complet = 'Indiquez un vrai nom complet, sans email ni numéro.';
-      if (email && !looksLikeEmail(email)) errors.email = 'Indiquez une adresse email valide.';
-      if (email && looksLikePhone(email)) errors.email = 'Le téléphone doit être dans le champ Téléphone.';
-      if (phone && !looksLikePhone(phone)) errors.telephone = 'Indiquez un vrai numéro de téléphone.';
-      if (phone && looksLikeEmail(phone)) errors.telephone = 'L’email doit être dans le champ Email.';
-      if (budget && validBudgets.indexOf(budget) === -1) errors.budget = 'Choisissez un budget dans la liste.';
-      if (hasLeadContent(formData) && hasSpamContent(formData)) {
-        errors.message = 'Ce message ressemble à une prospection ou contient un lien non autorisé.';
+      if (email && !looksLikeEmail(email)) {
+        errors.email = 'Indiquez une adresse email valide.';
       }
-      if (name && (looksLikeEmail(name) || looksLikePhone(name))) {
-        errors.nom_complet = 'Le nom ne doit pas contenir d’email ni de téléphone.';
+      if (phone && !looksLikePhone(phone)) {
+        errors.telephone = 'Indiquez un vrai numéro de téléphone.';
       }
 
       ['nom_complet', 'email', 'telephone', 'budget', 'message'].forEach(function(fieldName) {
@@ -186,7 +118,6 @@
           jour_visite: formData.get('jour_visite'),
           source: formData.get('source') || window.location.href,
           company_website: formData.get('company_website'),
-          form_token: formData.get('form_token'),
           elapsed_ms: Date.now() - startedAt
         }),
         credentials: 'same-origin'
@@ -217,7 +148,6 @@
           form.querySelectorAll('[name]').forEach(updateAnimatedFieldState);
           startedAt = Date.now();
           form.setAttribute('data-form-start', String(startedAt));
-          refreshFormToken();
           clearFieldErrors();
         })
         .catch(function(error) {
@@ -242,18 +172,11 @@
       updateAnimatedFieldState(field);
       field.addEventListener('input', function() {
         updateAnimatedFieldState(field);
-        validateContactForm(false);
-      });
-      field.addEventListener('blur', function() {
-        updateAnimatedFieldState(field);
-        validateContactForm(true);
       });
       field.addEventListener('change', function() {
         updateAnimatedFieldState(field);
-        validateContactForm(true);
       });
     });
-    refreshFormToken();
 
     form.addEventListener('submit', function(event) {
       event.preventDefault();
@@ -266,6 +189,7 @@
         return;
       }
 
+      clearFieldErrors();
       var errors = validateContactForm(true);
       if (Object.keys(errors).length) {
         setFormFeedback('Votre demande n’a pas pu être envoyée. Contactez-nous directement par WhatsApp.', true);

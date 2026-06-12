@@ -725,13 +725,12 @@
         <label for="company-website">Site web</label>
         <input id="company-website" type="text" name="company_website" tabindex="-1" autocomplete="off">
       </div>
-      <input type="hidden" name="form_token" id="contactFormToken" value="">
       <div class="form-row">
         <div class="field-wrap animated-field">
           <label class="field-label-animated" for="contact-name" aria-hidden="true">
             <span style="--i:0">N</span><span style="--i:1">o</span><span style="--i:2">m</span><span style="--i:3">&nbsp;</span><span style="--i:4">c</span><span style="--i:5">o</span><span style="--i:6">m</span><span style="--i:7">p</span><span style="--i:8">l</span><span style="--i:9">e</span><span style="--i:10">t</span>
           </label>
-          <input id="contact-name" type="text" name="nom_complet" placeholder=" " aria-label="Nom complet" autocomplete="name" minlength="3" maxlength="80">
+          <input id="contact-name" type="text" name="nom_complet" placeholder=" " aria-label="Nom complet" autocomplete="name" maxlength="80">
           <span class="field-error" data-error-for="nom_complet"></span>
         </div>
       </div>
@@ -760,7 +759,7 @@
               <option value="+39">Italie +39</option>
               <option value="+1">Etats-Unis / Canada +1</option>
             </select>
-            <input id="contact-phone" type="tel" name="phoneNumber" placeholder=" " aria-label="Téléphone" autocomplete="tel-national" inputmode="tel" minlength="6" maxlength="20" data-phone-number>
+            <input id="contact-phone" type="tel" name="phoneNumber" placeholder=" " aria-label="Téléphone" autocomplete="tel-national" inputmode="tel" maxlength="20" data-phone-number>
           </div>
           <input type="hidden" name="telephone" data-phone-legacy value="">
           <input type="hidden" name="phoneFull" data-phone-full value="">
@@ -785,7 +784,7 @@
         <label class="field-label-animated" for="contact-message" aria-hidden="true">
           <span style="--i:0">D</span><span style="--i:1">é</span><span style="--i:2">c</span><span style="--i:3">r</span><span style="--i:4">i</span><span style="--i:5">v</span><span style="--i:6">e</span><span style="--i:7">z</span><span style="--i:8">&nbsp;</span><span style="--i:9">v</span><span style="--i:10">o</span><span style="--i:11">t</span><span style="--i:12">r</span><span style="--i:13">e</span><span style="--i:14">&nbsp;</span><span style="--i:15">p</span><span style="--i:16">r</span><span style="--i:17">o</span><span style="--i:18">j</span><span style="--i:19">e</span><span style="--i:20">t</span>
         </label>
-        <textarea id="contact-message" name="message" placeholder=" " aria-label="Décrivez votre projet" minlength="20" maxlength="1200"></textarea>
+        <textarea id="contact-message" name="message" placeholder=" " aria-label="Décrivez votre projet" maxlength="1200"></textarea>
         <span class="field-error" data-error-for="message"></span>
       </div>
       <button type="submit" class="btn-submit">Envoyer la demande</button>

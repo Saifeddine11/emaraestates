@@ -268,7 +268,6 @@ function hasLeadContent(payload) {
 
 function shouldSilentlyAccept(payload) {
   if (payload.company_website) return true;
-  if (!payload.form_token || payload.form_token.length < 16) return true;
   if (payload.elapsed_ms > 0 && payload.elapsed_ms < MIN_SUBMIT_MS) return true;
   if (!hasLeadContent(payload)) return true;
   return false;
@@ -290,31 +289,15 @@ function validatePayload(input) {
     jour_visite: sanitize(input.jour_visite, 80),
     source: sanitize(input.source, 120),
     company_website: sanitize(input.company_website, 120),
-    form_token: sanitize(input.form_token, 128),
     elapsed_ms: Number(input.elapsed_ms || 0)
   };
   const errors = {};
 
-  if (payload.nom_complet && !looksLikeName(payload.nom_complet)) {
-    errors.nom_complet = 'Indiquez un vrai nom complet, sans email ni numéro.';
-  }
   if (payload.email && !looksLikeEmail(payload.email)) {
     errors.email = 'Indiquez une adresse email valide.';
   }
-  if (payload.email && looksLikePhone(payload.email)) {
-    errors.email = 'Le téléphone doit être dans le champ Téléphone.';
-  }
   if (payload.telephone && !looksLikePhone(payload.telephone)) {
     errors.telephone = 'Indiquez un vrai numéro de téléphone.';
-  }
-  if (payload.telephone && looksLikeEmail(payload.telephone)) {
-    errors.telephone = 'L’email doit être dans le champ Email.';
-  }
-  if (payload.budget && !validBudgets.has(payload.budget)) {
-    errors.budget = 'Choisissez un budget dans la liste.';
-  }
-  if (hasLeadContent(payload) && hasSpamContent(payload)) {
-    errors.message = 'Ce message ressemble à une prospection ou contient un lien non autorisé.';
   }
 
   return { payload, errors };
@@ -381,7 +364,6 @@ async function forwardLead(payload) {
       message: escapeHtml(payload.message),
       jour_visite: escapeHtml(payload.jour_visite),
       company_website: escapeHtml(payload.company_website),
-      form_token: escapeHtml(payload.form_token),
       elapsed_ms: payload.elapsed_ms,
       source: escapeHtml(payload.source || 'emaraestates.com')
     })

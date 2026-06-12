@@ -301,7 +301,6 @@ function hasLeadContent(array $payload): bool
 function shouldSilentlyAccept(array $payload): bool
 {
     if ($payload['company_website'] !== '') return true;
-    if (mb_strlen($payload['form_token']) < 16) return true;
     if ($payload['elapsed_ms'] > 0 && $payload['elapsed_ms'] < MIN_SUBMIT_MS) return true;
     if (!hasLeadContent($payload)) return true;
 
@@ -329,34 +328,15 @@ function validatePayload(array $input, array $validBudgets, array $blockedTerms)
         'message' => sanitizeValue($input['message'] ?? '', 1200),
         'source' => sanitizeValue($input['source'] ?? '', 120),
         'company_website' => sanitizeValue($input['company_website'] ?? '', 120),
-        'form_token' => sanitizeValue($input['form_token'] ?? '', 128),
         'elapsed_ms' => (int) ($input['elapsed_ms'] ?? 0),
     ];
     $errors = [];
 
-    if ($payload['nom_complet'] !== '' && !looksLikeName($payload['nom_complet'])) {
-        $errors['nom_complet'] = 'Indiquez un vrai nom complet, sans email ni numéro.';
-    }
     if ($payload['email'] !== '' && !looksLikeEmail($payload['email'])) {
         $errors['email'] = 'Indiquez une adresse email valide.';
     }
-    if ($payload['email'] !== '' && looksLikePhone($payload['email'])) {
-        $errors['email'] = 'Le téléphone doit être dans le champ Téléphone.';
-    }
     if ($payload['telephone'] !== '' && !looksLikePhone($payload['telephone'])) {
         $errors['telephone'] = 'Indiquez un vrai numéro de téléphone.';
-    }
-    if ($payload['telephone'] !== '' && looksLikeEmail($payload['telephone'])) {
-        $errors['telephone'] = 'L’email doit être dans le champ Email.';
-    }
-    if ($payload['telephone'] !== '' && !isset(phoneCountryOptions()[$payload['phoneCountryCode']])) {
-        $errors['telephone'] = 'Choisissez un indicatif pays valide.';
-    }
-    if ($payload['budget'] !== '' && !in_array($payload['budget'], $validBudgets, true)) {
-        $errors['budget'] = 'Choisissez un budget dans la liste.';
-    }
-    if (hasLeadContent($payload) && hasSpamContent($payload, $blockedTerms)) {
-        $errors['message'] = 'Ce message ressemble à une prospection ou contient un lien non autorisé.';
     }
 
     return [$payload, $errors];
@@ -398,6 +378,16 @@ function contactWebhookUrl(array $env): string
     return trim($env['CONTACT_WEBHOOK_URL'] ?? '') ?: CONTACT_WEBHOOK_URL_FALLBACK;
 }
 
+function contactToEmail(array $env): string
+{
+    $to = trim($env['CONTACT_TO'] ?? '');
+    if ($to === '') {
+        $fromEnv = getenv('CONTACT_TO');
+        $to = is_string($fromEnv) ? trim($fromEnv) : '';
+    }
+    return $to !== '' ? $to : 'contact@emaraestates.com';
+}
+
 function sendLeadToZapier(array $payload, array $env, string $ip): void
 {
     $webhookUrl = contactWebhookUrl($env);
@@ -417,7 +407,6 @@ function sendLeadToZapier(array $payload, array $env, string $ip): void
         'budget' => $payload['budget'],
         'message' => $payload['message'],
         'company_website' => $payload['company_website'],
-        'form_token' => $payload['form_token'],
         'elapsed_ms' => $payload['elapsed_ms'],
         'source' => $payload['source'] !== '' ? $payload['source'] : 'emaraestates.com',
         'form_id' => 'contactForm',
@@ -524,8 +513,8 @@ function leadEmailBody(array $payload): string
 
 function sendLeadEmailWithPhpMail(array $payload, array $env): void
 {
-    $to = $env['CONTACT_TO'] ?? 'contact@emaraestates.com';
-    $from = $env['CONTACT_FROM'] ?? 'contact@emaraestates.com';
+    $to = contactToEmail($env);
+    $from = trim($env['CONTACT_FROM'] ?? '') ?: contactToEmail($env);
     $subject = 'Nouvelle demande — Emara Estates';
     $headers = [
         'From: Emara Estates <' . $from . '>',
@@ -549,8 +538,8 @@ function sendLeadEmailWithSmtp(array $payload, array $env): void
     $port = (int) ($env['SMTP_PORT'] ?? 465);
     $user = $env['SMTP_USER'] ?? '';
     $pass = $env['SMTP_PASS'] ?? '';
-    $to = $env['CONTACT_TO'] ?? 'contact@emaraestates.com';
-    $from = $env['CONTACT_FROM'] ?? $user;
+    $to = contactToEmail($env);
+    $from = trim($env['CONTACT_FROM'] ?? '') ?: $user;
 
     if ($host === '' || $port <= 0 || $user === '' || $pass === '' || $from === '') {
         throw new RuntimeException('SMTP configuration missing.');
