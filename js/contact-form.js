@@ -3,9 +3,116 @@
 
   var successMessage = 'Votre demande a bien été envoyée. Merci, notre équipe vous contactera dans les plus brefs délais.';
 
+  var SOCIAL_LINKS = {
+    instagram: 'https://www.instagram.com/emara.estates',
+    tiktok: 'https://www.tiktok.com/@emara.estates?_r=1&_t=ZS-95VFqI78Wjw',
+    snapchat: 'https://snapchat.com/t/kQce8jwo'
+  };
+
+  var SOCIAL_ICONS = {
+    instagram: '/img/iconsocailmedia/instagram.png',
+    tiktok: '/img/iconsocailmedia/tik-tok.png',
+    snapchat: '/img/iconsocailmedia/snapchat.png'
+  };
+
+  var modalOpen = false;
+  var lastFocusedElement = null;
+
   function isLocalPreview() {
     return ['localhost', '127.0.0.1', '::1'].indexOf(window.location.hostname) !== -1;
   }
+
+  function formHasLeadContent(formData) {
+    var phone = formData.get('telephone') || formData.get('phoneFull') || '';
+    return String(formData.get('nom_complet') || '').trim() !== ''
+      || String(formData.get('email') || '').trim() !== ''
+      || String(phone).trim() !== ''
+      || String(formData.get('budget') || '').trim() !== ''
+      || String(formData.get('message') || '').trim() !== ''
+      || String(formData.get('jour_visite') || '').trim() !== '';
+  }
+
+  function ensureSuccessModal() {
+    if (document.getElementById('form-success-modal')) return;
+
+    var modal = document.createElement('div');
+    modal.id = 'form-success-modal';
+    modal.className = 'form-success-modal';
+    modal.setAttribute('role', 'dialog');
+    modal.setAttribute('aria-modal', 'true');
+    modal.setAttribute('aria-labelledby', 'form-success-modal-title');
+    modal.setAttribute('aria-hidden', 'true');
+    modal.innerHTML = [
+      '<div class="form-success-modal__backdrop" data-success-modal-close></div>',
+      '<div class="form-success-modal__card">',
+      '  <button type="button" class="form-success-modal__close" data-success-modal-close aria-label="Fermer">&times;</button>',
+      '  <h2 id="form-success-modal-title" class="form-success-modal__title">Merci pour votre demande</h2>',
+      '  <p class="form-success-modal__text">Votre formulaire a bien été envoyé. Un conseiller Emara Estates vous contactera rapidement avec les informations adaptées à votre projet.</p>',
+      '  <p class="form-success-modal__social-title">Suivez-nous sur nos réseaux</p>',
+      '  <p class="form-success-modal__social-note">Découvrez nos projets, visites et actualités immobilières à Marrakech.</p>',
+      '  <div class="form-success-modal__socials">',
+      '    <a href="' + SOCIAL_LINKS.instagram + '" class="form-success-modal__social-link" target="_blank" rel="noopener noreferrer" aria-label="Instagram Emara Estates">',
+      '      <img class="form-success-modal__social-icon" src="' + SOCIAL_ICONS.instagram + '" alt="" width="24" height="24" loading="lazy" decoding="async">',
+      '      <span>Instagram</span>',
+      '    </a>',
+      '    <a href="' + SOCIAL_LINKS.tiktok + '" class="form-success-modal__social-link" target="_blank" rel="noopener noreferrer" aria-label="TikTok Emara Estates">',
+      '      <img class="form-success-modal__social-icon" src="' + SOCIAL_ICONS.tiktok + '" alt="" width="24" height="24" loading="lazy" decoding="async">',
+      '      <span>TikTok</span>',
+      '    </a>',
+      '    <a href="' + SOCIAL_LINKS.snapchat + '" class="form-success-modal__social-link" target="_blank" rel="noopener noreferrer" aria-label="Snapchat Emara Estates">',
+      '      <img class="form-success-modal__social-icon" src="' + SOCIAL_ICONS.snapchat + '" alt="" width="24" height="24" loading="lazy" decoding="async">',
+      '      <span>Snapchat</span>',
+      '    </a>',
+      '  </div>',
+      '  <div class="form-success-modal__actions">',
+      '    <button type="button" class="btn-outline form-success-modal__dismiss" data-success-modal-close>Fermer</button>',
+      '    <a href="/" class="btn-primary form-success-modal__home"><span>Retour au site</span></a>',
+      '  </div>',
+      '</div>'
+    ].join('');
+
+    document.body.appendChild(modal);
+
+    modal.querySelectorAll('[data-success-modal-close]').forEach(function(el) {
+      el.addEventListener('click', closeSuccessModal);
+    });
+  }
+
+  function openSuccessModal() {
+    ensureSuccessModal();
+    var modal = document.getElementById('form-success-modal');
+    if (!modal || modalOpen) return;
+
+    lastFocusedElement = document.activeElement;
+    modal.classList.add('is-open');
+    modal.setAttribute('aria-hidden', 'false');
+    document.body.classList.add('form-success-modal-open');
+    modalOpen = true;
+
+    var closeBtn = modal.querySelector('.form-success-modal__close');
+    if (closeBtn) closeBtn.focus();
+  }
+
+  function closeSuccessModal() {
+    var modal = document.getElementById('form-success-modal');
+    if (!modal || !modalOpen) return;
+
+    modal.classList.remove('is-open');
+    modal.setAttribute('aria-hidden', 'true');
+    document.body.classList.remove('form-success-modal-open');
+    modalOpen = false;
+
+    if (lastFocusedElement && typeof lastFocusedElement.focus === 'function') {
+      lastFocusedElement.focus();
+    }
+  }
+
+  document.addEventListener('keydown', function(event) {
+    if (event.key === 'Escape' && modalOpen) {
+      event.preventDefault();
+      closeSuccessModal();
+    }
+  });
 
   function init(form) {
     if (!form || form.dataset.contactFormBound === 'true') return;
@@ -58,7 +165,7 @@
       });
     }
 
-    function submitContactForm() {
+    function submitContactForm(hadLeadContent) {
       var phoneDetails = syncPhoneInput() || {};
       var formData = new FormData(form);
 
@@ -105,14 +212,15 @@
             return payload;
           });
         })
-        .then(function(payload) {
-          setFormFeedback(payload.message || successMessage, false);
+        .then(function() {
+          setFormFeedback('', false);
           form.reset();
           if (phoneInput) phoneInput.init(form);
           form.querySelectorAll('[name]').forEach(updateAnimatedFieldState);
           startedAt = Date.now();
           form.setAttribute('data-form-start', String(startedAt));
           clearFieldErrors();
+          if (hadLeadContent) openSuccessModal();
         })
         .catch(function(error) {
           if (isLocalPreview() && (!error || !error.errors)) {
@@ -143,6 +251,7 @@
       syncPhoneInput();
       var formData = new FormData(form);
       var trap = String(formData.get('company_website') || '').trim();
+      var hadLeadContent = formHasLeadContent(formData);
 
       clearFieldErrors();
 
@@ -152,10 +261,15 @@
       }
 
       setSubmitting(true);
-      submitContactForm();
+      submitContactForm(hadLeadContent);
     });
   }
 
-  window.EmaraContactForm = { init: init };
-  init(document.getElementById('contactForm'));
+  window.EmaraContactForm = { init: init, openSuccessModal: openSuccessModal, closeSuccessModal: closeSuccessModal };
+
+  ensureSuccessModal();
+  var forms = document.querySelectorAll('form#contactForm');
+  for (var i = 0; i < forms.length; i++) {
+    init(forms[i]);
+  }
 })(window, document);
