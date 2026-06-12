@@ -2658,6 +2658,12 @@ footer,
     padding: 0 18px;
     gap: 28px;
   }
+  .contact-page .contact-page-shell .contact-panel {
+    order: 1;
+  }
+  .contact-page .contact-page-shell .contact-page-copy {
+    order: 2;
+  }
   .contact-page-copy {
     text-align: center;
   }

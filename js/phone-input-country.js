@@ -1,7 +1,7 @@
 (function(window, document) {
   'use strict';
 
-  var FALLBACK_COUNTRY = 'MA';
+  var FALLBACK_COUNTRY = 'FR';
   var COUNTRIES = [
     { countryCode: 'MA', code: '+212', country: 'Morocco', label: 'Maroc', flag: '🇲🇦' },
     { countryCode: 'FR', code: '+33', country: 'France', label: 'France', flag: '🇫🇷' },
@@ -81,6 +81,8 @@
     var raw = String(value || '').toUpperCase();
     return COUNTRIES.filter(function(country) {
       return country.countryCode === raw || country.code === value;
+    })[0] || COUNTRIES.filter(function(country) {
+      return country.countryCode === FALLBACK_COUNTRY;
     })[0] || COUNTRIES[0];
   }
 
@@ -313,7 +315,7 @@
     ensureCustomPicker(field);
 
     if (!field.dataset.phoneCountryTouched) {
-      setCountry(field, detectCountryCode(), false);
+      setCountry(field, FALLBACK_COUNTRY, false);
     }
 
     if (field.dataset.phoneInputBound === 'true') return syncField(field);
