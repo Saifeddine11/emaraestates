@@ -2654,15 +2654,21 @@ footer,
     min-height: auto;
     padding: 104px 0 calc(92px + env(safe-area-inset-bottom, 0px));
   }
-  .contact-page-shell {
+  .contact-page .contact-page-shell {
+    display: flex;
+    flex-direction: column;
     padding: 0 18px;
     gap: 28px;
   }
-  .contact-page .contact-page-shell .contact-panel {
+  .contact-page .contact-page-shell > .contact-panel {
     order: 1;
+    width: 100%;
+    min-width: 0;
   }
-  .contact-page .contact-page-shell .contact-page-copy {
+  .contact-page .contact-page-shell > .contact-page-copy {
     order: 2;
+    width: 100%;
+    min-width: 0;
   }
   .contact-page-copy {
     text-align: center;
@@ -4940,5 +4946,20 @@ footer,
   .apport-simulator__result-ctas .btn-outline {
     flex: 1 1 auto;
     width: 100%;
+  }
+}
+
+/* Contact page: form before copy on mobile (flex order; wins over grid layout) */
+@media (max-width: 768px) {
+  .contact-page .contact-page-shell {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .contact-page .contact-page-shell > .contact-panel {
+    order: 1;
+  }
+  .contact-page .contact-page-shell > .contact-page-copy {
+    order: 2;
   }
 }
