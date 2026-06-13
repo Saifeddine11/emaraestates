@@ -9,7 +9,7 @@
 
   function controlsAreVisible(root) {
     var controls = root.querySelector(
-      '.emara-gallery__controls, .photo-ribbon-carousel-ui, .project-gallery-carousel-ui, .seo-gallery-carousel-ui, .realisations-carousel-ui'
+      '.emara-gallery__controls, .photo-ribbon-carousel-ui, .project-gallery-carousel-ui, .seo-gallery-carousel-ui, .realisations-carousel-ui, .showflats-carousel__controls'
     );
     if (!controls) return false;
     return window.getComputedStyle(controls).display !== 'none';
@@ -19,6 +19,7 @@
     return isMobile()
       || root.classList.contains('smap-emara-gallery')
       || root.classList.contains('emara-gallery--single')
+      || root.classList.contains('emara-gallery--showflats')
       || controlsAreVisible(root);
   }
 
@@ -26,6 +27,7 @@
     return mode === 'slides' && (
       root.classList.contains('emara-gallery--ribbon')
       || root.classList.contains('project-gallery-ribbon')
+      || root.classList.contains('emara-gallery--showflats')
     );
   }
 
@@ -37,24 +39,28 @@
     var track = root.querySelector('.emara-gallery__track')
       || root.querySelector('.photo-ribbon-track')
       || root.querySelector('.seo-gallery__grid')
+      || root.querySelector('.showflats-carousel__track')
       || root.querySelector('.realisations-grid');
     if (!track) return null;
 
     var viewport = root.querySelector('.emara-gallery__viewport')
       || root.querySelector('.photo-ribbon-viewport')
       || root.querySelector('.seo-gallery__viewport')
+      || root.querySelector('.showflats-carousel__viewport')
       || track.parentElement;
 
     var prev = root.querySelector('.emara-gallery__button--prev')
       || root.querySelector('.photo-ribbon-carousel-btn--prev')
       || root.querySelector('.project-gallery-carousel-btn--prev')
       || root.querySelector('.seo-gallery-carousel-btn--prev')
+      || root.querySelector('.showflats-carousel__button--prev')
       || root.querySelector('.realisations-carousel-btn--prev');
 
     var next = root.querySelector('.emara-gallery__button--next')
       || root.querySelector('.photo-ribbon-carousel-btn--next')
       || root.querySelector('.project-gallery-carousel-btn--next')
       || root.querySelector('.seo-gallery-carousel-btn--next')
+      || root.querySelector('.showflats-carousel__button--next')
       || root.querySelector('.realisations-carousel-btn--next');
 
     var counter = root.querySelector('.emara-gallery__counter');
@@ -103,6 +109,34 @@
 
     function applyTransform() {
       setIndexVars(state.index);
+      if (root.classList.contains('emara-gallery--showflats')) {
+        updateShowflatsStep(root, track, getSlides());
+      }
+    }
+
+    function updateShowflatsStep(root, track, slides) {
+      if (!slides.length) return;
+      var viewport = root.querySelector('.showflats-carousel__viewport') || track.parentElement;
+
+      if (isMobile() && viewport) {
+        var viewportWidth = viewport.clientWidth;
+        if (viewportWidth > 0) {
+          track.style.setProperty('--showflats-step', viewportWidth + 'px');
+          track.style.setProperty('--showflats-slide-width', viewportWidth + 'px');
+          root.style.setProperty('--showflats-slide-width', viewportWidth + 'px');
+          return;
+        }
+      }
+
+      track.style.removeProperty('--showflats-slide-width');
+      root.style.removeProperty('--showflats-slide-width');
+
+      var slide = slides[Math.min(state.index, slides.length - 1)];
+      var gap = parseFloat(window.getComputedStyle(track).columnGap || window.getComputedStyle(track).gap) || 18;
+      var slideWidth = slide.getBoundingClientRect().width;
+      if (slideWidth > 0) {
+        track.style.setProperty('--showflats-step', (slideWidth + gap) + 'px');
+      }
     }
 
     function resetDesktopState(slides) {
