@@ -340,9 +340,12 @@ section { padding: 130px 60px; }
 .about { display: grid; grid-template-columns: minmax(320px, 560px) minmax(0, 1fr); gap: clamp(48px, 7vw, 100px); align-items: center; background: var(--cr); }
 .about > * { min-width: 0; }
 .about-img-wrap { position: relative; width: min(100%, 560px); justify-self: start; padding-bottom: 72px; max-width: 100%; }
-.about-img { border-radius: 20px; overflow: hidden; aspect-ratio: 3/4; max-height: 620px; width: 100%; }
+.about-img { position: relative; border-radius: 20px; overflow: hidden; aspect-ratio: 3/4; max-height: 620px; width: 100%; }
 .about-img img { width: 100%; height: 100%; object-fit: cover; transition: transform 1.2s; }
 .about-img:hover img { transform: scale(1.03); }
+.about-founder { position: absolute; left: clamp(18px, 4vw, 28px); bottom: clamp(18px, 4vw, 28px); z-index: 1; max-width: calc(100% - 56px); padding: 0 0 0 16px; border-left: 1px solid var(--mr); color: var(--cr); text-shadow: 0 2px 18px rgba(0,0,0,.38); }
+.about-founder__name { display: block; font-family: 'Cormorant Garamond', serif; font-size: clamp(24px, 2.2vw, 32px); font-weight: 400; line-height: 1; letter-spacing: 0; }
+.about-founder__role { display: block; margin-top: 7px; font-size: 12px; font-weight: 300; letter-spacing: 1.8px; line-height: 1.45; color: rgba(245,240,232,.82); }
 .about-float { position: absolute; right: 0; bottom: 0; transform: translate(28%, 0); min-width: 172px; background: var(--mr); border-radius: 14px; padding: 30px 26px; color: var(--white); text-align: center; box-shadow: 0 20px 50px rgba(155,112,64,.25); z-index: 2; }
 .about-float .af-num { font-family: 'Cormorant Garamond', serif; font-size: 58px; font-weight: 400; line-height: .92; letter-spacing: 0; font-kerning: normal; font-variant-numeric: lining-nums proportional-nums; }
 .about-float .af-label { font-size: 12px; letter-spacing: 2px; text-transform: uppercase; margin-top: 8px; }
@@ -2169,6 +2172,7 @@ footer,
   .newsletter-content .section-text { max-width: 760px; }
   .about { grid-template-columns: minmax(280px, 460px) minmax(0, 1fr); gap: 44px; }
   .about-img-wrap { width: min(100%, 460px); padding-bottom: 62px; }
+  .about-founder { max-width: 220px; }
   .about-float { min-width: 156px; padding: 24px 22px; right: 18px; bottom: 18px; transform: none; }
   .about-values { flex-direction: column; gap: 20px; }
   .Estates#biens .Estates-header > :first-child { max-width: 860px; }
@@ -2904,6 +2908,8 @@ footer,
   .section-title { font-size: 32px; }
   .section-text { font-size: 16px; }
   .about-img-wrap { width: 100%; max-width: 100%; }
+  .about-founder { max-width: 150px; }
+  .about-founder__role { font-size: 11px; letter-spacing: 1.4px; }
   .about-float { right: 14px; bottom: 14px; max-width: calc(100% - 28px); padding: 18px 14px; border-radius: 12px; }
   .about-float .af-num { font-size: 42px; }
   .about-float .af-label { font-size: 10px; letter-spacing: 2px; }
