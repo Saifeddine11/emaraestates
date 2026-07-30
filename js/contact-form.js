@@ -6,13 +6,15 @@
   var SOCIAL_LINKS = {
     instagram: 'https://www.instagram.com/emara.estates',
     tiktok: 'https://www.tiktok.com/@emara.estates?_r=1&_t=ZS-95VFqI78Wjw',
-    snapchat: 'https://snapchat.com/t/kQce8jwo'
+    snapchat: 'https://snapchat.com/t/kQce8jwo',
+    whatsapp: 'https://wa.me/212670038899?text=Bonjour%2C%20je%20souhaite%20%C3%A9changer%20avec%20Emara%20Estates%20au%20sujet%20d%27un%20projet%20immobilier%20%C3%A0%20Marrakech.%20Merci'
   };
 
   var SOCIAL_ICONS = {
     instagram: '/img/iconsocailmedia/instagram.png',
     tiktok: '/img/iconsocailmedia/tik-tok.png',
-    snapchat: '/img/iconsocailmedia/snapchat.png'
+    snapchat: '/img/iconsocailmedia/snapchat.png',
+    whatsapp: '/img/iconsocailmedia/whatsapp.png'
   };
 
   var modalOpen = false;
@@ -47,7 +49,7 @@
       '<div class="form-success-modal__card">',
       '  <button type="button" class="form-success-modal__close" data-success-modal-close aria-label="Fermer">&times;</button>',
       '  <h2 id="form-success-modal-title" class="form-success-modal__title">Merci pour votre demande</h2>',
-      '  <p class="form-success-modal__text">Votre formulaire a bien été envoyé. Un conseiller Emara Estates vous contactera rapidement avec les informations adaptées à votre projet.</p>',
+      '  <p class="form-success-modal__text">Un conseiller d’Emara Estates vous contactera dans les plus brefs délais.</p>',
       '  <p class="form-success-modal__social-title">Suivez-nous sur nos réseaux</p>',
       '  <p class="form-success-modal__social-note">Découvrez nos projets, visites et actualités immobilières à Marrakech.</p>',
       '  <div class="form-success-modal__socials">',
@@ -62,6 +64,10 @@
       '    <a href="' + SOCIAL_LINKS.snapchat + '" class="form-success-modal__social-link" target="_blank" rel="noopener noreferrer" aria-label="Snapchat Emara Estates">',
       '      <img class="form-success-modal__social-icon" src="' + SOCIAL_ICONS.snapchat + '" alt="" width="24" height="24" loading="lazy" decoding="async">',
       '      <span>Snapchat</span>',
+      '    </a>',
+      '    <a href="' + SOCIAL_LINKS.whatsapp + '" class="form-success-modal__social-link" target="_blank" rel="noopener noreferrer" aria-label="WhatsApp Emara Estates">',
+      '      <img class="form-success-modal__social-icon" src="' + SOCIAL_ICONS.whatsapp + '" alt="" width="24" height="24" loading="lazy" decoding="async">',
+      '      <span>WhatsApp</span>',
       '    </a>',
       '  </div>',
       '  <div class="form-success-modal__actions">',
