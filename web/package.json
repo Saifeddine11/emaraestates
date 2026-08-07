@@ -1,0 +1,44 @@
+{
+  "name": "web",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "eslint",
+    "preview": "next build && node scripts/preview.mjs",
+    "preview:serve": "node scripts/preview.mjs",
+    "verify": "node scripts/verify-preservation.mjs",
+    "smoke": "node scripts/smoke.mjs",
+    "form-parity": "node scripts/form-parity.mjs",
+    "shots": "node scripts/shots.mjs",
+    "lighthouse": "node scripts/lighthouse.mjs",
+    "video-gallery": "node scripts/video-gallery-check.mjs",
+    "check": "next build && node scripts/verify-preservation.mjs && node scripts/smoke.mjs && node scripts/form-parity.mjs",
+    "deploy:layout": "node scripts/deploy-layout.mjs",
+    "deploy:check": "node scripts/deploy-check.mjs",
+    "deploy": "next build && node scripts/deploy-layout.mjs && node scripts/deploy-check.mjs"
+  },
+  "dependencies": {
+    "clsx": "^2.1.1",
+    "motion": "^13.0.0",
+    "next": "16.3.0",
+    "react": "19.2.8",
+    "react-dom": "19.2.8",
+    "tailwind-merge": "^3.6.0"
+  },
+  "devDependencies": {
+    "@tailwindcss/postcss": "^4",
+    "@types/node": "^20",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "cheerio": "^1.2.0",
+    "eslint": "^9",
+    "eslint-config-next": "16.3.0",
+    "lighthouse": "^13.4.1",
+    "playwright": "^1.62.1",
+    "tailwindcss": "^4",
+    "typescript": "^5"
+  }
+}

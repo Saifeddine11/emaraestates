@@ -1,0 +1,1024 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="x-apple-disable-message-reformatting">
+  <meta name="format-detection" content="telephone=no, date=no, address=no, email=no">
+  <title>OffMarket — L’immobilier privé à Marrakech</title>
+
+  <style>
+    html, body {
+      margin: 0 !important;
+      padding: 0 !important;
+      width: 100% !important;
+      background: #e9e9e7;
+    }
+
+    body, table, td, a {
+      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display",
+        "SF Pro Text", "Helvetica Neue", Arial, sans-serif;
+    }
+
+    table {
+      border-collapse: collapse;
+      border-spacing: 0;
+    }
+
+    td {
+      padding: 0;
+    }
+
+    img {
+      display: block;
+      width: 100%;
+      max-width: 100%;
+      height: auto;
+      border: 0;
+      outline: 0;
+    }
+
+    a {
+      text-decoration: none;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 680px;
+      background: #080808;
+      border-radius: 26px;
+      overflow: hidden;
+    }
+
+    .pad {
+      padding-left: 32px;
+      padding-right: 32px;
+    }
+
+    .section-dark {
+      background: #080808;
+    }
+
+    .section-soft-dark {
+      background: #111111;
+    }
+
+    .section-light {
+      background: linear-gradient(180deg, #f8f8f6 0%, #efefec 100%);
+    }
+
+    .hero-title {
+      margin: 0 auto;
+      max-width: 600px;
+      color: #ffffff;
+      font-size: 50px;
+      line-height: 52px;
+      letter-spacing: -2.4px;
+      font-weight: 650;
+    }
+
+    .title-dark,
+    .title-light {
+      margin: 0;
+      font-size: 37px;
+      line-height: 41px;
+      letter-spacing: -1.8px;
+      font-weight: 650;
+    }
+
+    .title-dark { color: #ffffff; }
+    .title-light { color: #111111; }
+
+    .body-dark {
+      color: #b3b3ba;
+      font-size: 16px;
+      line-height: 26px;
+    }
+
+    .body-light {
+      color: #626268;
+      font-size: 16px;
+      line-height: 26px;
+    }
+
+    .eyebrow-dark,
+    .eyebrow-light {
+      font-size: 11px;
+      line-height: 16px;
+      letter-spacing: 1.8px;
+      text-transform: uppercase;
+      font-weight: 700;
+    }
+
+    .eyebrow-dark { color: #8d8d94; }
+    .eyebrow-light { color: #77777d; }
+
+    .button-white,
+    .button-dark,
+    .button-glass {
+      display: inline-block;
+      padding: 14px 22px;
+      border-radius: 999px;
+      font-size: 14px;
+      line-height: 18px;
+      font-weight: 700;
+    }
+
+    .button-white {
+      color: #080808;
+      background: #ffffff;
+    }
+
+    .button-dark {
+      color: #ffffff;
+      background: #111111;
+    }
+
+    .button-glass {
+      color: #ffffff;
+      background: rgba(255,255,255,.09);
+      border: 1px solid rgba(255,255,255,.18);
+    }
+
+    .glass-light {
+      background: #ffffff;
+      background: rgba(255,255,255,.79);
+      border: 1px solid rgba(255,255,255,.9);
+      border-radius: 20px;
+      box-shadow:
+        inset 0 1px 0 rgba(255,255,255,.95),
+        0 12px 34px rgba(20,20,20,.08);
+      overflow: hidden;
+    }
+
+    .glass-dark {
+      background: #191919;
+      background: rgba(255,255,255,.07);
+      border: 1px solid rgba(255,255,255,.11);
+      border-radius: 20px;
+      box-shadow:
+        inset 0 1px 0 rgba(255,255,255,.05),
+        0 12px 32px rgba(0,0,0,.22);
+      overflow: hidden;
+    }
+
+    .metric-card {
+      height: 156px;
+      padding: 18px;
+      box-sizing: border-box;
+    }
+
+    .metric-value {
+      color: #111111;
+      font-size: 25px;
+      line-height: 29px;
+      letter-spacing: -1px;
+      font-weight: 700;
+    }
+
+    .metric-label {
+      padding-top: 7px;
+      color: #6c6c72;
+      font-size: 12px;
+      line-height: 18px;
+    }
+
+    .concept-image {
+      height: 150px;
+      object-fit: cover;
+    }
+
+    .concept-content {
+      height: 225px;
+      padding: 20px;
+      box-sizing: border-box;
+      vertical-align: top;
+    }
+
+    .process-card {
+      height: 232px;
+      padding: 22px;
+      box-sizing: border-box;
+    }
+
+    .project-image {
+      height: 500px;
+      object-fit: cover;
+    }
+
+    .gallery-image {
+      height: 170px;
+      object-fit: cover;
+      border-radius: 13px;
+    }
+
+    .analysis-card {
+      height: 146px;
+      padding: 21px;
+      box-sizing: border-box;
+    }
+
+    .area-card {
+      min-height: 230px;
+      padding: 21px;
+      box-sizing: border-box;
+    }
+
+    .dot {
+      display: inline-block;
+      width: 8px;
+      height: 8px;
+      min-width: 8px;
+      max-width: 8px;
+      border-radius: 50%;
+      background: #30d158;
+      box-shadow: 0 0 0 3px rgba(48,209,88,.14);
+      font-size: 0;
+      line-height: 0;
+      vertical-align: middle;
+    }
+
+    @media only screen and (max-width: 680px) {
+      .outer {
+        padding: 0 !important;
+      }
+
+      .container {
+        width: 100% !important;
+        max-width: 100% !important;
+        border-radius: 0 !important;
+      }
+
+      .pad {
+        padding-left: 18px !important;
+        padding-right: 18px !important;
+      }
+
+      .hero-spacer {
+        height: 145px !important;
+      }
+
+      .hero-title {
+        max-width: 100% !important;
+        font-size: 35px !important;
+        line-height: 38px !important;
+        letter-spacing: -1.5px !important;
+      }
+
+      .title-dark,
+      .title-light {
+        font-size: 29px !important;
+        line-height: 33px !important;
+        letter-spacing: -1.2px !important;
+      }
+
+      .stack-column {
+        display: block !important;
+        width: 100% !important;
+        max-width: 100% !important;
+      }
+
+      .gap-column {
+        display: block !important;
+        width: 100% !important;
+        height: 14px !important;
+      }
+
+      .metric-cell {
+        display: block !important;
+        width: 100% !important;
+        padding: 0 0 12px 0 !important;
+      }
+
+      .button-cell {
+        display: block !important;
+        width: 100% !important;
+        padding: 0 0 10px 0 !important;
+        text-align: center !important;
+      }
+
+      .metric-card,
+      .concept-content,
+      .process-card,
+      .analysis-card,
+      .area-card {
+        height: auto !important;
+        min-height: 0 !important;
+      }
+
+      .hero-badge-text {
+        font-size: 10px !important;
+        line-height: 14px !important;
+      }
+
+      .concept-image,
+      .project-image,
+      .gallery-image {
+        height: auto !important;
+      }
+
+      .project-copy {
+        padding: 26px 22px 28px !important;
+      }
+
+      .mobile-center {
+        text-align: center !important;
+      }
+
+      .mobile-hide {
+        display: none !important;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div style="display:none;max-height:0;overflow:hidden;opacity:0;color:transparent;font-size:1px;line-height:1px;">
+    L’immobilier privé à Marrakech — villas, appartements, projets sur plan et accès privé.
+  </div>
+
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#e9e9e7;">
+    <tr>
+      <td align="center" class="outer" style="padding:28px 12px;">
+
+        <table role="presentation" width="680" cellpadding="0" cellspacing="0" border="0" class="container">
+
+          <!-- HEADER -->
+          <tr>
+            <td class="pad section-dark" style="padding-top:20px;padding-bottom:20px;border-bottom:1px solid rgba(255,255,255,.07);">
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+                <tr>
+                  <td width="33%" align="left" valign="middle">
+                    <a href="https://offmarketofficial.com/fr/" target="_blank"
+                      style="display:inline-block;padding:10px 15px;border-radius:999px;background:#ffffff;color:#111111;font-size:12px;line-height:16px;font-weight:700;">
+                      Nos projets
+                    </a>
+                  </td>
+
+                  <td width="34%" align="center" valign="middle">
+                    <a href="https://offmarketofficial.com/fr/" target="_blank">
+                      <img src="img/blanc.png" width="92" alt="OffMarket Properties"
+                        style="width:92px;max-width:92px;height:auto;margin:0 auto;">
+                    </a>
+                  </td>
+
+                  <td width="33%" align="right" valign="middle"
+                    style="font-size:13px;line-height:18px;font-weight:600;">
+                    <a href="https://offmarketofficial.com/fr/contact/" target="_blank" style="color:#ffffff;">
+                      Demander l’accès
+                    </a>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+
+          <!-- HERO -->
+          <tr>
+            <td background="img/honest-signature-7/honest7-res-nuit.webp" bgcolor="#101010" valign="bottom"
+              style="
+                background-color:#101010;
+                background-image:
+                  linear-gradient(180deg,rgba(0,0,0,.03) 0%,rgba(0,0,0,.08) 26%,rgba(0,0,0,.55) 67%,rgba(8,8,8,.98) 100%),
+                  url('img/honest-signature-7/honest7-res-nuit.webp');
+                background-size:cover;
+                background-position:center;
+                background-repeat:no-repeat;
+              ">
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+                <tr>
+                  <td class="hero-spacer" height="220" style="height:220px;"></td>
+                </tr>
+
+                <tr>
+                  <td class="pad" align="center" style="padding-bottom:50px;">
+
+                    <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin:0 auto 18px;">
+                      <tr>
+                        <td style="padding:10px 15px;border:1px solid rgba(255,255,255,.18);border-radius:999px;background:rgba(12,12,12,.58);">
+                          <table role="presentation" cellpadding="0" cellspacing="0" border="0">
+                            <tr>
+                              <td width="8" valign="middle" style="width:8px;font-size:0;line-height:0;">
+                                <span class="dot">&nbsp;</span>
+                              </td>
+                              <td class="hero-badge-text" valign="middle" style="padding-left:11px;color:#ffffff;font-size:12px;line-height:16px;font-weight:700;">
+                                Tous nos projets sont étudiés selon S.A.F.E
+                              </td>
+                            </tr>
+                          </table>
+                        </td>
+                      </tr>
+                    </table>
+
+                    <div style="padding-bottom:10px;color:#d7d7dc;font-size:12px;line-height:18px;font-weight:600;letter-spacing:1.4px;text-transform:uppercase;">
+                      Immobilier privé à Marrakech
+                    </div>
+
+                    <h1 class="hero-title" style="padding-bottom:18px;">
+                      L’immobilier privé<br>à Marrakech
+                    </h1>
+
+                    <div style="max-width:520px;margin:0 auto;padding-bottom:27px;color:#d5d5db;font-size:16px;line-height:26px;">
+                      Accédez à une sélection confidentielle de villas, appartements et projets sur plan.
+                      Tous les projets présentés sont étudiés et présélectionnés selon la méthode
+                      S.A.F.E pour leur emplacement, leur sérieux, leur cohérence et leur potentiel.
+                    </div>
+
+                    <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin:0 auto;">
+                      <tr>
+                        <td class="button-cell" style="padding-right:8px;">
+                          <a href="https://offmarketofficial.com/fr/contact/" target="_blank" class="button-white">
+                            Demander l’accès
+                          </a>
+                        </td>
+                        <td class="button-cell">
+                          <a href="https://offmarketofficial.com/fr/safe-certification-immobiliere/" target="_blank" class="button-glass">
+                            Principes S.A.F.E
+                          </a>
+                        </td>
+                      </tr>
+                    </table>
+
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+
+          <!-- METRICS -->
+          <tr>
+            <td style="background:linear-gradient(180deg,#080808 0%,#080808 40%,#f3f3f0 40%,#f3f3f0 100%);">
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+                <tr>
+                  <td class="pad" style="padding-bottom:30px;">
+                    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+                      <tr>
+                        <td class="metric-cell" width="25%" valign="top" style="padding-right:7px;">
+                          <div class="glass-light metric-card">
+                            <div class="metric-value">15+</div>
+                            <div class="metric-label">Projets privés suivis</div>
+                          </div>
+                        </td>
+
+                        <td class="metric-cell" width="25%" valign="top" style="padding-left:7px;padding-right:7px;">
+                          <div class="glass-light metric-card">
+                            <div class="metric-value" style="font-size:20px;line-height:25px;">Villas</div>
+                            <div class="metric-label">Villas sur plan à Marrakech</div>
+                          </div>
+                        </td>
+
+                        <td class="metric-cell" width="25%" valign="top" style="padding-left:7px;padding-right:7px;">
+                          <div class="glass-light metric-card">
+                            <div class="metric-value" style="font-size:18px;line-height:23px;">Appartements</div>
+                            <div class="metric-label">Programmes neufs à Guéliz</div>
+                          </div>
+                        </td>
+
+                        <td class="metric-cell" width="25%" valign="top" style="padding-left:7px;">
+                          <div class="glass-light metric-card">
+                            <div class="metric-value" style="font-size:20px;line-height:24px;">Accès privé</div>
+                            <div class="metric-label">Biens confidentiels accessibles sur demande</div>
+                          </div>
+                        </td>
+                      </tr>
+                    </table>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+
+          <!-- CONCEPT INTRO -->
+          <tr>
+            <td class="section-light">
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+                <tr>
+                  <td class="pad" style="padding-top:42px;padding-bottom:36px;">
+                    <div class="eyebrow-light" style="padding-bottom:14px;">La sélection OffMarket</div>
+                    <h2 class="title-light" style="max-width:590px;padding-bottom:18px;">
+                      Sur plan, existant<br>et accès privé.
+                    </h2>
+                    <div class="body-light" style="max-width:610px;">
+                      Découvrez une première sélection visible de villas et d’appartements.
+                      Les terrains, maisons, hôtels, restaurants et autres opportunités
+                      confidentielles sont accessibles après qualification de votre recherche.
+                    </div>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+
+          <!-- CONCEPT CARDS -->
+          <tr>
+            <td class="section-light">
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+                <tr>
+                  <td class="pad" style="padding-bottom:46px;">
+                    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+                      <tr>
+
+                        <td class="stack-column" width="32%" valign="top">
+                          <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" class="glass-light">
+                            <tr>
+                              <td>
+                                <img src="img/honest-signature-7/honest-signature-7-gueliz-marrakech-facade-01.webp"
+                                  alt="Villa Jaz — villa sur plan à Marrakech" class="concept-image">
+                              </td>
+                            </tr>
+                            <tr>
+                              <td class="concept-content" valign="top">
+                                <div style="padding-bottom:9px;color:#77777d;font-size:10px;line-height:15px;font-weight:700;letter-spacing:1.4px;text-transform:uppercase;">
+                                  01 · Villa sur plan
+                                </div>
+                                <div style="padding-bottom:12px;color:#111111;font-size:20px;line-height:24px;font-weight:700;letter-spacing:-.7px;">
+                                  Villa Jaz
+                                </div>
+                                <div style="color:#66666c;font-size:13px;line-height:21px;">
+                                  7 villas restantes à Marrakech. Un projet sur plan
+                                  à partir de 351 000 €.
+                                </div>
+                              </td>
+                            </tr>
+                          </table>
+                        </td>
+
+                        <td class="gap-column" width="2%" style="width:2%;"></td>
+
+                        <td class="stack-column" width="32%" valign="top">
+                          <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" class="glass-light">
+                            <tr>
+                              <td>
+                                <img src="img/honest-signature-7/honest-signature-7-gueliz-marrakech-appartement-01.webp"
+                                  alt="Appartement premium à Guéliz" class="concept-image">
+                              </td>
+                            </tr>
+                            <tr>
+                              <td class="concept-content" valign="top">
+                                <div style="padding-bottom:9px;color:#77777d;font-size:10px;line-height:15px;font-weight:700;letter-spacing:1.4px;text-transform:uppercase;">
+                                  02 · Appartement
+                                </div>
+                                <div style="padding-bottom:12px;color:#111111;font-size:20px;line-height:24px;font-weight:700;letter-spacing:-.7px;">
+                                  Premium à Guéliz
+                                </div>
+                                <div style="color:#66666c;font-size:13px;line-height:21px;">
+                                  39 à 140 m² en hyper-centre. Livraison prévue
+                                  en 2028, à partir de 1,05 M MAD.
+                                </div>
+                              </td>
+                            </tr>
+                          </table>
+                        </td>
+
+                        <td class="gap-column" width="2%" style="width:2%;"></td>
+
+                        <td class="stack-column" width="32%" valign="top">
+                          <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" class="glass-light">
+                            <tr>
+                              <td>
+                                <img src="img/honest-signature-7/honest-signature-7-gueliz-marrakech-residence-01.webp"
+                                  alt="Accès privé OffMarket" class="concept-image">
+                              </td>
+                            </tr>
+                            <tr>
+                              <td class="concept-content" valign="top">
+                                <div style="padding-bottom:9px;color:#77777d;font-size:10px;line-height:15px;font-weight:700;letter-spacing:1.4px;text-transform:uppercase;">
+                                  03 · Accès privé
+                                </div>
+                                <div style="padding-bottom:12px;color:#111111;font-size:20px;line-height:24px;font-weight:700;letter-spacing:-.7px;">
+                                  Biens off-market
+                                </div>
+                                <div style="color:#66666c;font-size:13px;line-height:21px;">
+                                  Terrains, maisons, hôtels et restaurants accessibles
+                                  sur demande après qualification.
+                                </div>
+                              </td>
+                            </tr>
+                          </table>
+                        </td>
+
+                      </tr>
+                    </table>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+
+          <!-- PROCESS -->
+          <tr>
+            <td class="section-dark" style="border-top:1px solid rgba(255,255,255,.07);border-bottom:1px solid rgba(255,255,255,.07);">
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+                <tr>
+                  <td class="pad" style="padding-top:48px;padding-bottom:38px;">
+                    <div class="eyebrow-dark" style="padding-bottom:14px;">Votre accès privé</div>
+                    <h2 class="title-dark" style="padding-bottom:26px;">
+                      Une demande qualifiée.<br>Une sélection ciblée.
+                    </h2>
+
+                    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+                      <tr>
+
+                        <td class="stack-column" width="32%" valign="top">
+                          <div class="glass-dark process-card">
+                            <div style="padding-bottom:20px;color:#7f7f86;font-size:11px;line-height:16px;font-weight:700;letter-spacing:1.5px;">01</div>
+                            <div style="padding-bottom:12px;color:#ffffff;font-size:20px;line-height:24px;font-weight:700;letter-spacing:-.6px;">
+                              Décrivez votre projet
+                            </div>
+                            <div style="color:#a4a4aa;font-size:13px;line-height:21px;">
+                              Usage, budget, typologie, zone recherchée et calendrier de votre projet.
+                            </div>
+                          </div>
+                        </td>
+
+                        <td class="gap-column" width="2%" style="width:2%;"></td>
+
+                        <td class="stack-column" width="32%" valign="top">
+                          <div class="glass-dark process-card">
+                            <div style="padding-bottom:20px;color:#7f7f86;font-size:11px;line-height:16px;font-weight:700;letter-spacing:1.5px;">02</div>
+                            <div style="padding-bottom:12px;color:#ffffff;font-size:20px;line-height:24px;font-weight:700;letter-spacing:-.6px;">
+                              Lecture S.A.F.E
+                            </div>
+                            <div style="color:#a4a4aa;font-size:13px;line-height:21px;">
+                              Nous étudions l’emplacement, le sérieux, la cohérence
+                              et le potentiel avant présentation.
+                            </div>
+                          </div>
+                        </td>
+
+                        <td class="gap-column" width="2%" style="width:2%;"></td>
+
+                        <td class="stack-column" width="32%" valign="top">
+                          <div class="glass-dark process-card">
+                            <div style="padding-bottom:20px;color:#7f7f86;font-size:11px;line-height:16px;font-weight:700;letter-spacing:1.5px;">03</div>
+                            <div style="padding-bottom:12px;color:#ffffff;font-size:20px;line-height:24px;font-weight:700;letter-spacing:-.6px;">
+                              Accédez à la sélection
+                            </div>
+                            <div style="color:#a4a4aa;font-size:13px;line-height:21px;">
+                              Recevez les fiches visibles et les opportunités confidentielles
+                              adaptées à votre recherche.
+                            </div>
+                          </div>
+                        </td>
+
+                      </tr>
+                    </table>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+
+          <!-- CURRENT SELECTION -->
+          <tr>
+            <td class="section-light">
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+                <tr>
+                  <td class="pad" style="padding-top:50px;padding-bottom:28px;">
+                    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+                      <tr>
+                        <td align="left" valign="bottom">
+                          <div class="eyebrow-light" style="padding-bottom:12px;">Projet visible</div>
+                          <h2 class="title-light" style="font-size:34px;line-height:38px;">
+                            Appartement premium à Guéliz.
+                          </h2>
+                        </td>
+                        <td class="mobile-hide" align="right" valign="bottom" style="color:#626268;font-size:12px;line-height:18px;">
+                          Programme neuf sur plan
+                        </td>
+                      </tr>
+                    </table>
+                  </td>
+                </tr>
+
+                <tr>
+                  <td class="pad" style="padding-bottom:48px;">
+                    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" class="glass-light">
+                      <tr>
+                        <td class="stack-column" width="52%" valign="top">
+                          <img src="img/honest-signature-7/honest-signature-7-gueliz-marrakech-espace-de-vie-01.webp"
+                            alt="Appartement premium à Guéliz" class="project-image">
+                        </td>
+
+                        <td class="stack-column project-copy" width="48%" valign="middle"
+                          style="padding:30px;box-sizing:border-box;">
+                          <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin-bottom:18px;">
+                            <tr>
+                              <td style="padding:10px 14px;border:1px solid rgba(0,0,0,.06);border-radius:999px;background:rgba(255,255,255,.82);">
+                                <table role="presentation" cellpadding="0" cellspacing="0" border="0">
+                                  <tr>
+                                    <td width="8" valign="middle" style="width:8px;font-size:0;line-height:0;">
+                                      <span class="dot">&nbsp;</span>
+                                    </td>
+                                    <td valign="middle" style="padding-left:11px;color:#111111;font-size:11px;line-height:16px;font-weight:700;">
+                                      Disponible · 30 unités restantes
+                                    </td>
+                                  </tr>
+                                </table>
+                              </td>
+                            </tr>
+                          </table>
+
+                          <div style="padding-bottom:12px;color:#111111;font-size:30px;line-height:34px;font-weight:700;letter-spacing:-1.3px;">
+                            Appartement premium à Guéliz.
+                          </div>
+
+                          <div style="padding-bottom:22px;color:#626268;font-size:14px;line-height:23px;">
+                            39 à 140 m² en hyper-centre de Marrakech. Livraison prévue
+                            en 2028, avec une sélection d’unités encore disponibles.
+                          </div>
+
+                          <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-bottom:24px;">
+                            <tr>
+                              <td width="50%" valign="top" style="padding-bottom:17px;">
+                                <div style="color:#111111;font-size:21px;line-height:25px;font-weight:700;">30</div>
+                                <div style="padding-top:3px;color:#74747a;font-size:11px;line-height:16px;">Unités restantes</div>
+                              </td>
+                              <td width="50%" valign="top" style="padding-bottom:17px;">
+                                <div style="color:#111111;font-size:21px;line-height:25px;font-weight:700;">1,05 M MAD</div>
+                                <div style="padding-top:3px;color:#74747a;font-size:11px;line-height:16px;">À partir de</div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td width="50%" valign="top">
+                                <div style="color:#111111;font-size:21px;line-height:25px;font-weight:700;">39–140 m²</div>
+                                <div style="padding-top:3px;color:#74747a;font-size:11px;line-height:16px;">Superficies</div>
+                              </td>
+                              <td width="50%" valign="top">
+                                <div style="color:#111111;font-size:21px;line-height:25px;font-weight:700;">2028</div>
+                                <div style="padding-top:3px;color:#74747a;font-size:11px;line-height:16px;">Livraison prévue</div>
+                              </td>
+                            </tr>
+                          </table>
+
+                          <a href="https://offmarketofficial.com/fr/contact/" target="_blank" class="button-dark">
+                            Voir la fiche
+                          </a>
+                        </td>
+                      </tr>
+                    </table>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+
+          <!-- GALLERY -->
+          <tr>
+            <td class="section-light">
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+                <tr>
+                  <td class="pad" style="padding-bottom:50px;">
+                    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-bottom:22px;">
+                      <tr>
+                        <td align="left" style="color:#111111;font-size:26px;line-height:31px;font-weight:700;letter-spacing:-1px;">
+                          Aperçu du projet
+                        </td>
+                        <td class="mobile-hide" align="right" valign="middle" style="color:#696970;font-size:12px;line-height:18px;font-weight:600;">
+                          Appartement premium à Guéliz
+                        </td>
+                      </tr>
+                    </table>
+
+                    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+                      <tr>
+                        <td class="stack-column" width="32%" valign="top">
+                          <div class="glass-light" style="padding:8px;">
+                            <img src="img/honest-signature-7/honest-signature-7-gueliz-marrakech-espace-de-vie-02.webp"
+                              alt="Espace de vie" class="gallery-image">
+                          </div>
+                        </td>
+
+                        <td class="gap-column" width="2%" style="width:2%;"></td>
+
+                        <td class="stack-column" width="32%" valign="top">
+                          <div class="glass-light" style="padding:8px;">
+                            <img src="img/honest-signature-7/honest-signature-7-gueliz-marrakech-interieur-02.webp"
+                              alt="Piscine de la résidence" class="gallery-image">
+                          </div>
+                        </td>
+
+                        <td class="gap-column" width="2%" style="width:2%;"></td>
+
+                        <td class="stack-column" width="32%" valign="top">
+                          <div class="glass-light" style="padding:8px;">
+                            <img src="img/honest-signature-7/honest-signature-7-gueliz-marrakech-residence-02.webp"
+                              alt="Intérieur de la résidence" class="gallery-image">
+                          </div>
+                        </td>
+                      </tr>
+                    </table>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+
+          <!-- ANALYSIS -->
+          <tr>
+            <td class="section-soft-dark" style="border-top:1px solid rgba(255,255,255,.07);border-bottom:1px solid rgba(255,255,255,.07);">
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+                <tr>
+                  <td class="pad" style="padding-top:50px;padding-bottom:50px;">
+                    <div class="eyebrow-dark" style="padding-bottom:14px;">Découvrir S.A.F.E</div>
+                    <h2 class="title-dark" style="max-width:590px;padding-bottom:18px;">
+                      Tous nos projets sont étudiés selon S.A.F.E avant présentation.
+                    </h2>
+                    <div class="body-dark" style="max-width:600px;padding-bottom:28px;">
+                      S.A.F.E — Security, Analysis, Fidelity & Expert Guidance est la méthode
+                      propriétaire d’analyse et de présélection d’OffMarket. Chaque projet présenté
+                      passe par cette lecture structurée. S.A.F.E ne constitue pas une certification réglementaire.
+                    </div>
+
+                    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+                      <tr>
+                        <td class="stack-column" width="49%" valign="top" style="padding-bottom:14px;">
+                          <div class="glass-dark analysis-card">
+                            <div style="padding-bottom:8px;color:#ffffff;font-size:17px;line-height:22px;font-weight:700;">Security — Sécurisation du projet</div>
+                            <div style="color:#a1a1a8;font-size:13px;line-height:21px;">Cadre du projet, promoteur, situation juridique et points de vigilance.</div>
+                          </div>
+                        </td>
+                        <td class="gap-column" width="2%" style="width:2%;"></td>
+                        <td class="stack-column" width="49%" valign="top" style="padding-bottom:14px;">
+                          <div class="glass-dark analysis-card">
+                            <div style="padding-bottom:8px;color:#ffffff;font-size:17px;line-height:22px;font-weight:700;">Analysis — Analyse d’investissement</div>
+                            <div style="color:#a1a1a8;font-size:13px;line-height:21px;">Emplacement, prix, demande, usage et potentiel d’investissement.</div>
+                          </div>
+                        </td>
+                      </tr>
+
+                      <tr>
+                        <td class="stack-column" width="49%" valign="top">
+                          <div class="glass-dark analysis-card">
+                            <div style="padding-bottom:8px;color:#ffffff;font-size:17px;line-height:22px;font-weight:700;">Fidelity — Fiabilité d’exécution</div>
+                            <div style="color:#a1a1a8;font-size:13px;line-height:21px;">Cohérence des informations, paiements, matériaux, avancement et livraison.</div>
+                          </div>
+                        </td>
+                        <td class="gap-column" width="2%" style="width:2%;"></td>
+                        <td class="stack-column" width="49%" valign="top">
+                          <div class="glass-dark analysis-card">
+                            <div style="padding-bottom:8px;color:#ffffff;font-size:17px;line-height:22px;font-weight:700;">Expert Guidance — Encadrement acheteur</div>
+                            <div style="color:#a1a1a8;font-size:13px;line-height:21px;">Lecture claire, accompagnement discret et décision mieux structurée.</div>
+                          </div>
+                        </td>
+                      </tr>
+                    </table>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+
+          <!-- AREAS -->
+          <tr>
+            <td class="section-light">
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+                <tr>
+                  <td class="pad" style="padding-top:50px;padding-bottom:50px;">
+                    <div class="eyebrow-light" style="padding-bottom:14px;">Nos opportunités</div>
+                    <h2 class="title-light" style="max-width:600px;padding-bottom:26px;">
+                      Une sélection publique. Des opportunités privées.
+                    </h2>
+
+                    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+                      <tr>
+                        <td class="stack-column" width="32%" valign="top">
+                          <div class="glass-light area-card">
+                            <div style="padding-bottom:24px;color:#b0b0b4;font-size:32px;line-height:34px;font-weight:600;">01</div>
+                            <div style="padding-bottom:8px;color:#111111;font-size:18px;line-height:23px;font-weight:700;">Villas sur plan</div>
+                            <div style="padding-bottom:12px;color:#66666c;font-size:13px;line-height:21px;">Villa Jaz et projets résidentiels sélectionnés à Marrakech.</div>
+                            <div style="color:#797970;font-size:10px;line-height:15px;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;">À partir de 351 000 €</div>
+                          </div>
+                        </td>
+
+                        <td class="gap-column" width="2%" style="width:2%;"></td>
+
+                        <td class="stack-column" width="32%" valign="top">
+                          <div class="glass-light area-card">
+                            <div style="padding-bottom:24px;color:#b0b0b4;font-size:32px;line-height:34px;font-weight:600;">02</div>
+                            <div style="padding-bottom:8px;color:#111111;font-size:18px;line-height:23px;font-weight:700;">Appartements neufs</div>
+                            <div style="padding-bottom:12px;color:#66666c;font-size:13px;line-height:21px;">Programmes premium en hyper-centre de Guéliz.</div>
+                            <div style="color:#797970;font-size:10px;line-height:15px;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;">À partir de 1,05 M MAD</div>
+                          </div>
+                        </td>
+
+                        <td class="gap-column" width="2%" style="width:2%;"></td>
+
+                        <td class="stack-column" width="32%" valign="top">
+                          <div class="glass-light area-card">
+                            <div style="padding-bottom:24px;color:#b0b0b4;font-size:32px;line-height:34px;font-weight:600;">03</div>
+                            <div style="padding-bottom:8px;color:#111111;font-size:18px;line-height:23px;font-weight:700;">Accès privé</div>
+                            <div style="padding-bottom:12px;color:#66666c;font-size:13px;line-height:21px;">Terrains, maisons, hôtels, restaurants et biens confidentiels.</div>
+                            <div style="color:#797970;font-size:10px;line-height:15px;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;">Sur demande</div>
+                          </div>
+                        </td>
+                      </tr>
+                    </table>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+
+          <!-- FINAL CTA -->
+          <tr>
+            <td background="img/honest-signature-7/honest-signature-7-gueliz-marrakech-interieur-03.webp"
+              bgcolor="#111111" valign="middle"
+              style="
+                background-color:#111111;
+                background-image:
+                  linear-gradient(90deg,rgba(0,0,0,.88) 0%,rgba(0,0,0,.72) 50%,rgba(0,0,0,.5) 100%),
+                  url('img/honest-signature-7/honest-signature-7-gueliz-marrakech-interieur-03.webp');
+                background-size:cover;
+                background-position:center;
+                background-repeat:no-repeat;
+              ">
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+                <tr>
+                  <td class="pad" align="center" style="padding-top:64px;padding-bottom:64px;">
+                    <div style="padding-bottom:13px;color:#d0d0d5;font-size:11px;line-height:16px;font-weight:700;letter-spacing:1.8px;text-transform:uppercase;">Accès privé</div>
+                    <div style="max-width:530px;margin:0 auto;padding-bottom:17px;color:#ffffff;font-size:40px;line-height:43px;font-weight:650;letter-spacing:-1.9px;">
+                      Débloquez la sélection OffMarket.
+                    </div>
+                    <div style="max-width:530px;margin:0 auto;padding-bottom:28px;color:#d4d4d9;font-size:16px;line-height:26px;">
+                      Dites-nous ce que vous recherchez. Terrains, maisons, hôtels, restaurants,
+                      villas et appartements peuvent vous être présentés selon votre projet.
+                    </div>
+
+                    <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin:0 auto;">
+                      <tr>
+                        <td class="button-cell" style="padding-right:8px;">
+                          <a href="https://offmarketofficial.com/fr/contact/" target="_blank" class="button-white">
+                            Demander l’accès
+                          </a>
+                        </td>
+                        <td class="button-cell" style="padding-right:8px;">
+                          <a href="https://offmarketofficial.com/fr/safe-certification-immobiliere/" target="_blank" class="button-glass">
+                            Principes S.A.F.E
+                          </a>
+                        </td>
+                        <td class="button-cell">
+                          <a href="mailto:contact@offmarketofficial.com" class="button-glass">
+                            Parler à un conseiller
+                          </a>
+                        </td>
+                      </tr>
+                    </table>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+
+          <!-- FOOTER -->
+          <tr>
+            <td class="pad section-dark" style="padding-top:34px;padding-bottom:28px;border-top:1px solid rgba(255,255,255,.07);">
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+                <tr>
+                  <td class="stack-column" width="44%" valign="top" style="padding-bottom:22px;">
+                    <img src="img/blanc.png" width="94" alt="OffMarket Properties"
+                      style="width:94px;max-width:94px;height:auto;margin-bottom:15px;">
+                    <div style="color:#8f8f96;font-size:12px;line-height:21px;">
+                      Immobilier privé à Marrakech<br>
+                      offmarketofficial.com<br>
+                      contact@offmarketofficial.com
+                    </div>
+                  </td>
+
+                  <td class="stack-column" width="28%" valign="top" style="padding-bottom:22px;">
+                    <div style="padding-bottom:9px;color:#ffffff;font-size:12px;line-height:18px;font-weight:700;">Explorer</div>
+                    <div style="color:#8f8f96;font-size:12px;line-height:23px;">
+                      <a href="https://offmarketofficial.com/fr/" style="color:#8f8f96;">Accueil</a><br>
+                      <a href="https://offmarketofficial.com/fr/sur-plan/" style="color:#8f8f96;">Projets sur plan</a><br>
+                      <a href="https://offmarketofficial.com/fr/contact/" style="color:#8f8f96;">Demander l’accès</a>
+                    </div>
+                  </td>
+
+                  <td class="stack-column" width="28%" valign="top" style="padding-bottom:22px;">
+                    <div style="padding-bottom:9px;color:#ffffff;font-size:12px;line-height:18px;font-weight:700;">Immobilier</div>
+                    <div style="color:#8f8f96;font-size:12px;line-height:23px;">
+                      Appartements<br>
+                      Villas à Marrakech<br>
+                      Opportunités off-market
+                    </div>
+                  </td>
+                </tr>
+              </table>
+
+              <div style="height:1px;background:rgba(255,255,255,.08);margin-top:4px;"></div>
+
+              <div align="center" style="padding-top:20px;color:#626269;font-size:10px;line-height:17px;">
+                © 2026 OffMarket Properties. Tous droits réservés.<br>
+                Vous recevez cet email car vous avez manifesté un intérêt pour nos opportunités immobilières.
+                <br><br>
+                <a href="{{ unsubscribe_link }}" style="color:#8f8f96;text-decoration:underline;">Se désabonner</a>
+              </div>
+            </td>
+          </tr>
+
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>

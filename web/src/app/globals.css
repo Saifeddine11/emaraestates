@@ -1,0 +1,265 @@
+@import 'tailwindcss';
+
+/* ============================================================
+   Emara Estates — design tokens
+   Ported verbatim from css/style.css `:root`. Values are the
+   brand contract; only the naming is modernised.
+   ============================================================ */
+@theme {
+  /* Brand palette — legacy var name in the comment for traceability */
+  --color-forest: #2d3a2d; /* --vf  vert forêt   */
+  --color-olive: #7a8b68; /* --vo  vert olive   */
+  --color-bronze: #9b7040; /* --mr  marron or    */
+  --color-sand: #c8bba8; /* --bg  beige gris   */
+  --color-cream: #f5f0e8; /* --cr  crème        */
+  --color-shell: #faf8f4; /* --ow  blanc cassé  */
+  --color-ink: #1a1a1a; /* --bk  noir         */
+  --color-gold: #d2b178; /* hero price accent  */
+  --color-whatsapp: #25d366;
+
+  /* Typefaces — bound to next/font in layout.tsx */
+  --font-sans: var(--font-jost), ui-sans-serif, system-ui, sans-serif;
+  --font-serif: var(--font-cormorant), Georgia, 'Times New Roman', serif;
+
+  /* Motion signatures. These two curves are the site's entire
+     personality — every reveal and transition uses one of them. */
+  --ease-premium: cubic-bezier(0.23, 1, 0.32, 1);
+  --ease-step: cubic-bezier(0.22, 1, 0.36, 1);
+
+  /* Breakpoints matched to the legacy ladder. `md` is overridden to
+     769px because that is the site's primary mobile/desktop split. */
+  --breakpoint-xs: 481px;
+  --breakpoint-sm: 641px;
+  --breakpoint-md: 769px;
+  --breakpoint-lg: 1024px;
+  --breakpoint-xl: 1280px;
+
+  /* Keyframed animations carried over from the static build */
+  --animate-hero-float: heroFloat 25s ease-in-out infinite alternate;
+  --animate-scroll-bounce: scrollBounce 2s infinite;
+  --animate-ribbon: photoRibbonScroll 34s linear infinite;
+  --animate-slider-zoom: propertySliderZoom 6s ease-out forwards;
+  --animate-wa-float: waFloat 3s ease-in-out infinite;
+
+  /* ==========================================================
+     Design system — added in the Phase 01 foundation pass.
+     Everything above this line is the ported brand contract and
+     is unchanged; everything below is new vocabulary layered on
+     top of it. No colour is introduced: the palette above is the
+     whole palette.
+     ========================================================== */
+
+  /* ---- Type scale -----------------------------------------
+     Eight roles. Tuned for premium readability: luxury does not
+     mean tiny type. Sentence-level copy stays ≥16px on all viewports. */
+  --text-display: clamp(44px, 6vw, 88px);
+  --text-display--line-height: 1.04;
+  --text-display--letter-spacing: -0.02em;
+
+  --text-title: clamp(36px, 4.2vw, 62px);
+  --text-title--line-height: 1.1;
+  --text-title--letter-spacing: -0.015em;
+
+  --text-subhead: clamp(22px, 2.2vw, 28px);
+  --text-subhead--line-height: 1.25;
+  --text-subhead--letter-spacing: -0.005em;
+
+  --text-lead: clamp(17px, 1.35vw, 19px);
+  --text-lead--line-height: 1.65;
+
+  --text-body: clamp(16px, 1.2vw, 17.5px);
+  --text-body--line-height: 1.7;
+
+  --text-caption: 16px;
+  --text-caption--line-height: 1.55;
+  --text-caption--letter-spacing: 0.01em;
+
+  /* Eyebrows stay uppercase + tracked, but large enough to scan. */
+  --text-eyebrow: 13.5px;
+  --text-eyebrow--line-height: 1.45;
+  --text-eyebrow--letter-spacing: 1.6px;
+
+  /* ---- Vertical rhythm ------------------------------------
+     Three tiers, chosen by what a section is for. Seven ad-hoc
+     values collapse into these; the variation between them is
+     what produces hierarchy down the page. */
+  --spacing-band-tight: clamp(56px, 7vw, 96px);
+  --spacing-band: clamp(80px, 9vw, 128px);
+  --spacing-band-feature: clamp(104px, 12vw, 168px);
+
+  /* One horizontal page gutter, replacing nine variants. */
+  --spacing-gutter: clamp(22px, 5vw, 64px);
+
+  /* ---- Surfaces -------------------------------------------- */
+  --radius-card: 20px;
+  --radius-media: 16px;
+  --shadow-card: 0 18px 40px -28px rgb(45 58 45 / 0.28);
+  --shadow-card-hover: 0 28px 64px -32px rgb(45 58 45 / 0.38);
+  --shadow-card-dark: 0 26px 56px -32px rgb(6 12 6 / 0.8);
+
+  /* ---- Motion ----------------------------------------------
+     Durations are plain custom properties rather than utilities;
+     use them as duration-[var(--duration-enter)]. The two easing
+     curves above are unchanged — they are the brand's signature. */
+  --duration-move: 260ms;
+  --duration-hover: 400ms;
+  --duration-enter: 620ms;
+  --duration-enter-slow: 900ms;
+  --duration-modal: 280ms;
+}
+
+@keyframes heroFloat {
+  0% {
+    transform: translate(0, 0) scale(1);
+  }
+  50% {
+    transform: translate(-1%, -1%) scale(1.04);
+  }
+  100% {
+    transform: translate(1%, 0) scale(1.02);
+  }
+}
+
+@keyframes scrollBounce {
+  0%,
+  100% {
+    transform: translateY(0);
+    opacity: 0.3;
+  }
+  50% {
+    transform: translateY(12px);
+    opacity: 1;
+  }
+}
+
+@keyframes photoRibbonScroll {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(calc(-50% - 9px));
+  }
+}
+
+@keyframes propertySliderZoom {
+  from {
+    transform: scale(1);
+  }
+  to {
+    transform: scale(1.08);
+  }
+}
+
+@keyframes waFloat {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-5px);
+  }
+}
+
+/* ============================================================
+   Base layer
+   ============================================================ */
+@layer base {
+  html {
+    scroll-behavior: smooth;
+    max-width: 100%;
+    overflow-x: clip;
+    /* Nav is fixed; keep anchor targets clear of it. Replaces the
+       legacy JS scroll offset with a native, jank-free equivalent. */
+    scroll-padding-top: 96px;
+  }
+
+  body {
+    max-width: 100%;
+    overflow-x: clip;
+    line-height: 1.6;
+    -webkit-overflow-scrolling: touch;
+    font-family: var(--font-sans);
+    color: var(--color-ink);
+    background: var(--color-cream);
+    text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  ::selection {
+    background: var(--color-bronze);
+    color: #fff;
+  }
+
+  /* Visible, on-brand focus ring for keyboard users only. */
+  :focus-visible {
+    outline: 2px solid var(--color-bronze);
+    outline-offset: 3px;
+  }
+
+  h1,
+  h2,
+  h3 {
+    font-family: var(--font-serif);
+    text-wrap: balance;
+  }
+
+  /* Avoids a single trailing word — or, in French, a lone "?" — dropping to a
+     line of its own. Purely a wrapping hint; it never alters the text. */
+  p {
+    text-wrap: pretty;
+  }
+}
+
+/* ============================================================
+   Utilities
+   ============================================================ */
+@utility sr-only-legacy {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/**
+ * The one page container.
+ *
+ * Was defined during the migration and then used by nothing, while sections
+ * hand-rolled nine different gutters between them. It now reads the single
+ * `--spacing-gutter` token, so changing the page margin is one edit.
+ */
+@utility shell {
+  width: min(100% - 2 * var(--spacing-gutter), 1320px);
+  margin-inline: auto;
+}
+
+/**
+ * Reading measure for body copy. Long paragraphs otherwise run the full 1320
+ * and become hard to track line to line.
+ */
+@utility measure {
+  max-width: 62ch;
+}
+
+/* ============================================================
+   Reduced motion — parity with the four legacy opt-outs
+   ============================================================ */
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

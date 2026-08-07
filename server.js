@@ -362,6 +362,216 @@ async function forwardLead(payload) {
   if (!response.ok) throw new Error(`Zapier webhook failed: ${response.status}`);
 }
 
+/* ═══════════════════════════════════════════════════════════════════════
+   LANDING ADS « OFFRE GUÉLIZ » — /api/lead-gueliz
+   Endpoint sécurisé côté serveur. Aucun token privé n'est exposé au client.
+   Réutilise l'intégration existante (webhook Zapier) et ajoute une soumission
+   HubSpot configurable. Le mapping des champs est centralisé ci-dessous.
+   ═══════════════════════════════════════════════════════════════════════ */
+
+// Correspondance UNIQUE label métier -> nom interne de propriété HubSpot.
+// Adaptez ces valeurs aux noms internes réels de votre portail HubSpot.
+const GUELIZ_HUBSPOT_FIELD_MAP = {
+  fullName: 'full_name',
+  phone: 'phone',
+  projectType: 'project_type',
+  apartmentType: 'apartment_type',
+  timeframe: 'acquisition_timeframe',
+  leadSource: 'lead_source',
+  adPlatform: 'advertising_platform',
+  campaign: 'campaign',
+  adset: 'ad_set',
+  ad: 'advertisement',
+  landingPageUrl: 'landing_page_url',
+  utmSource: 'utm_source',
+  utmMedium: 'utm_medium',
+  utmCampaign: 'utm_campaign',
+  utmContent: 'utm_content',
+  utmTerm: 'utm_term',
+  referrer: 'referrer',
+  submissionDate: 'submission_date'
+};
+
+const GUELIZ_LEAD_SOURCE = 'Ads Landing Page';
+
+function buildGuelizLead(input) {
+  const clean = function (value, max) { return sanitize(value, max || 200); };
+  return {
+    fullName: clean(input.fullName, 80),
+    phone: clean(input.phone, 30),
+    phoneCountry: clean(input.phoneCountry, 40),
+    phoneCountryCode: clean(input.phoneCountryCode, 3),
+    projectType: clean(input.projectType, 60),
+    apartmentType: clean(input.apartmentType, 60),
+    timeframe: clean(input.timeframe, 60),
+    leadSource: GUELIZ_LEAD_SOURCE,
+    adPlatform: clean(input.adPlatform, 40),
+    campaign: clean(input.campaign, 200),
+    adset: clean(input.adset, 200),
+    ad: clean(input.ad, 200),
+    landingPageUrl: clean(input.landingPageUrl, 500),
+    utmSource: clean(input.utmSource, 200),
+    utmMedium: clean(input.utmMedium, 200),
+    utmCampaign: clean(input.utmCampaign, 200),
+    utmContent: clean(input.utmContent, 200),
+    utmTerm: clean(input.utmTerm, 200),
+    referrer: clean(input.referrer, 500),
+    submissionDate: clean(input.submissionDate, 40) || new Date().toISOString()
+  };
+}
+
+function guelizHubspotFields(lead) {
+  return Object.keys(GUELIZ_HUBSPOT_FIELD_MAP)
+    .map(function (key) {
+      return { name: GUELIZ_HUBSPOT_FIELD_MAP[key], value: String(lead[key] || '') };
+    })
+    .filter(function (field) { return field.value !== ''; });
+}
+
+async function submitGuelizToHubspotForm(lead) {
+  const portalId = process.env.HUBSPOT_PORTAL_ID;
+  const formGuid = process.env.HUBSPOT_FORM_GUID;
+  if (!portalId || !formGuid) return false;
+
+  const url = `https://api.hsforms.com/submissions/v3/integration/submit/${portalId}/${formGuid}`;
+  const response = await fetch(url, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      fields: guelizHubspotFields(lead),
+      context: {
+        pageUri: lead.landingPageUrl || 'https://emaraestates.com/offre-gueliz',
+        pageName: 'Offre Guéliz'
+      }
+    })
+  });
+  if (!response.ok) {
+    const detail = await response.text().catch(function () { return ''; });
+    throw new Error(`HubSpot Forms API ${response.status}: ${detail.slice(0, 200)}`);
+  }
+  return true;
+}
+
+async function submitGuelizToHubspotCrm(lead) {
+  const token = process.env.HUBSPOT_ACCESS_TOKEN;
+  if (!token) return false;
+
+  const nameParts = String(lead.fullName || '').trim().split(/\s+/);
+  const firstname = nameParts.shift() || '';
+  const lastname = nameParts.join(' ');
+
+  const properties = {
+    firstname: firstname,
+    lastname: lastname,
+    phone: lead.phone
+  };
+  Object.keys(GUELIZ_HUBSPOT_FIELD_MAP).forEach(function (key) {
+    if (key === 'fullName' || key === 'phone') return;
+    if (lead[key]) properties[GUELIZ_HUBSPOT_FIELD_MAP[key]] = lead[key];
+  });
+
+  const response = await fetch('https://api.hubapi.com/crm/v3/objects/contacts', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token}`
+    },
+    body: JSON.stringify({ properties: properties })
+  });
+  if (!response.ok) {
+    const detail = await response.text().catch(function () { return ''; });
+    throw new Error(`HubSpot CRM API ${response.status}: ${detail.slice(0, 200)}`);
+  }
+  return true;
+}
+
+async function forwardGuelizWebhook(lead) {
+  const url = process.env.GUELIZ_WEBHOOK_URL || CONTACT_WEBHOOK_URL;
+  if (!url) return false;
+  const response = await fetch(url, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(Object.assign({ form_type: 'gueliz_landing' }, lead))
+  });
+  if (!response.ok) throw new Error(`Gueliz webhook failed: ${response.status}`);
+  return true;
+}
+
+function guelizPhoneValid(phone) {
+  const d = String(phone || '').replace(/\D/g, '');
+  return d.length >= 8 && d.length <= 15;
+}
+
+async function handleGuelizLead(req, res) {
+  const ip = clientIp(req);
+  let input;
+  try {
+    input = await readJsonBody(req);
+  } catch (error) {
+    sendJson(res, 400, { success: false, message: 'Données invalides.' });
+    return;
+  }
+
+  // Piège anti-spam : on accepte silencieusement sans traiter.
+  if (sanitize(input.company_website, 120)) {
+    sendJson(res, 200, { success: true, message: 'Votre demande a bien été envoyée.' });
+    return;
+  }
+
+  const lead = buildGuelizLead(input);
+
+  if (String(lead.fullName || '').trim().length < 2 || !guelizPhoneValid(lead.phone)) {
+    sendJson(res, 422, {
+      success: false,
+      message: 'Merci d’indiquer votre nom et un numéro de téléphone valide.'
+    });
+    return;
+  }
+
+  if (isRateLimited(ip)) {
+    sendJson(res, 429, { success: false, message: 'Trop de demandes. Réessayez plus tard.' });
+    return;
+  }
+
+  const sinks = [
+    { name: 'hubspot-form', run: submitGuelizToHubspotForm },
+    { name: 'hubspot-crm', run: submitGuelizToHubspotCrm },
+    { name: 'webhook', run: forwardGuelizWebhook }
+  ];
+
+  let attempted = 0;
+  let succeeded = 0;
+  for (const sink of sinks) {
+    try {
+      const handled = await sink.run(lead);
+      if (handled) { attempted += 1; succeeded += 1; }
+    } catch (error) {
+      attempted += 1;
+      // Journalisation sûre : on ne perd jamais l'information de l'échec.
+      console.error(`[gueliz-lead] ${sink.name} failed:`, error.message);
+    }
+  }
+
+  // Aucun connecteur configuré (dev/local) : on journalise le lead sans le perdre.
+  if (attempted === 0) {
+    console.warn('[gueliz-lead] Aucun connecteur configuré. Lead journalisé :', JSON.stringify(lead));
+    sendJson(res, 200, { success: true, message: 'Votre demande a bien été envoyée.' });
+    return;
+  }
+
+  if (succeeded > 0) {
+    sendJson(res, 200, { success: true, message: 'Votre demande a bien été envoyée.' });
+    return;
+  }
+
+  // Tous les connecteurs configurés ont échoué : on ne masque pas l'erreur.
+  console.error('[gueliz-lead] Tous les connecteurs ont échoué. Lead :', JSON.stringify(lead));
+  sendJson(res, 502, {
+    success: false,
+    message: 'Votre demande n’a pas pu être transmise. Contactez-nous directement sur WhatsApp.'
+  });
+}
+
 const NEWSLETTER_SUCCESS = 'Merci. Votre inscription à la newsletter Emara Estates a bien été prise en compte.';
 const NEWSLETTER_INVALID = 'Veuillez entrer une adresse email valide.';
 const NEWSLETTER_ERROR = 'Une erreur est survenue. Veuillez réessayer ou nous contacter directement.';
@@ -732,7 +942,8 @@ const CANONICAL_PAGES = {
   '/residences-honest-678/': path.join('residences-honest-678', 'index.html'),
   '/immobilier-luxe-marrakech': 'immobilier-luxe-marrakech.html',
   '/appartement-neuf-gueliz-marrakech': 'appartement-neuf-gueliz-marrakech.html',
-  '/investissement-immobilier-marrakech': 'investissement-immobilier-marrakech.html'
+  '/investissement-immobilier-marrakech': 'investissement-immobilier-marrakech.html',
+  '/offre-gueliz': 'offre-gueliz.html'
 };
 
 function redirectTo(res, location) {
@@ -800,6 +1011,10 @@ const server = http.createServer(function(req, res) {
   }
   if (req.method === 'POST' && (req.url === '/newsletter.php' || req.url === '/api/newsletter')) {
     handleNewsletter(req, res);
+    return;
+  }
+  if (req.method === 'POST' && (req.url === '/api/lead-gueliz' || req.url === '/lead-gueliz.php')) {
+    handleGuelizLead(req, res);
     return;
   }
   if (req.method === 'GET' || req.method === 'HEAD') {
