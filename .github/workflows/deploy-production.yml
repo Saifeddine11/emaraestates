@@ -30,61 +30,96 @@ jobs:
         working-directory: web
         run: npm ci
 
-      - name: Build and assemble web/deploy
+      - name: Install Playwright browser
+        working-directory: web
+        run: npx playwright install chromium
+
+      - name: Build, verify, and assemble web/deploy
         working-directory: web
         run: |
           set -euo pipefail
-          npm run build
+          # check = next build + preservation + smoke + form-parity
+          npm run check
           node scripts/deploy-layout.mjs
+          node scripts/deploy-check.mjs
           test -f deploy/index.html
           test -d deploy/_next
 
-      - name: Check SFTP secrets
+      - name: Check FTP secrets
         env:
+          FTP_HOST: ${{ secrets.FTP_HOST }}
+          FTP_USERNAME: ${{ secrets.FTP_USERNAME }}
+          FTP_PASSWORD: ${{ secrets.FTP_PASSWORD }}
+          FTP_PORT: ${{ secrets.FTP_PORT }}
+          FTP_REMOTE_PATH: ${{ secrets.FTP_REMOTE_PATH }}
           SFTP_HOST: ${{ secrets.SFTP_HOST }}
           SFTP_USERNAME: ${{ secrets.SFTP_USERNAME }}
           SFTP_PASSWORD: ${{ secrets.SFTP_PASSWORD }}
-          SFTP_PORT: ${{ secrets.SFTP_PORT }}
+          SFTP_REMOTE_PATH: ${{ secrets.SFTP_REMOTE_PATH }}
         run: |
           set -euo pipefail
-          test -n "$SFTP_HOST" || (echo "::error::SFTP_HOST secret is missing" && exit 1)
-          test -n "$SFTP_USERNAME" || (echo "::error::SFTP_USERNAME secret is missing" && exit 1)
-          test -n "$SFTP_PASSWORD" || (echo "::error::SFTP_PASSWORD secret is missing" && exit 1)
-          test -n "$SFTP_PORT" || (echo "::error::SFTP_PORT secret is missing. Use 22 for SFTP." && exit 1)
-          if ! [[ "$SFTP_PORT" =~ ^[0-9]+$ ]]; then
-            echo "::error::SFTP_PORT must be a number. Use 22 for SFTP."
+
+          # Prefer FTP_* secrets; fall back to existing SFTP_* names for
+          # host/user/password/path. Port defaults to 21 (Hostinger FTP) and
+          # never inherits a former SFTP port 22.
+          HOST="${FTP_HOST:-${SFTP_HOST:-}}"
+          USERNAME="${FTP_USERNAME:-${SFTP_USERNAME:-}}"
+          PASSWORD="${FTP_PASSWORD:-${SFTP_PASSWORD:-}}"
+          PORT="${FTP_PORT:-21}"
+          REMOTE_PATH="${FTP_REMOTE_PATH:-${SFTP_REMOTE_PATH:-/home/u929205898/domains/emaraestates.com/public_html}}"
+
+          test -n "$HOST" || (echo "::error::FTP_HOST (or SFTP_HOST) secret is missing" && exit 1)
+          test -n "$USERNAME" || (echo "::error::FTP_USERNAME (or SFTP_USERNAME) secret is missing" && exit 1)
+          test -n "$PASSWORD" || (echo "::error::FTP_PASSWORD (or SFTP_PASSWORD) secret is missing" && exit 1)
+          if ! [[ "$PORT" =~ ^[0-9]+$ ]]; then
+            echo "::error::FTP_PORT must be a number. Use 21 for Hostinger FTP."
             exit 1
           fi
-          echo "SFTP host: $SFTP_HOST"
-          echo "SFTP port: $SFTP_PORT"
+          if [ "$PORT" = "22" ]; then
+            echo "::error::Port 22 is SFTP. Hostinger FTP uses port 21. Set FTP_PORT=21."
+            exit 1
+          fi
+
+          echo "FTP host: $HOST"
+          echo "FTP port: $PORT"
+          echo "FTP remote path: $REMOTE_PATH"
 
       - name: Install lftp
         run: brew install lftp
 
-      - name: Deploy web/deploy via SFTP
+      - name: Deploy web/deploy via FTP
         env:
+          FTP_HOST: ${{ secrets.FTP_HOST }}
+          FTP_USERNAME: ${{ secrets.FTP_USERNAME }}
+          FTP_PASSWORD: ${{ secrets.FTP_PASSWORD }}
+          FTP_PORT: ${{ secrets.FTP_PORT }}
+          FTP_REMOTE_PATH: ${{ secrets.FTP_REMOTE_PATH }}
           SFTP_HOST: ${{ secrets.SFTP_HOST }}
           SFTP_USERNAME: ${{ secrets.SFTP_USERNAME }}
           SFTP_PASSWORD: ${{ secrets.SFTP_PASSWORD }}
-          SFTP_PORT: ${{ secrets.SFTP_PORT }}
           SFTP_REMOTE_PATH: ${{ secrets.SFTP_REMOTE_PATH }}
         working-directory: web
         run: |
           set -euo pipefail
 
+          HOST="${FTP_HOST:-${SFTP_HOST:-}}"
+          USERNAME="${FTP_USERNAME:-${SFTP_USERNAME:-}}"
+          PASSWORD="${FTP_PASSWORD:-${SFTP_PASSWORD:-}}"
+          PORT="${FTP_PORT:-21}"
+          REMOTE_PATH="${FTP_REMOTE_PATH:-${SFTP_REMOTE_PATH:-/home/u929205898/domains/emaraestates.com/public_html}}"
           ATTEMPTS=3
-          REMOTE_PATH="${SFTP_REMOTE_PATH:-public_html}"
 
-          echo "Deploying web/deploy/ to ${REMOTE_PATH} on ${SFTP_HOST}:${SFTP_PORT}"
+          echo "Deploying web/deploy/ to ${REMOTE_PATH} on ${HOST}:${PORT} via FTP"
           echo "Root merge only (no delete). _next is mirrored with --delete semantics via lftp mirror."
 
           for attempt in $(seq 1 "$ATTEMPTS"); do
-            echo "SFTP deployment attempt ${attempt}/${ATTEMPTS}"
+            echo "FTP deployment attempt ${attempt}/${ATTEMPTS}"
 
             COMMAND_FILE="$(mktemp)"
             {
               echo "set cmd:fail-exit yes"
-              echo "set sftp:auto-confirm yes"
+              echo "set ftp:passive-mode true"
+              echo "set ftp:ssl-allow no"
               echo "set net:timeout 45"
               echo "set net:max-retries 3"
               echo "set net:reconnect-interval-base 5"
@@ -114,7 +149,9 @@ jobs:
               echo "bye"
             } > "$COMMAND_FILE"
 
-            if lftp -u "${SFTP_USERNAME},${SFTP_PASSWORD}" "sftp://${SFTP_HOST}:${SFTP_PORT}" < "$COMMAND_FILE"
+            # Prefer LFTP_PASSWORD so special characters in the password are safe.
+            export LFTP_PASSWORD="${PASSWORD}"
+            if lftp -u "${USERNAME}" "ftp://${HOST}:${PORT}" < "$COMMAND_FILE"
             then
               rm -f "$COMMAND_FILE"
               echo "Deployment completed successfully."
@@ -125,10 +162,10 @@ jobs:
 
             if [ "$attempt" -lt "$ATTEMPTS" ]; then
               sleep_seconds=$((attempt * 20))
-              echo "::warning::SFTP deployment failed. Retrying in ${sleep_seconds}s..."
+              echo "::warning::FTP deployment failed. Retrying in ${sleep_seconds}s..."
               sleep "$sleep_seconds"
             fi
           done
 
-          echo "::error::SFTP deployment failed after ${ATTEMPTS} attempts. Check SFTP_HOST, SFTP_PORT, SFTP_USERNAME, SFTP_PASSWORD, SFTP_REMOTE_PATH and Hostinger SFTP access."
+          echo "::error::FTP deployment failed after ${ATTEMPTS} attempts. Check FTP_HOST, FTP_PORT (21), FTP_USERNAME, FTP_PASSWORD, FTP_REMOTE_PATH and Hostinger FTP access."
           exit 1
