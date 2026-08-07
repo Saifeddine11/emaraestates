@@ -52,37 +52,31 @@ jobs:
           FTP_PASSWORD: ${{ secrets.FTP_PASSWORD }}
           FTP_PORT: ${{ secrets.FTP_PORT }}
           FTP_REMOTE_PATH: ${{ secrets.FTP_REMOTE_PATH }}
-          SFTP_HOST: ${{ secrets.SFTP_HOST }}
-          SFTP_USERNAME: ${{ secrets.SFTP_USERNAME }}
-          SFTP_PASSWORD: ${{ secrets.SFTP_PASSWORD }}
-          SFTP_REMOTE_PATH: ${{ secrets.SFTP_REMOTE_PATH }}
         run: |
           set -euo pipefail
 
-          # Prefer FTP_* secrets; fall back to existing SFTP_* names for
-          # host/user/password/path. Port defaults to 21 (Hostinger FTP) and
-          # never inherits a former SFTP port 22.
-          HOST="${FTP_HOST:-${SFTP_HOST:-}}"
-          USERNAME="${FTP_USERNAME:-${SFTP_USERNAME:-}}"
-          PASSWORD="${FTP_PASSWORD:-${SFTP_PASSWORD:-}}"
-          PORT="${FTP_PORT:-21}"
-          REMOTE_PATH="${FTP_REMOTE_PATH:-${SFTP_REMOTE_PATH:-/home/u929205898/domains/emaraestates.com/public_html}}"
+          echo "FTP host: $FTP_HOST"
+          echo "FTP port: $FTP_PORT"
+          echo "FTP username: $FTP_USERNAME"
+          echo "FTP remote path: $FTP_REMOTE_PATH"
+          echo "FTP password length: ${#FTP_PASSWORD}"
 
-          test -n "$HOST" || (echo "::error::FTP_HOST (or SFTP_HOST) secret is missing" && exit 1)
-          test -n "$USERNAME" || (echo "::error::FTP_USERNAME (or SFTP_USERNAME) secret is missing" && exit 1)
-          test -n "$PASSWORD" || (echo "::error::FTP_PASSWORD (or SFTP_PASSWORD) secret is missing" && exit 1)
-          if ! [[ "$PORT" =~ ^[0-9]+$ ]]; then
+          test -n "${FTP_HOST:-}" || (echo "::error::FTP_HOST secret is missing" && exit 1)
+          test -n "${FTP_USERNAME:-}" || (echo "::error::FTP_USERNAME secret is missing" && exit 1)
+          test -n "${FTP_PORT:-}" || (echo "::error::FTP_PORT secret is missing. Use 21 for Hostinger FTP." && exit 1)
+          test -n "${FTP_REMOTE_PATH:-}" || (echo "::error::FTP_REMOTE_PATH secret is missing" && exit 1)
+          if [ "${#FTP_PASSWORD}" -eq 0 ]; then
+            echo "::error::FTP_PASSWORD secret is missing or empty"
+            exit 1
+          fi
+          if ! [[ "$FTP_PORT" =~ ^[0-9]+$ ]]; then
             echo "::error::FTP_PORT must be a number. Use 21 for Hostinger FTP."
             exit 1
           fi
-          if [ "$PORT" = "22" ]; then
+          if [ "$FTP_PORT" = "22" ]; then
             echo "::error::Port 22 is SFTP. Hostinger FTP uses port 21. Set FTP_PORT=21."
             exit 1
           fi
-
-          echo "FTP host: $HOST"
-          echo "FTP port: $PORT"
-          echo "FTP remote path: $REMOTE_PATH"
 
       - name: Install lftp
         run: brew install lftp
@@ -94,20 +88,27 @@ jobs:
           FTP_PASSWORD: ${{ secrets.FTP_PASSWORD }}
           FTP_PORT: ${{ secrets.FTP_PORT }}
           FTP_REMOTE_PATH: ${{ secrets.FTP_REMOTE_PATH }}
-          SFTP_HOST: ${{ secrets.SFTP_HOST }}
-          SFTP_USERNAME: ${{ secrets.SFTP_USERNAME }}
-          SFTP_PASSWORD: ${{ secrets.SFTP_PASSWORD }}
-          SFTP_REMOTE_PATH: ${{ secrets.SFTP_REMOTE_PATH }}
         working-directory: web
         run: |
           set -euo pipefail
 
-          HOST="${FTP_HOST:-${SFTP_HOST:-}}"
-          USERNAME="${FTP_USERNAME:-${SFTP_USERNAME:-}}"
-          PASSWORD="${FTP_PASSWORD:-${SFTP_PASSWORD:-}}"
-          PORT="${FTP_PORT:-21}"
-          REMOTE_PATH="${FTP_REMOTE_PATH:-${SFTP_REMOTE_PATH:-/home/u929205898/domains/emaraestates.com/public_html}}"
+          HOST="${FTP_HOST}"
+          USERNAME="${FTP_USERNAME}"
+          PASSWORD="${FTP_PASSWORD}"
+          PORT="${FTP_PORT}"
+          REMOTE_PATH="${FTP_REMOTE_PATH}"
           ATTEMPTS=3
+
+          echo "FTP host: $HOST"
+          echo "FTP port: $PORT"
+          echo "FTP username: $USERNAME"
+          echo "FTP remote path: $REMOTE_PATH"
+          echo "FTP password length: ${#PASSWORD}"
+
+          if [ "${#PASSWORD}" -eq 0 ]; then
+            echo "::error::FTP_PASSWORD secret is missing or empty"
+            exit 1
+          fi
 
           echo "Deploying web/deploy/ to ${REMOTE_PATH} on ${HOST}:${PORT} via FTP"
           echo "Root merge only (no delete). _next is mirrored with --delete semantics via lftp mirror."
@@ -149,9 +150,8 @@ jobs:
               echo "bye"
             } > "$COMMAND_FILE"
 
-            # Prefer LFTP_PASSWORD so special characters in the password are safe.
-            export LFTP_PASSWORD="${PASSWORD}"
-            if lftp -u "${USERNAME}" "ftp://${HOST}:${PORT}" < "$COMMAND_FILE"
+            # Pass user AND password in -u so lftp never prompts (GetPass fails in CI).
+            if lftp -u "${USERNAME},${PASSWORD}" -p "${PORT}" "ftp://${HOST}" < "$COMMAND_FILE"
             then
               rm -f "$COMMAND_FILE"
               echo "Deployment completed successfully."
