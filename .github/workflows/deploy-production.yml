@@ -1,0 +1,134 @@
+name: Deploy production
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+
+concurrency:
+  group: hostinger-production
+  cancel-in-progress: true
+
+jobs:
+  build-and-deploy:
+    runs-on: macos-latest
+    timeout-minutes: 45
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: web/package-lock.json
+
+      - name: Install dependencies
+        working-directory: web
+        run: npm ci
+
+      - name: Build and assemble web/deploy
+        working-directory: web
+        run: |
+          set -euo pipefail
+          npm run build
+          node scripts/deploy-layout.mjs
+          test -f deploy/index.html
+          test -d deploy/_next
+
+      - name: Check SFTP secrets
+        env:
+          SFTP_HOST: ${{ secrets.SFTP_HOST }}
+          SFTP_USERNAME: ${{ secrets.SFTP_USERNAME }}
+          SFTP_PASSWORD: ${{ secrets.SFTP_PASSWORD }}
+          SFTP_PORT: ${{ secrets.SFTP_PORT }}
+        run: |
+          set -euo pipefail
+          test -n "$SFTP_HOST" || (echo "::error::SFTP_HOST secret is missing" && exit 1)
+          test -n "$SFTP_USERNAME" || (echo "::error::SFTP_USERNAME secret is missing" && exit 1)
+          test -n "$SFTP_PASSWORD" || (echo "::error::SFTP_PASSWORD secret is missing" && exit 1)
+          test -n "$SFTP_PORT" || (echo "::error::SFTP_PORT secret is missing. Use 22 for SFTP." && exit 1)
+          if ! [[ "$SFTP_PORT" =~ ^[0-9]+$ ]]; then
+            echo "::error::SFTP_PORT must be a number. Use 22 for SFTP."
+            exit 1
+          fi
+          echo "SFTP host: $SFTP_HOST"
+          echo "SFTP port: $SFTP_PORT"
+
+      - name: Install lftp
+        run: brew install lftp
+
+      - name: Deploy web/deploy via SFTP
+        env:
+          SFTP_HOST: ${{ secrets.SFTP_HOST }}
+          SFTP_USERNAME: ${{ secrets.SFTP_USERNAME }}
+          SFTP_PASSWORD: ${{ secrets.SFTP_PASSWORD }}
+          SFTP_PORT: ${{ secrets.SFTP_PORT }}
+          SFTP_REMOTE_PATH: ${{ secrets.SFTP_REMOTE_PATH }}
+        working-directory: web
+        run: |
+          set -euo pipefail
+
+          ATTEMPTS=3
+          REMOTE_PATH="${SFTP_REMOTE_PATH:-public_html}"
+
+          echo "Deploying web/deploy/ to ${REMOTE_PATH} on ${SFTP_HOST}:${SFTP_PORT}"
+          echo "Root merge only (no delete). _next is mirrored with --delete semantics via lftp mirror."
+
+          for attempt in $(seq 1 "$ATTEMPTS"); do
+            echo "SFTP deployment attempt ${attempt}/${ATTEMPTS}"
+
+            COMMAND_FILE="$(mktemp)"
+            {
+              echo "set cmd:fail-exit yes"
+              echo "set sftp:auto-confirm yes"
+              echo "set net:timeout 45"
+              echo "set net:max-retries 3"
+              echo "set net:reconnect-interval-base 5"
+              echo "set net:reconnect-interval-max 30"
+              echo "lcd deploy"
+              echo "cd \"${REMOTE_PATH}\""
+
+              # 1) Root pages + assets — put only, never delete the document root.
+              find deploy -type d -mindepth 1 -not -path 'deploy/_next*' | sort | while IFS= read -r directory; do
+                remote_directory="${directory#deploy/}"
+                printf 'mkdir -p "./%s"\n' "$remote_directory"
+              done
+
+              find deploy -type f -not -path 'deploy/_next/*' -not -name 'DEPLOY-MANIFEST.md' | sort | while IFS= read -r file; do
+                remote_file="${file#deploy/}"
+                remote_directory="$(dirname "$remote_file")"
+                if [ "$remote_directory" = "." ]; then
+                  printf 'put "%s"\n' "$remote_file"
+                else
+                  printf 'put -O "./%s" "%s"\n' "$remote_directory" "$remote_file"
+                fi
+              done
+
+              # 2) _next only — mirror with delete is safe here (owned by the build).
+              echo "mirror -R --delete --verbose ./_next ./_next"
+
+              echo "bye"
+            } > "$COMMAND_FILE"
+
+            if lftp -u "${SFTP_USERNAME},${SFTP_PASSWORD}" "sftp://${SFTP_HOST}:${SFTP_PORT}" < "$COMMAND_FILE"
+            then
+              rm -f "$COMMAND_FILE"
+              echo "Deployment completed successfully."
+              exit 0
+            fi
+
+            rm -f "$COMMAND_FILE"
+
+            if [ "$attempt" -lt "$ATTEMPTS" ]; then
+              sleep_seconds=$((attempt * 20))
+              echo "::warning::SFTP deployment failed. Retrying in ${sleep_seconds}s..."
+              sleep "$sleep_seconds"
+            fi
+          done
+
+          echo "::error::SFTP deployment failed after ${ATTEMPTS} attempts. Check SFTP_HOST, SFTP_PORT, SFTP_USERNAME, SFTP_PASSWORD, SFTP_REMOTE_PATH and Hostinger SFTP access."
+          exit 1
