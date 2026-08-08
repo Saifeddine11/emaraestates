@@ -14,8 +14,8 @@ export type Country = {
   flag: string;
 };
 
-/** Final fallback when every detection signal fails — Emara is Morocco-based. */
-export const FALLBACK_COUNTRY = 'MA';
+/** Final fallback when every detection signal fails. */
+export const FALLBACK_COUNTRY = 'FR';
 
 export const COUNTRIES: Country[] = [
   { countryCode: 'MA', code: '+212', country: 'Morocco', label: 'Maroc', flag: '🇲🇦' },
@@ -183,7 +183,7 @@ export async function detectCountryCodeFromIp(timeoutMs = 1500): Promise<string 
  * 1. IP geolocation (fast timeout)
  * 2. navigator.language region
  * 3. IANA timezone
- * 4. Morocco (+212)
+ * 4. France (+33)
  */
 export async function detectVisitorCountryCode(timeoutMs = 1500): Promise<string> {
   const fromIp = await detectCountryCodeFromIp(timeoutMs);

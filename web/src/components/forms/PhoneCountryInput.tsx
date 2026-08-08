@@ -15,7 +15,7 @@ import { cn } from '@/lib/cn';
 /**
  * Country-code selector + national number field.
  *
- * Replaces js/phone-input-country.js. SSR defaults to Morocco (+212). After
+ * Replaces js/phone-input-country.js. SSR defaults to France (+33). After
  * mount we silently upgrade via IP → locale → timezone (never GPS). Manual
  * picks are never overwritten.
  *

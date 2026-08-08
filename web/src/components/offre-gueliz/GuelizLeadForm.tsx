@@ -32,7 +32,7 @@ const STEPS = OG_FORM.steps;
 const TOTAL = STEPS.length;
 const L = OG_FORM.labels;
 
-const MOROCCO = COUNTRIES.find((c) => c.countryCode === 'MA') ?? COUNTRIES[0];
+const FRANCE = COUNTRIES.find((c) => c.countryCode === 'FR') ?? COUNTRIES[0];
 
 function digits(value: string) {
   return String(value || '').replace(/\D/g, '');
@@ -47,7 +47,7 @@ export function GuelizLeadForm() {
   const [current, setCurrent] = useState(0);
   const [values, setValues] = useState<Partial<Record<OgStepKey, string>>>({});
   const [fullName, setFullName] = useState('');
-  const [country, setCountry] = useState<Country>(MOROCCO);
+  const [country, setCountry] = useState<Country>(FRANCE);
   const [number, setNumber] = useState('');
   const [honeypot, setHoneypot] = useState('');
   const [errors, setErrors] = useState<{ fullName?: string; telephone?: string }>({});
