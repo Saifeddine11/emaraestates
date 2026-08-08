@@ -1,5 +1,6 @@
 import { Reveal } from '@/components/motion/Reveal';
-import { SectionLabel, SectionText, SectionTitle } from '@/components/ui/Section';
+import { HandDrawnCircle } from '@/components/motion/HandDrawnCircle';
+import { SectionLabel } from '@/components/ui/Section';
 import { ProjectShowcase } from './ProjectShowcase';
 import { VirtualTour } from '@/components/sections/VirtualTour';
 import { ApportSimulator } from '@/components/forms/ApportSimulator';
@@ -7,11 +8,9 @@ import { ApportSimulator } from '@/components/forms/ApportSimulator';
 /**
  * `#biens` — projects on plan.
  *
- * Opens with the plaza track and the Apple-style Honest Signature 7
- * showcase. The plaza headline lives in the compact MapSection card.
- * Indexed label / h2 / body copy stay in the DOM after the showcase so
- * heading hierarchy and SEO wording are preserved. Immersion 3D and the
- * apport simulator follow. Honest 5 lives in `#nos-réalisations`.
+ * Opens with a strong Guéliz headline + subtitle, then the plaza track and
+ * the Apple-style Honest Signature 7 showcase. Immersion 3D and the apport
+ * simulator follow. Honest 5 lives in `#nos-réalisations`.
  */
 
 const TRACK_ITEMS = [
@@ -24,7 +23,20 @@ export function ProjectsSection() {
   return (
     <section id="biens" className="scroll-mt-24 bg-cream px-[clamp(28px,5vw,60px)] py-[clamp(72px,9vw,120px)]">
       <div className="mx-auto w-full max-w-[1320px]">
-        <Reveal>
+        <div className="max-w-[1180px]">
+          <SectionLabel>Nos projets sur plans</SectionLabel>
+          <h2 className="w-full max-w-none font-serif text-[clamp(36px,4vw,56px)] font-normal leading-[1.2] tracking-[-0.02em] text-forest lg:whitespace-nowrap">
+            <HandDrawnCircle>Nouveau</HandDrawnCircle>
+            {' '}
+            projet au cœur de Guéliz
+          </h2>
+          <p className="mt-5 max-w-[38rem] text-[clamp(17px,1.4vw,20px)] font-normal leading-[1.65] text-forest/80 md:mt-6">
+            Découvrez Honest Signature 7, un programme immobilier neuf situé à 1 minute à pied du
+            Plaza, dans l&apos;un des secteurs les plus recherchés de Marrakech.
+          </p>
+        </div>
+
+        <Reveal className="mt-12 md:mt-14">
           <div className="mx-auto flex max-w-[1180px] flex-col items-stretch gap-5 rounded-2xl bg-forest px-6 py-6 md:flex-row md:items-center md:justify-center md:gap-10 md:px-10 md:py-7">
             {TRACK_ITEMS.map((item, index) => (
               <div key={item.rest} className="contents">
@@ -48,20 +60,6 @@ export function ProjectsSection() {
         </Reveal>
 
         <ProjectShowcase />
-
-        {/* Indexed intro copy — kept after the visual block so the hero stays
-            minimal without dropping SEO wording or the section h2. */}
-        <div className="mt-16 max-w-[720px] md:mt-20">
-          <SectionLabel>Nos projets sur plans</SectionLabel>
-          <SectionTitle>Honest Signature 7 à Guéliz Marrakech</SectionTitle>
-          <SectionText className="mt-5">
-            Emara Estates sélectionne des appartements neufs à Guéliz Marrakech pour les acheteurs
-            exigeants, les investisseurs et les clients qui souhaitent sécuriser un bien neuf dans
-            un emplacement stratégique. Notre accompagnement couvre la découverte du programme
-            immobilier Marrakech, les plans, les prix, les disponibilités et l&apos;organisation
-            d&apos;une visite.
-          </SectionText>
-        </div>
 
         <VirtualTour />
         <ApportSimulator idSuffix="home" />

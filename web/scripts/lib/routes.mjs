@@ -10,12 +10,13 @@
  * apply everywhere because they come from chrome every page renders.
  *
  * `copyExceptions` and `altExceptions` waive individual strings the port
- * legitimately drops. `addedSections` names whole sections the port adds that
- * the legacy page never had, and lifts them out of the built page before the
- * diff. `removedSections` does the opposite for approved deletions from the
- * legacy page. Everything listed in either is unverified by this script — only
- * for wholly new or wholly dropped sections, never to quiet a diff in ported
- * content that should still be there.
+ * legitimately drops. `headingExceptions` allow an intentional heading rewrite
+ * at the same index (from → to). `addedSections` names whole sections the port
+ * adds that the legacy page never had, and lifts them out of the built page
+ * before the diff. `removedSections` does the opposite for approved deletions
+ * from the legacy page. Everything listed in either is unverified by this
+ * script — only for wholly new or wholly dropped sections, never to quiet a
+ * diff in ported content that should still be there.
  */
 
 /** Copy that every page loses for the same reason: deferred-mount chrome. */
@@ -105,18 +106,27 @@ export const ROUTES = [
       },
 
       {
-        // Hero CTAs used to sit directly above the `#biens` label. The section
-        // now opens with a single visual headline, so this contiguous sentence
-        // is split — every clause remains on the page.
+        // First sentence-chunk of the legacy `#biens` intro (hero CTAs → label
+        // → h2 → body sentence 1). Replaced by the Guéliz headline rewrite.
         text:
           'VoirlesappartementsdisponiblesÊtrerappeléparunconseillerNosprojetssurplans' +
           'HonestSignature7àGuélizMarrakechEmaraEstatessélectionnedesappartementsneufs' +
           'àGuélizMarrakechpourlesacheteursexigeants,lesinvestisseursetlesclientsqui' +
-          "souhaitentsécuriserunbienneufdansunemplacementstratégique.",
+          'souhaitentsécuriserunbienneufdansunemplacementstratégique.',
         why:
-          '#biens intro simplified to one headline on request; label, h2 and ' +
-          'body copy remain lower in the section',
+          '#biens intro rewritten to “Nouveau projet au cœur de Guéliz”; ' +
+          'hero CTAs, label and HS7 name remain elsewhere on the homepage',
       },
+      {
+        // Second sentence of the legacy `#biens` body (own chunk at the period).
+        text:
+          'NotreaccompagnementcouvreladécouverteduprogrammeimmobilierMarrakech,' +
+          "lesplans,lesprix,lesdisponibilitésetl'organisationd'unevisite.",
+        why:
+          'legacy `#biens` body sentence 2 dropped with the intro rewrite; ' +
+          'plans/prix/disponibilités CTAs remain on the HS7 card and forms',
+      },
+
       {
         // Legacy nests Honest 5 after the four sold cards. It now leads
         // `#nos-réalisations` as the featured listing card; wording stays.
@@ -279,6 +289,15 @@ export const ROUTES = [
         why:
           'full-bleed aerial localisation map removed on request; #localisation ' +
           'now lands on the compact plaza promo card (map-intro title kept)',
+      },
+    ],
+    headingExceptions: [
+      {
+        from: 'h2: Honest Signature 7 à Guéliz Marrakech',
+        to: 'h2: Nouveau projet au cœur de Guéliz',
+        why:
+          '#biens section h2 rewritten on request; HS7 name remains as card ' +
+          'title in the showcase (not a heading)',
       },
     ],
   },

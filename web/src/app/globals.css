@@ -246,6 +246,34 @@
   max-width: 62ch;
 }
 
+/* Hand-drawn oval around a highlighted word (ProjectsSection title). */
+.hand-circle-path {
+  stroke-dasharray: 1;
+  stroke-dashoffset: 1;
+  transition: stroke-dashoffset 1.25s var(--ease-premium);
+}
+
+.hand-circle[data-drawn='true'] .hand-circle-path {
+  stroke-dashoffset: 0;
+}
+
+.hand-circle[data-drawn='true'] svg {
+  transform-origin: center;
+  animation: handCirclePulse 1.7s ease-in-out 1.2s 1;
+}
+
+@keyframes handCirclePulse {
+  0%,
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  45% {
+    opacity: 0.93;
+    transform: scale(1.012);
+  }
+}
+
 /* ============================================================
    Reduced motion — parity with the four legacy opt-outs
    ============================================================ */

@@ -400,11 +400,34 @@ function verifyRoute(route, builtIdsByRoute) {
         `      only in built:  ${builtHeadings.filter((h) => !legacyHeadings.includes(h)).join(' | ') || '—'}`,
     );
   } else {
+    const headingRewrites = new Map(
+      (route.headingExceptions ?? []).map(({ from, to, why }) => [`${from}=>${to}`, why]),
+    );
+    const usedHeadingExceptions = new Set();
     const diffs = legacyHeadings
-      .map((h, i) => (h === builtHeadings[i] ? null : `      [${i}] ${h}  ->  ${builtHeadings[i]}`))
+      .map((h, i) => {
+        if (h === builtHeadings[i]) return null;
+        const key = `${h}=>${builtHeadings[i]}`;
+        if (headingRewrites.has(key)) {
+          usedHeadingExceptions.add(key);
+          return null;
+        }
+        return `      [${i}] ${h}  ->  ${builtHeadings[i]}`;
+      })
       .filter(Boolean);
     if (diffs.length) failures.push(`heading order/text differs:\n${diffs.join('\n')}`);
-    else passes.push(`heading hierarchy (${legacyHeadings.length} headings, exact order)`);
+    else {
+      passes.push(`heading hierarchy (${legacyHeadings.length} headings, exact order)`);
+      for (const { from, to, why } of route.headingExceptions ?? []) {
+        if (usedHeadingExceptions.has(`${from}=>${to}`)) {
+          passes.push(`heading rewrite "${from}" → "${to}" — ${why}`);
+        } else {
+          warnings.push(
+            `heading exception "${from}" → "${to}" matches nothing — drop it.`,
+          );
+        }
+      }
+    }
   }
 
   /* visible copy */
