@@ -176,6 +176,10 @@ async function capture(browser, url, viewport = DESKTOP) {
   // realistic dwell time is part of the contract being tested.
   await page.waitForTimeout(3200);
 
+  // Pin the dial code so payload parity is about field contracts, not
+  // IP/locale auto-detect (ported may resolve MA via IP while legacy stays FR).
+  await page.selectOption('#contact-phone-code', 'FR');
+
   await page.fill('#contact-name', VALUES.name);
   await page.fill('#contact-email', VALUES.email);
   await page.fill('#contact-phone', VALUES.phone);
@@ -286,6 +290,8 @@ async function fillGueliz(page, { honeypot = false } = {}) {
   }
 
   await page.waitForSelector('#og-fullname', { state: 'visible' });
+  // Same as contact: pin FR so IP auto-detect cannot diverge from legacy.
+  await page.selectOption('#og-phone-code', 'FR');
   await page.fill('#og-fullname', GUELIZ_VALUES.fullName);
   await page.fill('#og-phone', GUELIZ_VALUES.phone);
   if (honeypot) {
@@ -751,6 +757,7 @@ g(
 const WIDGET_INTERNAL_HOOKS = [
   'data-country',
   'data-phone-button',
+  'data-phone-country-touched',
   'data-phone-dropdown',
   'data-phone-input-bound',
   'data-phone-options',

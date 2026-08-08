@@ -14,7 +14,8 @@ export type Country = {
   flag: string;
 };
 
-export const FALLBACK_COUNTRY = 'FR';
+/** Final fallback when every detection signal fails — Emara is Morocco-based. */
+export const FALLBACK_COUNTRY = 'MA';
 
 export const COUNTRIES: Country[] = [
   { countryCode: 'MA', code: '+212', country: 'Morocco', label: 'Maroc', flag: '🇲🇦' },
@@ -90,7 +91,12 @@ const TIMEZONE_COUNTRIES: Record<string, string> = {
   'America/Denver': 'US',
   'America/Los_Angeles': 'US',
   'America/Toronto': 'CA',
+  'America/Vancouver': 'CA',
 };
+
+function isKnownCountry(code: string) {
+  return COUNTRIES.some((country) => country.countryCode === code);
+}
 
 /** Lowercase and strip diacritics so search matches "Algerie" and "Algérie". */
 export function normalizeText(value: string) {
@@ -109,15 +115,25 @@ export function findCountry(value: string | undefined): Country {
   );
 }
 
-/** Best-effort locale guess: browser languages first, then the IANA timezone. */
-export function detectCountryCode(): string {
+/**
+ * Sync locale/timezone guess.
+ *
+ * When `allowNorthAmerica` is false, language regions US/CA are skipped so an
+ * English browser in Morocco/France does not briefly flash +1 before IP/TZ
+ * resolve. Timezone can still return US/CA (real North-American visitors).
+ */
+export function detectCountryCodeFromLocale(options?: { allowNorthAmerica?: boolean }): string {
+  const allowNorthAmerica = options?.allowNorthAmerica !== false;
+
   if (typeof navigator === 'undefined') return FALLBACK_COUNTRY;
 
   const languages = [...(navigator.languages ?? []), navigator.language].filter(Boolean);
   for (const language of languages) {
     const parts = String(language).split('-');
     const region = parts.length > 1 ? parts.pop()!.toUpperCase() : '';
-    if (region && COUNTRIES.some((country) => country.countryCode === region)) return region;
+    if (!region || !isKnownCountry(region)) continue;
+    if (!allowNorthAmerica && (region === 'US' || region === 'CA')) continue;
+    return region;
   }
 
   try {
@@ -128,6 +144,51 @@ export function detectCountryCode(): string {
   }
 
   return FALLBACK_COUNTRY;
+}
+
+/** Sync best-effort guess (locale → timezone → MA). Kept for callers/tests. */
+export function detectCountryCode(): string {
+  return detectCountryCodeFromLocale({ allowNorthAmerica: true });
+}
+
+/**
+ * Silent IP country lookup. No GPS, no permission prompt.
+ * Returns a known ISO code or null on timeout/failure.
+ */
+export async function detectCountryCodeFromIp(timeoutMs = 1500): Promise<string | null> {
+  if (typeof fetch === 'undefined') return null;
+
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), timeoutMs);
+
+  try {
+    const response = await fetch('https://api.country.is/', {
+      signal: controller.signal,
+      credentials: 'omit',
+      cache: 'no-store',
+    });
+    if (!response.ok) return null;
+    const data = (await response.json()) as { country?: string };
+    const code = String(data?.country ?? '').toUpperCase();
+    return isKnownCountry(code) ? code : null;
+  } catch {
+    return null;
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
+/**
+ * Full visitor country resolution:
+ * 1. IP geolocation (fast timeout)
+ * 2. navigator.language region
+ * 3. IANA timezone
+ * 4. Morocco (+212)
+ */
+export async function detectVisitorCountryCode(timeoutMs = 1500): Promise<string> {
+  const fromIp = await detectCountryCodeFromIp(timeoutMs);
+  if (fromIp) return fromIp;
+  return detectCountryCodeFromLocale({ allowNorthAmerica: true });
 }
 
 /**

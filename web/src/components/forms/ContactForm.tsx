@@ -71,7 +71,7 @@ export function ContactForm({
   className?: string;
 }) {
   const plain = variant === 'plain';
-  const [country, setCountry] = useState<Country>(() => findCountry('FR'));
+  const [country, setCountry] = useState<Country>(() => findCountry('MA'));
   const [phoneNumber, setPhoneNumber] = useState('');
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');

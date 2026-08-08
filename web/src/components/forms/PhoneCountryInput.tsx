@@ -4,7 +4,8 @@ import { AnimatePresence, motion } from 'motion/react';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   COUNTRIES,
-  detectCountryCode,
+  detectCountryCodeFromLocale,
+  detectVisitorCountryCode,
   findCountry,
   normalizeText,
   type Country,
@@ -14,9 +15,9 @@ import { cn } from '@/lib/cn';
 /**
  * Country-code selector + national number field.
  *
- * Replaces js/phone-input-country.js. The country defaults to France and is
- * upgraded to a locale guess after mount — doing it in an effect rather than
- * during render keeps the server-rendered HTML deterministic.
+ * Replaces js/phone-input-country.js. SSR defaults to Morocco (+212). After
+ * mount we silently upgrade via IP → locale → timezone (never GPS). Manual
+ * picks are never overwritten.
  *
  * Keyboard support: the trigger opens the panel, typing filters, Up/Down moves
  * through matches, Enter selects, Escape closes and returns focus.
@@ -54,19 +55,44 @@ export function PhoneCountryInput({
   const [query, setQuery] = useState('');
   const [highlighted, setHighlighted] = useState(0);
   const detectedRef = useRef(false);
+  const userPickedRef = useRef(false);
+  const onCountryChangeRef = useRef(onCountryChange);
+  const countryCodeRef = useRef(country.countryCode);
   const containerRef = useRef<HTMLDivElement>(null);
   const triggerRef = useRef<HTMLButtonElement>(null);
   const searchRef = useRef<HTMLInputElement>(null);
 
-  // Locale guess runs once on mount and deliberately closes over the initial
-  // props: re-running it later would overwrite a country the user picked. The
-  // ref guards against Strict Mode's double invocation.
+  useEffect(() => {
+    onCountryChangeRef.current = onCountryChange;
+  }, [onCountryChange]);
+
+  useEffect(() => {
+    countryCodeRef.current = country.countryCode;
+  }, [country.countryCode]);
+
+  // Silent auto-detect once on mount. Strict Mode double-invoke is gated by
+  // the ref; a manual pick sets userPickedRef so later IP results are ignored.
   useEffect(() => {
     if (detectedRef.current) return;
     detectedRef.current = true;
-    const guess = findCountry(detectCountryCode());
-    if (guess.countryCode !== country.countryCode) onCountryChange(guess);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    let cancelled = false;
+
+    const apply = (code: string) => {
+      if (cancelled || userPickedRef.current) return;
+      const guess = findCountry(code);
+      if (guess.countryCode !== countryCodeRef.current) {
+        onCountryChangeRef.current(guess);
+      }
+    };
+
+    // Fast interim guess without flashing +1 for English browsers abroad.
+    apply(detectCountryCodeFromLocale({ allowNorthAmerica: false }));
+
+    void detectVisitorCountryCode(1500).then(apply);
+
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   const matches = useMemo(() => {
@@ -103,6 +129,7 @@ export function PhoneCountryInput({
   }, [open]);
 
   const select = (item: Country) => {
+    userPickedRef.current = true;
     onCountryChange(item);
     close(true);
   };
@@ -130,7 +157,10 @@ export function PhoneCountryInput({
           value={country.countryCode}
           onChange={(event) => {
             const next = COUNTRIES.find((c) => c.countryCode === event.target.value);
-            if (next) onCountryChange(next);
+            if (next) {
+              userPickedRef.current = true;
+              onCountryChange(next);
+            }
           }}
           className="pointer-events-none absolute size-px overflow-hidden opacity-0"
         >
