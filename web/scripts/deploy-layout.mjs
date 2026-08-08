@@ -31,6 +31,8 @@ import {
   VIDEO_MEDIA_ASSETS,
 } from './lib/deploy-manifest.mjs';
 
+const REPO = fileURLToPath(new URL('../..', import.meta.url));
+
 const WEB = fileURLToPath(new URL('..', import.meta.url));
 const OUT = join(WEB, 'out');
 const DEPLOY = join(WEB, 'deploy');
@@ -104,11 +106,26 @@ for (const { from, to } of SLASHED_PAGES) await copyFile(from, to);
 for (const file of ASSET_FILES) await copyFile(file, file);
 
 for (const dir of ASSET_DIRS) {
-  await cp(join(OUT, dir), join(DEPLOY, dir), { recursive: true });
+  const fromOut = join(OUT, dir);
+  const fromRepoVideos = dir === 'videos' ? join(REPO, 'img', 'videos') : null;
+  const src =
+    (await stat(fromOut).catch(() => null))
+      ? fromOut
+      : fromRepoVideos && (await stat(fromRepoVideos).catch(() => null))
+        ? fromRepoVideos
+        : null;
+
+  if (!src) {
+    console.error(`\n  Missing asset directory for deploy: ${dir}/\n`);
+    process.exit(1);
+  }
+
+  await cp(src, join(DEPLOY, dir), { recursive: true });
   let bytes = 0;
   let count = 0;
   const walk = async (d) => {
     for (const e of await readdir(d, { withFileTypes: true })) {
+      if (e.name === '.DS_Store') continue;
       const p = join(d, e.name);
       if (e.isDirectory()) await walk(p);
       else {
@@ -118,44 +135,21 @@ for (const dir of ASSET_DIRS) {
     }
   };
   await walk(join(DEPLOY, dir));
-  included.push({ path: `${dir}/`, size: bytes, note: `${count} files` });
+  included.push({
+    path: `${dir}/`,
+    size: bytes,
+    note:
+      dir === 'videos'
+        ? `${count} homepage carousel covers + mp4s`
+        : `${count} files`,
+  });
 }
 
-/* Homepage carousel media — selectively lift img/videos out of excluded img/. */
-{
-  const videosSrc = join(OUT, 'img', 'videos');
-  const videosDest = join(DEPLOY, 'img', 'videos');
-  if (!(await stat(videosSrc).catch(() => null))) {
-    console.error('\n  out/img/videos missing. Ensure public/img/videos exists, then rebuild.\n');
+for (const asset of VIDEO_MEDIA_ASSETS) {
+  const relative = asset.replace(/^\//, '');
+  if (!(await stat(join(DEPLOY, relative)).catch(() => null))) {
+    console.error(`\n  Missing carousel media in deploy image: ${asset}\n`);
     process.exit(1);
-  }
-  await mkdir(join(DEPLOY, 'img'), { recursive: true });
-  await cp(videosSrc, videosDest, { recursive: true });
-  let bytes = 0;
-  let count = 0;
-  const walkVideos = async (d) => {
-    for (const e of await readdir(d, { withFileTypes: true })) {
-      const p = join(d, e.name);
-      if (e.isDirectory()) await walkVideos(p);
-      else {
-        bytes += (await stat(p)).size;
-        count++;
-      }
-    }
-  };
-  await walkVideos(videosDest);
-  included.push({
-    path: 'img/videos/',
-    size: bytes,
-    note: `${count} homepage carousel covers + mp4s`,
-  });
-
-  for (const asset of VIDEO_MEDIA_ASSETS) {
-    const relative = asset.replace(/^\//, '');
-    if (!(await stat(join(DEPLOY, relative)).catch(() => null))) {
-      console.error(`\n  Missing carousel media in deploy image: ${asset}\n`);
-      process.exit(1);
-    }
   }
 }
 
@@ -167,8 +161,6 @@ const deployEntries = await readdir(DEPLOY, { withFileTypes: true });
 for (const entry of deployEntries) {
   if (!entry.isDirectory()) continue;
   if (ASSET_DIRS.includes(entry.name)) continue;
-  // Asset trees (not routes): _next above, and img/videos for the carousel.
-  if (entry.name === 'img') continue;
   // Any other directory must carry an index.html, or DirectorySlash will 301
   // requests for the extensionless URL into a directory with nothing to serve.
   const hasIndex = await stat(join(DEPLOY, entry.name, 'index.html')).catch(() => null);
@@ -193,17 +185,8 @@ const walkAll = async (dir) => {
 await walkAll(DEPLOY);
 if (strays.length) problems.push(`RSC payloads leaked into the image: ${strays.slice(0, 5).join(', ')}`);
 
-// Only img/videos may ship; a full img/ tree would duplicate live production.
-const deployImg = join(DEPLOY, 'img');
-if (await stat(deployImg).catch(() => null)) {
-  const imgChildren = await readdir(deployImg);
-  const unexpected = imgChildren.filter((name) => name !== 'videos');
-  if (unexpected.length) {
-    problems.push(
-      `img/ leaked unexpected entries into the image (${unexpected.join(', ')}) — only img/videos is allowed`,
-    );
-  }
-}
+const imgLeak = await stat(join(DEPLOY, 'img')).catch(() => null);
+if (imgLeak) problems.push('img/ leaked into the image — it would duplicate the live /img');
 
 /* ── manifest for review ──────────────────────────────────────────────────── */
 
@@ -260,6 +243,6 @@ if (problems.length) {
 }
 
 console.log(
-  '\n  Self-check passed: no RSC payloads, img/videos included, no bulk img, no indexless directory.',
+  '\n  Self-check passed: no RSC payloads, videos/ included, no bulk img, no indexless directory.',
 );
 console.log('  Nothing has been uploaded. Review web/deploy/, then run `npm run deploy:check`.\n');

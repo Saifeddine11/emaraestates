@@ -31,8 +31,11 @@ export const SLASHED_PAGES = [
   { from: 'residences-honest-678.html', to: 'residences-honest-678/index.html' },
 ];
 
-/** Build output uploaded verbatim. */
-export const ASSET_DIRS = ['_next'];
+/**
+ * Build output uploaded verbatim.
+ * `videos/` is the homepage carousel media (`web/public/videos` → repo img/videos).
+ */
+export const ASSET_DIRS = ['_next', 'videos'];
 
 /** Individual files uploaded verbatim. */
 export const ASSET_FILES = [
@@ -43,26 +46,25 @@ export const ASSET_FILES = [
 ];
 
 /**
- * Homepage `#videos` carousel media. Kept under `/img/videos` (stable public
- * URLs). The rest of `out/img` is excluded as a live duplicate, but this tree
- * is selectively copied into `web/deploy/img/videos` so Hostinger receives the
- * covers + mp4s that production was missing.
+ * Homepage `#videos` carousel media under stable public URLs:
+ *   /videos/<slug>.mp4
+ *   /videos/covers/<slug>-cover.webp
  */
 export const VIDEO_MEDIA_ASSETS = [
-  '/img/videos/covers/presentation-projet-cover.webp',
-  '/img/videos/covers/presentation-honest-cover.webp',
-  '/img/videos/covers/chantier-cover.webp',
-  '/img/videos/covers/localisation-gueliz-cover.webp',
-  '/img/videos/covers/lifestyle-cover.webp',
-  '/img/videos/covers/promoteur-fiable-cover.webp',
-  '/img/videos/covers/rendement-locatif-cover.webp',
-  '/img/videos/presentation-projet.mp4',
-  '/img/videos/presentation-honest.mp4',
-  '/img/videos/chantier.mp4',
-  '/img/videos/localisation-gueliz.mp4',
-  '/img/videos/lifestyle.mp4',
-  '/img/videos/promoteur-fiable.mp4',
-  '/img/videos/rendement-locatif.mp4',
+  '/videos/covers/presentation-projet-cover.webp',
+  '/videos/covers/presentation-honest-cover.webp',
+  '/videos/covers/chantier-cover.webp',
+  '/videos/covers/localisation-gueliz-cover.webp',
+  '/videos/covers/lifestyle-cover.webp',
+  '/videos/covers/promoteur-fiable-cover.webp',
+  '/videos/covers/rendement-locatif-cover.webp',
+  '/videos/presentation-projet.mp4',
+  '/videos/presentation-honest.mp4',
+  '/videos/chantier.mp4',
+  '/videos/localisation-gueliz.mp4',
+  '/videos/lifestyle.mp4',
+  '/videos/promoteur-fiable.mp4',
+  '/videos/rendement-locatif.mp4',
 ];
 
 /**
@@ -70,8 +72,7 @@ export const VIDEO_MEDIA_ASSETS = [
  * name first, then by pattern.
  */
 export const EXCLUDED_EXACT = {
-  img:
-    'bulk /img is already live (~45 MB); only img/videos is selectively copied into deploy for the homepage carousel',
+  img: 'byte-identical duplicate of the live /img (45 MB); production already serves it',
   '404.html':
     'the 404 page is not ported — uploading this would replace the designed legacy one',
   '_not-found.html': 'Next artifact; would publish a stray /_not-found URL',

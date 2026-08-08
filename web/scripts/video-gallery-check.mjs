@@ -211,7 +211,7 @@ async function run(label, viewport, isMobile) {
     );
     check(
       'the player opens on the cover the card was showing',
-      (await playerVideo.getAttribute('poster'))?.includes('/img/videos/covers/'),
+      (await playerVideo.getAttribute('poster'))?.includes('/videos/covers/'),
       true,
     );
 
