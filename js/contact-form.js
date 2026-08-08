@@ -17,6 +17,8 @@
     whatsapp: '/img/iconsocailmedia/whatsapp.png'
   };
 
+  var WHATSAPP_DIRECT_LINK = 'https://wa.me/212670038899?text=Bonjour%20Emara%20Estates%2C%20je%20viens%20de%20remplir%20le%20formulaire%20sur%20votre%20site%20et%20je%20souhaite%20%C3%AAtre%20contact%C3%A9%20directement.';
+
   var modalOpen = false;
   var lastFocusedElement = null;
 
@@ -70,9 +72,12 @@
       '      <span>WhatsApp</span>',
       '    </a>',
       '  </div>',
+      '  <a href="' + WHATSAPP_DIRECT_LINK + '" class="form-success-modal__whatsapp" target="_blank" rel="noopener noreferrer">',
+      '    <span>Nous contacter directement sur WhatsApp</span>',
+      '  </a>',
       '  <div class="form-success-modal__actions">',
       '    <button type="button" class="btn-outline form-success-modal__dismiss" data-success-modal-close>Fermer</button>',
-      '    <a href="/" class="btn-primary form-success-modal__home"><span>Retour au site</span></a>',
+      '    <a href="/" class="btn-outline form-success-modal__home"><span>Retour au site</span></a>',
       '  </div>',
       '</div>'
     ].join('');
