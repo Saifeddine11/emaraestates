@@ -1,3 +1,24 @@
+# Deploy production to Hostinger via plain FTP (lftp).
+#
+# Required GitHub secrets:
+#   FTP_HOST          e.g. ftp.emaraestates.com (or Hostinger FTP hostname)
+#   FTP_USERNAME      Hostinger FTP username
+#   FTP_PASSWORD      Hostinger FTP password
+#   FTP_PORT          21 (plain FTP — not 22/SFTP)
+#   FTP_REMOTE_PATH   relative path only. Default/recommended: public_html
+#
+# FTP_REMOTE_PATH notes (Hostinger):
+#   - Use a path relative to the FTP login root, usually: public_html
+#   - If the FTP account is already chrooted into public_html, use: .
+#   - Do NOT use absolute system paths like:
+#       /home/uXXXXXX/domains/emaraestates.com/public_html
+#     Hostinger FTP often cannot cd into those and fails with:
+#       550 No such file or directory
+#
+# Deploy semantics:
+#   - Merge web/deploy/ into FTP_REMOTE_PATH (no root delete)
+#   - Mirror web/deploy/_next/ with --delete (safe; build-owned)
+
 name: Deploy production
 
 on:
@@ -55,16 +76,18 @@ jobs:
         run: |
           set -euo pipefail
 
+          # Relative Hostinger path. Never default to a full /home/... system path.
+          REMOTE_PATH="${FTP_REMOTE_PATH:-public_html}"
+
           echo "FTP host: $FTP_HOST"
           echo "FTP port: $FTP_PORT"
           echo "FTP username: $FTP_USERNAME"
-          echo "FTP remote path: $FTP_REMOTE_PATH"
+          echo "FTP remote path: $REMOTE_PATH"
           echo "FTP password length: ${#FTP_PASSWORD}"
 
           test -n "${FTP_HOST:-}" || (echo "::error::FTP_HOST secret is missing" && exit 1)
           test -n "${FTP_USERNAME:-}" || (echo "::error::FTP_USERNAME secret is missing" && exit 1)
           test -n "${FTP_PORT:-}" || (echo "::error::FTP_PORT secret is missing. Use 21 for Hostinger FTP." && exit 1)
-          test -n "${FTP_REMOTE_PATH:-}" || (echo "::error::FTP_REMOTE_PATH secret is missing" && exit 1)
           if [ "${#FTP_PASSWORD}" -eq 0 ]; then
             echo "::error::FTP_PASSWORD secret is missing or empty"
             exit 1
@@ -75,6 +98,10 @@ jobs:
           fi
           if [ "$FTP_PORT" = "22" ]; then
             echo "::error::Port 22 is SFTP. Hostinger FTP uses port 21. Set FTP_PORT=21."
+            exit 1
+          fi
+          if [[ "$REMOTE_PATH" == /* ]]; then
+            echo "::error::FTP_REMOTE_PATH must be relative for Hostinger FTP (use public_html or .), not an absolute path like /home/.../public_html."
             exit 1
           fi
 
@@ -96,7 +123,7 @@ jobs:
           USERNAME="${FTP_USERNAME}"
           PASSWORD="${FTP_PASSWORD}"
           PORT="${FTP_PORT}"
-          REMOTE_PATH="${FTP_REMOTE_PATH}"
+          REMOTE_PATH="${FTP_REMOTE_PATH:-public_html}"
           ATTEMPTS=3
 
           echo "FTP host: $HOST"
@@ -107,6 +134,37 @@ jobs:
 
           if [ "${#PASSWORD}" -eq 0 ]; then
             echo "::error::FTP_PASSWORD secret is missing or empty"
+            exit 1
+          fi
+          if [[ "$REMOTE_PATH" == /* ]]; then
+            echo "::error::FTP_REMOTE_PATH must be relative for Hostinger FTP (use public_html or .), not an absolute path like /home/.../public_html."
+            exit 1
+          fi
+
+          echo "Probing FTP login directory (pwd + listing)…"
+          lftp -u "${USERNAME},${PASSWORD}" -p "${PORT}" "ftp://${HOST}" <<'PROBE'
+          set ftp:ssl-allow no
+          set ftp:passive-mode true
+          set net:timeout 30
+          set net:max-retries 2
+          pwd
+          cls -la
+          bye
+          PROBE
+
+          echo "Checking FTP_REMOTE_PATH=${REMOTE_PATH}…"
+          if ! lftp -u "${USERNAME},${PASSWORD}" -p "${PORT}" "ftp://${HOST}" <<EOF
+          set cmd:fail-exit yes
+          set ftp:ssl-allow no
+          set ftp:passive-mode true
+          set net:timeout 30
+          set net:max-retries 2
+          cd "${REMOTE_PATH}"
+          pwd
+          bye
+          EOF
+          then
+            echo "::error::FTP_REMOTE_PATH is wrong. Try public_html or ."
             exit 1
           fi
 
@@ -167,5 +225,5 @@ jobs:
             fi
           done
 
-          echo "::error::FTP deployment failed after ${ATTEMPTS} attempts. Check FTP_HOST, FTP_PORT (21), FTP_USERNAME, FTP_PASSWORD, FTP_REMOTE_PATH and Hostinger FTP access."
+          echo "::error::FTP deployment failed after ${ATTEMPTS} attempts. Check FTP_HOST, FTP_PORT (21), FTP_USERNAME, FTP_PASSWORD, FTP_REMOTE_PATH (public_html or .) and Hostinger FTP access."
           exit 1
