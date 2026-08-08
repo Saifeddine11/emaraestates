@@ -9,19 +9,26 @@ import { EXTERNAL } from '@/lib/site';
  * still content rather than configuration — titles and alt strings are visible
  * and indexed.
  *
- * Seven entries are our own 1080x1920 files under `/img/videos`, played by the
- * browser rather than framed by a third party. Nothing is fetched until a card
- * is clicked: the covers are the only bytes this section costs on page load.
- * The eighth is the Vertex 3D tour, which is a navigable app rather than a
- * video and so opens in its own tab.
+ * Seven entries are our own 1080x1920 files under `/img/videos` (via
+ * `web/public/img` → repo `img/`), played by the browser rather than framed by
+ * a third party. Nothing is fetched until a card is clicked: the covers are
+ * the only bytes this section costs on page load. The eighth is the Vertex 3D
+ * tour, which is a navigable app rather than a video and so opens in its own
+ * tab.
  *
  * Covers are single frames lifted from each video, so a card always shows the
  * film it plays. To replace one, export a frame at 720x1280 and overwrite the
  * file in `/img/videos/covers`.
  *
+ * `deploy-layout.mjs` selectively ships `img/videos/` into `web/deploy` so
+ * Hostinger FTP receives the carousel media even though the rest of `/img` is
+ * excluded as an already-live duplicate.
+ *
  * To add a video: drop `<slug>.mp4` in `/img/videos`, a `<slug>-cover.webp` in
- * `/img/videos/covers`, and add an entry below. An entry with no `linkUrl`
- * renders a "Bientôt" state rather than a play button that opens nothing.
+ * `/img/videos/covers`, add an entry below, and list both paths in
+ * `VIDEO_MEDIA_ASSETS` (`scripts/lib/deploy-manifest.mjs`). An entry with no
+ * `linkUrl` renders a "Bientôt" state rather than a play button that opens
+ * nothing.
  */
 export const VIDEO_CARDS: FanCard[] = [
   {

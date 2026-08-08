@@ -43,11 +43,35 @@ export const ASSET_FILES = [
 ];
 
 /**
+ * Homepage `#videos` carousel media. Kept under `/img/videos` (stable public
+ * URLs). The rest of `out/img` is excluded as a live duplicate, but this tree
+ * is selectively copied into `web/deploy/img/videos` so Hostinger receives the
+ * covers + mp4s that production was missing.
+ */
+export const VIDEO_MEDIA_ASSETS = [
+  '/img/videos/covers/presentation-projet-cover.webp',
+  '/img/videos/covers/presentation-honest-cover.webp',
+  '/img/videos/covers/chantier-cover.webp',
+  '/img/videos/covers/localisation-gueliz-cover.webp',
+  '/img/videos/covers/lifestyle-cover.webp',
+  '/img/videos/covers/promoteur-fiable-cover.webp',
+  '/img/videos/covers/rendement-locatif-cover.webp',
+  '/img/videos/presentation-projet.mp4',
+  '/img/videos/presentation-honest.mp4',
+  '/img/videos/chantier.mp4',
+  '/img/videos/localisation-gueliz.mp4',
+  '/img/videos/lifestyle.mp4',
+  '/img/videos/promoteur-fiable.mp4',
+  '/img/videos/rendement-locatif.mp4',
+];
+
+/**
  * Everything else in `out/`, with the reason it stays behind. Matched by exact
  * name first, then by pattern.
  */
 export const EXCLUDED_EXACT = {
-  img: 'byte-identical duplicate of the live /img (45 MB); production already serves it',
+  img:
+    'bulk /img is already live (~45 MB); only img/videos is selectively copied into deploy for the homepage carousel',
   '404.html':
     'the 404 page is not ported — uploading this would replace the designed legacy one',
   '_not-found.html': 'Next artifact; would publish a stray /_not-found URL',
@@ -153,6 +177,8 @@ export const EXPECTED_ROUTES = [
   { url: '/sitemap.xml', status: 200, legacy: true },
   { url: '/robots.txt', status: 200, legacy: true },
   { url: '/img/logo.webp', status: 200, legacy: true },
+  // Homepage video carousel — must ship with deploy (covers + self-hosted mp4s).
+  ...VIDEO_MEDIA_ASSETS.map((url) => ({ url, status: 200, videoMedia: true })),
   { url: '/css/style.css', status: 200, legacy: true },
   { url: '/js/phone-input-country.js', status: 200, legacy: true },
   { url: '/does-not-exist-' + 'probe', status: 404 },

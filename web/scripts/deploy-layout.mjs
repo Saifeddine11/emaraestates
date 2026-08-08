@@ -28,6 +28,7 @@ import {
   FLAT_PAGES,
   LEGACY_KEEP,
   SLASHED_PAGES,
+  VIDEO_MEDIA_ASSETS,
 } from './lib/deploy-manifest.mjs';
 
 const WEB = fileURLToPath(new URL('..', import.meta.url));
@@ -120,6 +121,44 @@ for (const dir of ASSET_DIRS) {
   included.push({ path: `${dir}/`, size: bytes, note: `${count} files` });
 }
 
+/* Homepage carousel media — selectively lift img/videos out of excluded img/. */
+{
+  const videosSrc = join(OUT, 'img', 'videos');
+  const videosDest = join(DEPLOY, 'img', 'videos');
+  if (!(await stat(videosSrc).catch(() => null))) {
+    console.error('\n  out/img/videos missing. Ensure public/img/videos exists, then rebuild.\n');
+    process.exit(1);
+  }
+  await mkdir(join(DEPLOY, 'img'), { recursive: true });
+  await cp(videosSrc, videosDest, { recursive: true });
+  let bytes = 0;
+  let count = 0;
+  const walkVideos = async (d) => {
+    for (const e of await readdir(d, { withFileTypes: true })) {
+      const p = join(d, e.name);
+      if (e.isDirectory()) await walkVideos(p);
+      else {
+        bytes += (await stat(p)).size;
+        count++;
+      }
+    }
+  };
+  await walkVideos(videosDest);
+  included.push({
+    path: 'img/videos/',
+    size: bytes,
+    note: `${count} homepage carousel covers + mp4s`,
+  });
+
+  for (const asset of VIDEO_MEDIA_ASSETS) {
+    const relative = asset.replace(/^\//, '');
+    if (!(await stat(join(DEPLOY, relative)).catch(() => null))) {
+      console.error(`\n  Missing carousel media in deploy image: ${asset}\n`);
+      process.exit(1);
+    }
+  }
+}
+
 /* ── self-check: the image must not be able to break Apache routing ───────── */
 
 const problems = [];
@@ -128,6 +167,8 @@ const deployEntries = await readdir(DEPLOY, { withFileTypes: true });
 for (const entry of deployEntries) {
   if (!entry.isDirectory()) continue;
   if (ASSET_DIRS.includes(entry.name)) continue;
+  // Asset trees (not routes): _next above, and img/videos for the carousel.
+  if (entry.name === 'img') continue;
   // Any other directory must carry an index.html, or DirectorySlash will 301
   // requests for the extensionless URL into a directory with nothing to serve.
   const hasIndex = await stat(join(DEPLOY, entry.name, 'index.html')).catch(() => null);
@@ -152,8 +193,17 @@ const walkAll = async (dir) => {
 await walkAll(DEPLOY);
 if (strays.length) problems.push(`RSC payloads leaked into the image: ${strays.slice(0, 5).join(', ')}`);
 
-const imgLeak = await stat(join(DEPLOY, 'img')).catch(() => null);
-if (imgLeak) problems.push('img/ leaked into the image — it would duplicate the live /img');
+// Only img/videos may ship; a full img/ tree would duplicate live production.
+const deployImg = join(DEPLOY, 'img');
+if (await stat(deployImg).catch(() => null)) {
+  const imgChildren = await readdir(deployImg);
+  const unexpected = imgChildren.filter((name) => name !== 'videos');
+  if (unexpected.length) {
+    problems.push(
+      `img/ leaked unexpected entries into the image (${unexpected.join(', ')}) — only img/videos is allowed`,
+    );
+  }
+}
 
 /* ── manifest for review ──────────────────────────────────────────────────── */
 
@@ -209,5 +259,7 @@ if (problems.length) {
   process.exit(1);
 }
 
-console.log('\n  Self-check passed: no RSC payloads, no duplicate img, no indexless directory.');
+console.log(
+  '\n  Self-check passed: no RSC payloads, img/videos included, no bulk img, no indexless directory.',
+);
 console.log('  Nothing has been uploaded. Review web/deploy/, then run `npm run deploy:check`.\n');

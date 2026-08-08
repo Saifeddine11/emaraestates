@@ -29,7 +29,12 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { chromium } from 'playwright';
-import { BROWSER_ROUTES, EXPECTED_ROUTES, LEGACY_KEEP } from './lib/deploy-manifest.mjs';
+import {
+  BROWSER_ROUTES,
+  EXPECTED_ROUTES,
+  LEGACY_KEEP,
+  VIDEO_MEDIA_ASSETS,
+} from './lib/deploy-manifest.mjs';
 
 const WEB = fileURLToPath(new URL('..', import.meta.url));
 const REPO = join(WEB, '..');
@@ -179,6 +184,18 @@ DocumentRoot "${root}"
   };
 }
 
+/* ── deploy image media (homepage video carousel) ─────────────────────────── */
+
+async function checkDeployVideoMedia() {
+  console.log('\n  Homepage video carousel media in web/deploy\n');
+  for (const asset of VIDEO_MEDIA_ASSETS) {
+    const relative = asset.replace(/^\//, '');
+    const exists = Boolean(await stat(join(DEPLOY, relative)).catch(() => null));
+    record(`deploy ${asset}`, exists, exists ? 'present' : 'missing from web/deploy');
+    console.log(`  ${exists ? 'PASS' : 'FAIL'}  ${asset}`);
+  }
+}
+
 /* ── routing ──────────────────────────────────────────────────────────────── */
 
 /** Follows redirects by hand so the whole chain is visible, not just the end. */
@@ -205,6 +222,16 @@ async function chase(base, url, max = 6) {
 async function checkRouting(base) {
   console.log('\n  Routing\n');
   for (const route of EXPECTED_ROUTES) {
+    // Large mp4s: HEAD only — we need reachability, not the bytes.
+    if (route.videoMedia) {
+      const response = await fetch(base + route.url, { method: 'HEAD', redirect: 'manual' });
+      const ok = response.status === route.status;
+      const detail = `${response.status}${ok ? '' : `  expected ${route.status}`}`;
+      record(route.url, ok, detail);
+      console.log(`  ${ok ? 'PASS' : 'FAIL'}  ${route.url.padEnd(38)} ${detail}`);
+      continue;
+    }
+
     const { chain, final, status, loop, tooManyHops } = await chase(base, route.url);
     const first = chain[0].status;
     const hops = chain.length - 1;
@@ -352,6 +379,7 @@ if (remoteBase) {
 }
 
 try {
+  if (!remoteBase) await checkDeployVideoMedia();
   await checkRouting(base);
   await checkHead(base);
   await checkRuntime(base);
