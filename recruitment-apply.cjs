@@ -197,75 +197,170 @@ function fieldOrDash(value) {
   return String(value || '').trim() || '—';
 }
 
-function recruitmentTeamEmailBody(payload) {
+function eHtml(value) {
+  return String(value || '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
+function isPriorityRecruitmentProfile(payload) {
+  const salesOk = payload.sales_experience === 'Plus de 3 ans';
+  const closedOk = payload.sales_closed_12m === '6 à 15' || payload.sales_closed_12m === 'Plus de 15';
+  const closingOk = payload.closing_level === 'Confirmé' || payload.closing_level === 'Excellent';
+  return salesOk && closedOk && closingOk;
+}
+
+function recruitmentSourceLabel(payload) {
+  const utmSource = String(payload.utm_source || '').trim();
+  if (utmSource) return utmSource;
+  const source = String(payload.source || '').trim();
+  if (!source || source === 'recruitment_website') return 'Site web Emara Estates';
+  return source;
+}
+
+function recruitmentTeamEmailPlainBody(payload) {
+  const fullName = (payload.first_name + ' ' + payload.last_name).trim();
+  const badge = isPriorityRecruitmentProfile(payload) ? 'PROFIL À PRIORISER' : 'CANDIDATURE À ÉTUDIER';
   return [
-    'NOUVELLE CANDIDATURE EMARA ESTATES',
+    'Emara Estates — Nouvelle candidature commerciale',
+    badge,
     '',
-    'Nom :',
-    payload.last_name,
+    'CANDIDAT',
+    fullName,
+    'Téléphone : ' + payload.telephone,
+    'Email : ' + payload.email,
     '',
-    'Prénom :',
-    payload.first_name,
+    'PROFIL COMMERCIAL',
+    'Expérience en vente : ' + payload.sales_experience,
+    'Expérience dans l’immobilier : ' + payload.real_estate_experience,
+    'Ventes conclues sur les 12 derniers mois : ' + payload.sales_closed_12m,
+    'Niveau de closing : ' + payload.closing_level,
     '',
-    'Téléphone :',
-    payload.telephone,
+    'CV',
+    'Voir le CV : ' + (payload.cv_download_url || ''),
     '',
-    'Email :',
-    payload.email,
+    'SOURCE DE LA CANDIDATURE',
+    'Source : ' + recruitmentSourceLabel(payload),
+    'Campagne : ' + fieldOrDash(payload.utm_campaign),
+    'Contenu / publicité : ' + fieldOrDash(payload.utm_content),
+    'Date : ' + payload.submitted_at,
     '',
-    'EXPÉRIENCE',
-    '',
-    'Expérience commerciale :',
-    payload.sales_experience,
-    '',
-    'Expérience immobilière :',
-    payload.real_estate_experience,
-    '',
-    'Ventes conclues sur les 12 derniers mois :',
-    payload.sales_closed_12m,
-    '',
-    'NIVEAU COMMERCIAL',
-    '',
-    'Niveau de closing :',
-    payload.closing_level,
-    '',
-    'CV (PDF)',
-    '',
-    'Fichier :',
-    payload.cv_filename,
-    '',
-    'Télécharger le CV :',
-    payload.cv_download_url,
-    '',
-    'SOURCE',
-    '',
-    'URL de la page :',
-    fieldOrDash(payload.page_url),
-    '',
-    'Source :',
-    payload.source,
-    '',
-    'utm_source :',
-    fieldOrDash(payload.utm_source),
-    '',
-    'utm_medium :',
-    fieldOrDash(payload.utm_medium),
-    '',
-    'utm_campaign :',
-    fieldOrDash(payload.utm_campaign),
-    '',
-    'utm_content :',
-    fieldOrDash(payload.utm_content),
-    '',
-    'utm_term :',
-    fieldOrDash(payload.utm_term),
-    '',
-    'Referrer :',
-    fieldOrDash(payload.referrer),
-    '',
-    'Date de candidature :',
-    payload.submitted_at,
+    'Candidature reçue via emaraestates.com/recrutement-commercial-marrakech',
   ].join('\r\n');
+}
+
+function recruitmentProfileRowHtml(label, value) {
+  return (
+    '<tr>' +
+    '<td style="padding:14px 0 4px 0;font-family:Georgia,\'Times New Roman\',serif;font-size:12px;letter-spacing:0.12em;text-transform:uppercase;color:#9b7040;">' +
+    eHtml(label) +
+    '</td>' +
+    '</tr>' +
+    '<tr>' +
+    '<td style="padding:0 0 10px 0;font-family:-apple-system,BlinkMacSystemFont,\'Segoe UI\',Arial,sans-serif;font-size:20px;line-height:1.35;font-weight:700;color:#1a1a1a;">' +
+    eHtml(value) +
+    '</td>' +
+    '</tr>'
+  );
+}
+
+function recruitmentTeamEmailHtmlBody(payload) {
+  const fullName = (payload.first_name + ' ' + payload.last_name).trim();
+  const priority = isPriorityRecruitmentProfile(payload);
+  const badgeLabel = priority ? 'PROFIL À PRIORISER' : 'CANDIDATURE À ÉTUDIER';
+  const badgeBg = priority ? '#2d3a2d' : '#9b7040';
+  const cvUrl = String(payload.cv_download_url || '');
+  const phoneHref = 'tel:' + String(payload.telephone || '').replace(/\s+/g, '');
+  const mailHref = 'mailto:' + payload.email;
+  const rows =
+    recruitmentProfileRowHtml('Expérience en vente', payload.sales_experience) +
+    recruitmentProfileRowHtml('Expérience dans l’immobilier', payload.real_estate_experience) +
+    recruitmentProfileRowHtml('Ventes conclues sur les 12 derniers mois', payload.sales_closed_12m) +
+    recruitmentProfileRowHtml('Niveau de closing', payload.closing_level);
+
+  return `<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Nouvelle candidature Emara Estates</title>
+</head>
+<body style="margin:0;padding:0;background:#f5f0e8;">
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#f5f0e8;padding:24px 12px;">
+    <tr>
+      <td align="center">
+        <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="max-width:620px;background:#ffffff;border:1px solid #e6dccb;">
+          <tr>
+            <td style="padding:28px 28px 18px 28px;border-bottom:3px solid #d2b178;">
+              <div style="font-family:Georgia,'Times New Roman',serif;font-size:22px;letter-spacing:0.08em;text-transform:uppercase;color:#2d3a2d;font-weight:700;">Emara Estates</div>
+              <div style="margin-top:8px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Arial,sans-serif;font-size:15px;color:#7a8b68;letter-spacing:0.04em;">Nouvelle candidature commerciale</div>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding:22px 28px 8px 28px;">
+              <span style="display:inline-block;background:${badgeBg};color:#ffffff;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Arial,sans-serif;font-size:12px;font-weight:700;letter-spacing:0.14em;text-transform:uppercase;padding:10px 14px;">${eHtml(badgeLabel)}</span>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding:12px 28px 8px 28px;">
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#faf8f4;border:1px solid #e6dccb;">
+                <tr><td style="padding:22px 22px 8px 22px;font-family:Georgia,'Times New Roman',serif;font-size:12px;letter-spacing:0.14em;text-transform:uppercase;color:#2d3a2d;font-weight:700;">Candidat</td></tr>
+                <tr><td style="padding:0 22px 16px 22px;font-family:Georgia,'Times New Roman',serif;font-size:28px;line-height:1.25;color:#1a1a1a;font-weight:700;">${eHtml(fullName)}</td></tr>
+                <tr><td style="padding:0 22px 6px 22px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Arial,sans-serif;font-size:13px;color:#9b7040;letter-spacing:0.08em;text-transform:uppercase;">Téléphone</td></tr>
+                <tr><td style="padding:0 22px 14px 22px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Arial,sans-serif;font-size:18px;font-weight:700;color:#1a1a1a;"><a href="${eHtml(phoneHref)}" style="color:#1a1a1a;text-decoration:none;">${eHtml(payload.telephone)}</a></td></tr>
+                <tr><td style="padding:0 22px 6px 22px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Arial,sans-serif;font-size:13px;color:#9b7040;letter-spacing:0.08em;text-transform:uppercase;">Email</td></tr>
+                <tr><td style="padding:0 22px 22px 22px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Arial,sans-serif;font-size:18px;font-weight:700;color:#1a1a1a;"><a href="${eHtml(mailHref)}" style="color:#1a1a1a;text-decoration:none;">${eHtml(payload.email)}</a></td></tr>
+              </table>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding:20px 28px 8px 28px;">
+              <div style="font-family:Georgia,'Times New Roman',serif;font-size:14px;letter-spacing:0.14em;text-transform:uppercase;color:#2d3a2d;font-weight:700;margin-bottom:8px;">Profil commercial</div>
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="border-top:1px solid #e6dccb;">${rows}</table>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding:18px 28px 8px 28px;">
+              <div style="font-family:Georgia,'Times New Roman',serif;font-size:14px;letter-spacing:0.14em;text-transform:uppercase;color:#2d3a2d;font-weight:700;margin-bottom:12px;">CV</div>
+              <table role="presentation" cellpadding="0" cellspacing="0" border="0">
+                <tr>
+                  <td style="background:#2d3a2d;border-radius:2px;">
+                    <a href="${eHtml(cvUrl)}" style="display:inline-block;padding:14px 22px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Arial,sans-serif;font-size:13px;font-weight:700;letter-spacing:0.14em;text-transform:uppercase;color:#ffffff;text-decoration:none;">Voir le CV</a>
+                  </td>
+                </tr>
+              </table>
+              <div style="margin-top:12px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Arial,sans-serif;font-size:13px;color:#7a8b68;">Lien sécurisé vers le PDF du candidat</div>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding:22px 28px 10px 28px;">
+              <div style="font-family:Georgia,'Times New Roman',serif;font-size:13px;letter-spacing:0.14em;text-transform:uppercase;color:#2d3a2d;font-weight:700;margin-bottom:12px;">Source de la candidature</div>
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#faf8f4;border:1px solid #e6dccb;">
+                <tr><td style="padding:16px 18px 4px 18px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Arial,sans-serif;font-size:12px;letter-spacing:0.08em;text-transform:uppercase;color:#9b7040;">Source</td></tr>
+                <tr><td style="padding:0 18px 12px 18px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Arial,sans-serif;font-size:15px;color:#1a1a1a;font-weight:600;">${eHtml(recruitmentSourceLabel(payload))}</td></tr>
+                <tr><td style="padding:0 18px 4px 18px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Arial,sans-serif;font-size:12px;letter-spacing:0.08em;text-transform:uppercase;color:#9b7040;">Campagne</td></tr>
+                <tr><td style="padding:0 18px 12px 18px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Arial,sans-serif;font-size:15px;color:#1a1a1a;font-weight:600;">${eHtml(fieldOrDash(payload.utm_campaign))}</td></tr>
+                <tr><td style="padding:0 18px 4px 18px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Arial,sans-serif;font-size:12px;letter-spacing:0.08em;text-transform:uppercase;color:#9b7040;">Contenu / publicité</td></tr>
+                <tr><td style="padding:0 18px 12px 18px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Arial,sans-serif;font-size:15px;color:#1a1a1a;font-weight:600;">${eHtml(fieldOrDash(payload.utm_content))}</td></tr>
+                <tr><td style="padding:0 18px 4px 18px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Arial,sans-serif;font-size:12px;letter-spacing:0.08em;text-transform:uppercase;color:#9b7040;">Date</td></tr>
+                <tr><td style="padding:0 18px 16px 18px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Arial,sans-serif;font-size:15px;color:#1a1a1a;font-weight:600;">${eHtml(payload.submitted_at)}</td></tr>
+              </table>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding:18px 28px 28px 28px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Arial,sans-serif;font-size:12px;line-height:1.5;color:#7a8b68;border-top:1px solid #e6dccb;">
+              Candidature reçue via emaraestates.com/recrutement-commercial-marrakech
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>`;
 }
 
 function candidateConfirmationBody(payload) {
@@ -320,17 +415,18 @@ function storeCvPrivately(payload, baseUrl) {
 /**
  * Local stand-in for PHP mail(): try sendmail, else write outbox files.
  * Never uses SMTP.
+ * @param {{ contentType?: string, extraHeaders?: string[] }} [options]
  */
-function sendMailLikePhp(to, subject, body, extraHeaders) {
+function sendMailLikePhp(to, subject, body, options) {
+  const opts = options || {};
   const from = recruitmentFromEmail();
   const headers = [
     'From: Emara Estates <' + from + '>',
     'To: ' + to,
     'Subject: ' + subject,
     'MIME-Version: 1.0',
-    'Content-Type: text/plain; charset=UTF-8',
-    'Content-Transfer-Encoding: 8bit',
-  ].concat(extraHeaders || []);
+    'Content-Type: ' + (opts.contentType || 'text/plain; charset=UTF-8'),
+  ].concat(opts.extraHeaders || []);
   const raw = headers.join('\r\n') + '\r\n\r\n' + body + '\r\n';
 
   const sendmail = spawnSync('sendmail', ['-t', '-i'], {
@@ -349,6 +445,30 @@ function sendMailLikePhp(to, subject, body, extraHeaders) {
   fs.writeFileSync(file, raw, { mode: 0o600 });
   console.info('[recruitment] mail outbox (no SMTP):', file);
   return { ok: true, method: 'outbox', file };
+}
+
+function buildTeamMultipartBody(payload) {
+  const boundary = 'emara_recruit_' + crypto.randomBytes(10).toString('hex');
+  const body = [
+    '--' + boundary,
+    'Content-Type: text/plain; charset=UTF-8',
+    'Content-Transfer-Encoding: 8bit',
+    '',
+    recruitmentTeamEmailPlainBody(payload),
+    '',
+    '--' + boundary,
+    'Content-Type: text/html; charset=UTF-8',
+    'Content-Transfer-Encoding: 8bit',
+    '',
+    recruitmentTeamEmailHtmlBody(payload),
+    '',
+    '--' + boundary + '--',
+    '',
+  ].join('\r\n');
+  return {
+    contentType: 'multipart/alternative; boundary="' + boundary + '"',
+    body,
+  };
 }
 
 function validateCv(file, firstName, lastName) {
@@ -485,9 +605,11 @@ async function handleRecruitmentApply(req, res) {
 
     const fullName = (result.payload.first_name + ' ' + result.payload.last_name).trim();
     const teamSubject = 'Nouvelle candidature — ' + fullName + ' — Commercial Marrakech';
-    sendMailLikePhp(teamTo, teamSubject, recruitmentTeamEmailBody(result.payload), [
-      'Reply-To: ' + fullName + ' <' + result.payload.email + '>',
-    ]);
+    const teamMime = buildTeamMultipartBody(result.payload);
+    sendMailLikePhp(teamTo, teamSubject, teamMime.body, {
+      contentType: teamMime.contentType,
+      extraHeaders: ['Reply-To: ' + fullName + ' <' + result.payload.email + '>'],
+    });
     sendMailLikePhp(
       result.payload.email,
       'Votre candidature chez Emara Estates a bien été reçue',

@@ -526,76 +526,225 @@ function storeCvPrivately(array $payload): array
     ];
 }
 
-function recruitmentTeamEmailBody(array $payload): string
+function eHtml(string $value): string
 {
+    return htmlspecialchars($value, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
+}
+
+function isPriorityRecruitmentProfile(array $payload): bool
+{
+    $salesOk = ($payload['sales_experience'] ?? '') === 'Plus de 3 ans';
+    $closedOk = in_array($payload['sales_closed_12m'] ?? '', ['6 à 15', 'Plus de 15'], true);
+    $closingOk = in_array($payload['closing_level'] ?? '', ['Confirmé', 'Excellent'], true);
+    return $salesOk && $closedOk && $closingOk;
+}
+
+function recruitmentSourceLabel(array $payload): string
+{
+    $utmSource = trim((string) ($payload['utm_source'] ?? ''));
+    if ($utmSource !== '') {
+        return $utmSource;
+    }
+    $source = trim((string) ($payload['source'] ?? ''));
+    if ($source === 'recruitment_website' || $source === '') {
+        return 'Site web Emara Estates';
+    }
+    return $source;
+}
+
+function recruitmentTeamEmailPlainBody(array $payload): string
+{
+    $fullName = trim($payload['first_name'] . ' ' . $payload['last_name']);
+    $badge = isPriorityRecruitmentProfile($payload) ? 'PROFIL À PRIORISER' : 'CANDIDATURE À ÉTUDIER';
+
     return implode("\r\n", [
-        'NOUVELLE CANDIDATURE EMARA ESTATES',
+        'Emara Estates — Nouvelle candidature commerciale',
+        $badge,
         '',
-        'Nom :',
-        $payload['last_name'],
+        'CANDIDAT',
+        $fullName,
+        'Téléphone : ' . $payload['telephone'],
+        'Email : ' . $payload['email'],
         '',
-        'Prénom :',
-        $payload['first_name'],
+        'PROFIL COMMERCIAL',
+        'Expérience en vente : ' . $payload['sales_experience'],
+        'Expérience dans l’immobilier : ' . $payload['real_estate_experience'],
+        'Ventes conclues sur les 12 derniers mois : ' . $payload['sales_closed_12m'],
+        'Niveau de closing : ' . $payload['closing_level'],
         '',
-        'Téléphone :',
-        $payload['telephone'],
+        'CV',
+        'Voir le CV : ' . ($payload['cv_download_url'] ?? ''),
         '',
-        'Email :',
-        $payload['email'],
+        'SOURCE DE LA CANDIDATURE',
+        'Source : ' . recruitmentSourceLabel($payload),
+        'Campagne : ' . fieldOrDash($payload['utm_campaign'] ?? ''),
+        'Contenu / publicité : ' . fieldOrDash($payload['utm_content'] ?? ''),
+        'Date : ' . ($payload['submitted_at'] ?? ''),
         '',
-        'EXPÉRIENCE',
-        '',
-        'Expérience commerciale :',
-        $payload['sales_experience'],
-        '',
-        'Expérience immobilière :',
-        $payload['real_estate_experience'],
-        '',
-        'Ventes conclues sur les 12 derniers mois :',
-        $payload['sales_closed_12m'],
-        '',
-        'NIVEAU COMMERCIAL',
-        '',
-        'Niveau de closing :',
-        $payload['closing_level'],
-        '',
-        'CV (PDF)',
-        '',
-        'Fichier :',
-        $payload['cv_filename'],
-        '',
-        'Télécharger le CV :',
-        $payload['cv_download_url'],
-        '',
-        'SOURCE',
-        '',
-        'URL de la page :',
-        fieldOrDash($payload['page_url']),
-        '',
-        'Source :',
-        $payload['source'],
-        '',
-        'utm_source :',
-        fieldOrDash($payload['utm_source']),
-        '',
-        'utm_medium :',
-        fieldOrDash($payload['utm_medium']),
-        '',
-        'utm_campaign :',
-        fieldOrDash($payload['utm_campaign']),
-        '',
-        'utm_content :',
-        fieldOrDash($payload['utm_content']),
-        '',
-        'utm_term :',
-        fieldOrDash($payload['utm_term']),
-        '',
-        'Referrer :',
-        fieldOrDash($payload['referrer']),
-        '',
-        'Date de candidature :',
-        $payload['submitted_at'],
+        'Candidature reçue via emaraestates.com/recrutement-commercial-marrakech',
     ]);
+}
+
+function recruitmentProfileRowHtml(string $label, string $value): string
+{
+    return ''
+        . '<tr>'
+        . '<td style="padding:14px 0 4px 0;font-family:Georgia,\'Times New Roman\',serif;font-size:12px;letter-spacing:0.12em;text-transform:uppercase;color:#9b7040;">'
+        . eHtml($label)
+        . '</td>'
+        . '</tr>'
+        . '<tr>'
+        . '<td style="padding:0 0 10px 0;font-family:-apple-system,BlinkMacSystemFont,\'Segoe UI\',Arial,sans-serif;font-size:20px;line-height:1.35;font-weight:700;color:#1a1a1a;">'
+        . eHtml($value)
+        . '</td>'
+        . '</tr>';
+}
+
+function recruitmentTeamEmailHtmlBody(array $payload): string
+{
+    $fullName = trim($payload['first_name'] . ' ' . $payload['last_name']);
+    $priority = isPriorityRecruitmentProfile($payload);
+    $badgeLabel = $priority ? 'PROFIL À PRIORISER' : 'CANDIDATURE À ÉTUDIER';
+    $badgeBg = $priority ? '#2d3a2d' : '#9b7040';
+    $badgeText = '#ffffff';
+    $cvUrl = trim((string) ($payload['cv_download_url'] ?? ''));
+    $phone = (string) $payload['telephone'];
+    $email = (string) $payload['email'];
+    $phoneHref = 'tel:' . preg_replace('/\s+/', '', $phone);
+    $mailHref = 'mailto:' . $email;
+
+    $rows = ''
+        . recruitmentProfileRowHtml('Expérience en vente', (string) $payload['sales_experience'])
+        . recruitmentProfileRowHtml('Expérience dans l’immobilier', (string) $payload['real_estate_experience'])
+        . recruitmentProfileRowHtml('Ventes conclues sur les 12 derniers mois', (string) $payload['sales_closed_12m'])
+        . recruitmentProfileRowHtml('Niveau de closing', (string) $payload['closing_level']);
+
+    return '<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Nouvelle candidature Emara Estates</title>
+</head>
+<body style="margin:0;padding:0;background:#f5f0e8;">
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#f5f0e8;padding:24px 12px;">
+    <tr>
+      <td align="center">
+        <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="max-width:620px;background:#ffffff;border:1px solid #e6dccb;">
+          <tr>
+            <td style="padding:28px 28px 18px 28px;border-bottom:3px solid #d2b178;">
+              <div style="font-family:Georgia,\'Times New Roman\',serif;font-size:22px;letter-spacing:0.08em;text-transform:uppercase;color:#2d3a2d;font-weight:700;">Emara Estates</div>
+              <div style="margin-top:8px;font-family:-apple-system,BlinkMacSystemFont,\'Segoe UI\',Arial,sans-serif;font-size:15px;color:#7a8b68;letter-spacing:0.04em;">Nouvelle candidature commerciale</div>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding:22px 28px 8px 28px;">
+              <span style="display:inline-block;background:' . $badgeBg . ';color:' . $badgeText . ';font-family:-apple-system,BlinkMacSystemFont,\'Segoe UI\',Arial,sans-serif;font-size:12px;font-weight:700;letter-spacing:0.14em;text-transform:uppercase;padding:10px 14px;">'
+        . eHtml($badgeLabel)
+        . '</span>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding:12px 28px 8px 28px;">
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#faf8f4;border:1px solid #e6dccb;">
+                <tr>
+                  <td style="padding:22px 22px 8px 22px;font-family:Georgia,\'Times New Roman\',serif;font-size:12px;letter-spacing:0.14em;text-transform:uppercase;color:#2d3a2d;font-weight:700;">Candidat</td>
+                </tr>
+                <tr>
+                  <td style="padding:0 22px 16px 22px;font-family:Georgia,\'Times New Roman\',serif;font-size:28px;line-height:1.25;color:#1a1a1a;font-weight:700;">'
+        . eHtml($fullName)
+        . '</td>
+                </tr>
+                <tr>
+                  <td style="padding:0 22px 6px 22px;font-family:-apple-system,BlinkMacSystemFont,\'Segoe UI\',Arial,sans-serif;font-size:13px;color:#9b7040;letter-spacing:0.08em;text-transform:uppercase;">Téléphone</td>
+                </tr>
+                <tr>
+                  <td style="padding:0 22px 14px 22px;font-family:-apple-system,BlinkMacSystemFont,\'Segoe UI\',Arial,sans-serif;font-size:18px;font-weight:700;color:#1a1a1a;">
+                    <a href="' . eHtml($phoneHref) . '" style="color:#1a1a1a;text-decoration:none;">' . eHtml($phone) . '</a>
+                  </td>
+                </tr>
+                <tr>
+                  <td style="padding:0 22px 6px 22px;font-family:-apple-system,BlinkMacSystemFont,\'Segoe UI\',Arial,sans-serif;font-size:13px;color:#9b7040;letter-spacing:0.08em;text-transform:uppercase;">Email</td>
+                </tr>
+                <tr>
+                  <td style="padding:0 22px 22px 22px;font-family:-apple-system,BlinkMacSystemFont,\'Segoe UI\',Arial,sans-serif;font-size:18px;font-weight:700;color:#1a1a1a;">
+                    <a href="' . eHtml($mailHref) . '" style="color:#1a1a1a;text-decoration:none;">' . eHtml($email) . '</a>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding:20px 28px 8px 28px;">
+              <div style="font-family:Georgia,\'Times New Roman\',serif;font-size:14px;letter-spacing:0.14em;text-transform:uppercase;color:#2d3a2d;font-weight:700;margin-bottom:8px;">Profil commercial</div>
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="border-top:1px solid #e6dccb;">'
+        . $rows
+        . '</table>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding:18px 28px 8px 28px;">
+              <div style="font-family:Georgia,\'Times New Roman\',serif;font-size:14px;letter-spacing:0.14em;text-transform:uppercase;color:#2d3a2d;font-weight:700;margin-bottom:12px;">CV</div>
+              <table role="presentation" cellpadding="0" cellspacing="0" border="0">
+                <tr>
+                  <td style="background:#2d3a2d;border-radius:2px;">
+                    <a href="' . eHtml($cvUrl) . '" style="display:inline-block;padding:14px 22px;font-family:-apple-system,BlinkMacSystemFont,\'Segoe UI\',Arial,sans-serif;font-size:13px;font-weight:700;letter-spacing:0.14em;text-transform:uppercase;color:#ffffff;text-decoration:none;">Voir le CV</a>
+                  </td>
+                </tr>
+              </table>
+              <div style="margin-top:12px;font-family:-apple-system,BlinkMacSystemFont,\'Segoe UI\',Arial,sans-serif;font-size:13px;color:#7a8b68;">Lien sécurisé vers le PDF du candidat</div>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding:22px 28px 10px 28px;">
+              <div style="font-family:Georgia,\'Times New Roman\',serif;font-size:13px;letter-spacing:0.14em;text-transform:uppercase;color:#2d3a2d;font-weight:700;margin-bottom:12px;">Source de la candidature</div>
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#faf8f4;border:1px solid #e6dccb;">
+                <tr>
+                  <td style="padding:16px 18px 4px 18px;font-family:-apple-system,BlinkMacSystemFont,\'Segoe UI\',Arial,sans-serif;font-size:12px;letter-spacing:0.08em;text-transform:uppercase;color:#9b7040;">Source</td>
+                </tr>
+                <tr>
+                  <td style="padding:0 18px 12px 18px;font-family:-apple-system,BlinkMacSystemFont,\'Segoe UI\',Arial,sans-serif;font-size:15px;color:#1a1a1a;font-weight:600;">'
+        . eHtml(recruitmentSourceLabel($payload))
+        . '</td>
+                </tr>
+                <tr>
+                  <td style="padding:0 18px 4px 18px;font-family:-apple-system,BlinkMacSystemFont,\'Segoe UI\',Arial,sans-serif;font-size:12px;letter-spacing:0.08em;text-transform:uppercase;color:#9b7040;">Campagne</td>
+                </tr>
+                <tr>
+                  <td style="padding:0 18px 12px 18px;font-family:-apple-system,BlinkMacSystemFont,\'Segoe UI\',Arial,sans-serif;font-size:15px;color:#1a1a1a;font-weight:600;">'
+        . eHtml(fieldOrDash($payload['utm_campaign'] ?? ''))
+        . '</td>
+                </tr>
+                <tr>
+                  <td style="padding:0 18px 4px 18px;font-family:-apple-system,BlinkMacSystemFont,\'Segoe UI\',Arial,sans-serif;font-size:12px;letter-spacing:0.08em;text-transform:uppercase;color:#9b7040;">Contenu / publicité</td>
+                </tr>
+                <tr>
+                  <td style="padding:0 18px 12px 18px;font-family:-apple-system,BlinkMacSystemFont,\'Segoe UI\',Arial,sans-serif;font-size:15px;color:#1a1a1a;font-weight:600;">'
+        . eHtml(fieldOrDash($payload['utm_content'] ?? ''))
+        . '</td>
+                </tr>
+                <tr>
+                  <td style="padding:0 18px 4px 18px;font-family:-apple-system,BlinkMacSystemFont,\'Segoe UI\',Arial,sans-serif;font-size:12px;letter-spacing:0.08em;text-transform:uppercase;color:#9b7040;">Date</td>
+                </tr>
+                <tr>
+                  <td style="padding:0 18px 16px 18px;font-family:-apple-system,BlinkMacSystemFont,\'Segoe UI\',Arial,sans-serif;font-size:15px;color:#1a1a1a;font-weight:600;">'
+        . eHtml((string) ($payload['submitted_at'] ?? ''))
+        . '</td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding:18px 28px 28px 28px;font-family:-apple-system,BlinkMacSystemFont,\'Segoe UI\',Arial,sans-serif;font-size:12px;line-height:1.5;color:#7a8b68;border-top:1px solid #e6dccb;">
+              Candidature reçue via emaraestates.com/recrutement-commercial-marrakech
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>';
 }
 
 function candidateConfirmationBody(array $payload): string
@@ -614,7 +763,8 @@ function candidateConfirmationBody(array $payload): string
 }
 
 /**
- * Same delivery method as contact.php → sendLeadEmailWithPhpMail(): PHP mail().
+ * Same delivery method as contact.php → PHP mail().
+ * Team email is multipart HTML + plain; candidate confirmation stays simple plain text.
  */
 function sendRecruitmentEmailsWithPhpMail(array $payload, array $env): void
 {
@@ -627,18 +777,35 @@ function sendRecruitmentEmailsWithPhpMail(array $payload, array $env): void
     $fullName = trim($payload['first_name'] . ' ' . $payload['last_name']);
     $subject = 'Nouvelle candidature — ' . $fullName . ' — Commercial Marrakech';
 
+    // For multipart bodies, pass headers separately from the MIME body.
+    $boundary = 'emara_recruit_' . bin2hex(random_bytes(10));
     $teamHeaders = [
         'From: Emara Estates <' . $from . '>',
         'Reply-To: ' . encodeHeader($fullName) . ' <' . $payload['email'] . '>',
         'MIME-Version: 1.0',
+        'Content-Type: multipart/alternative; boundary="' . $boundary . '"',
+    ];
+    $teamBody = implode("\r\n", [
+        '--' . $boundary,
         'Content-Type: text/plain; charset=UTF-8',
         'Content-Transfer-Encoding: 8bit',
-    ];
+        '',
+        recruitmentTeamEmailPlainBody($payload),
+        '',
+        '--' . $boundary,
+        'Content-Type: text/html; charset=UTF-8',
+        'Content-Transfer-Encoding: 8bit',
+        '',
+        recruitmentTeamEmailHtmlBody($payload),
+        '',
+        '--' . $boundary . '--',
+        '',
+    ]);
 
     $teamSent = mail(
         $to,
         encodeHeader($subject),
-        recruitmentTeamEmailBody($payload),
+        $teamBody,
         implode("\r\n", $teamHeaders),
     );
     if (!$teamSent) {
