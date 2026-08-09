@@ -15,7 +15,7 @@ const MAX_CV_BYTES = 5 * 1024 * 1024;
 const MIN_SUBMIT_MS = 2500;
 const RATE_LIMIT_WINDOW_MS = 60 * 60 * 1000;
 const RATE_LIMIT_MAX = 8;
-const RECRUITMENT_TO_DEFAULT = 'recrutement@emaraestates.com';
+const RECRUITMENT_TO_DEFAULT = 'contact@emaraestates.com';
 const RECRUITMENT_FROM_DEFAULT = 'contact@emaraestates.com';
 const rateLimitStore = new Map();
 

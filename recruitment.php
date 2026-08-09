@@ -20,7 +20,7 @@ const RATE_LIMIT_WINDOW = 3600;
 const RATE_LIMIT_MAX = 8;
 const MIN_SUBMIT_MS = 2500;
 const RECRUITMENT_DEBUG_KEY = 'emara-recruit-debug-20260809';
-const RECRUITMENT_TO_DEFAULT = 'recrutement@emaraestates.com';
+const RECRUITMENT_TO_DEFAULT = 'contact@emaraestates.com';
 const RECRUITMENT_FROM_DEFAULT = 'contact@emaraestates.com';
 
 $allowedSalesExperience = [
