@@ -6,8 +6,10 @@ import { PhoneCountryInput } from '@/components/forms/PhoneCountryInput';
 import { Button, ButtonLink } from '@/components/ui/Button';
 import { fieldError, fieldInput, fieldLabel } from '@/components/ui/form-tokens';
 import {
+  AVAILABILITY_PERIOD_OPTIONS,
   CLOSING_LEVEL_OPTIONS,
   MAX_CV_BYTES,
+  PREFERRED_WORKING_HOURS_OPTIONS,
   REAL_ESTATE_OPTIONS,
   RECRUITMENT_STEPS,
   SALES_CLOSED_OPTIONS,
@@ -25,6 +27,8 @@ type FormState = {
   real_estate_experience: string;
   sales_closed_12m: string;
   closing_level: string;
+  preferred_working_hours: string;
+  availability_period: string;
   first_name: string;
   last_name: string;
   email: string;
@@ -35,6 +39,8 @@ const INITIAL: FormState = {
   real_estate_experience: '',
   sales_closed_12m: '',
   closing_level: '',
+  preferred_working_hours: '',
+  availability_period: '',
   first_name: '',
   last_name: '',
   email: '',
@@ -182,6 +188,10 @@ export function RecruitmentForm() {
 
     if (current === 2) {
       if (!data.closing_level) nextErrors.closing_level = 'Sélectionnez une option.';
+      if (!data.preferred_working_hours)
+        nextErrors.preferred_working_hours = 'Sélectionnez une option.';
+      if (!data.availability_period)
+        nextErrors.availability_period = 'Sélectionnez une option.';
     }
 
     if (current === 3) {
@@ -435,14 +445,32 @@ export function RecruitmentForm() {
               ) : null}
 
               {step === 2 ? (
-                <OptionGroup
-                  legend="Comment évaluez-vous votre niveau en closing ?"
-                  name="closing_level"
-                  value={data.closing_level}
-                  options={CLOSING_LEVEL_OPTIONS}
-                  onChange={(value) => setField('closing_level', value)}
-                  error={errors.closing_level}
-                />
+                <>
+                  <OptionGroup
+                    legend="Comment évaluez-vous votre niveau en closing ?"
+                    name="closing_level"
+                    value={data.closing_level}
+                    options={CLOSING_LEVEL_OPTIONS}
+                    onChange={(value) => setField('closing_level', value)}
+                    error={errors.closing_level}
+                  />
+                  <OptionGroup
+                    legend="Quels horaires de travail vous conviennent le mieux ?"
+                    name="preferred_working_hours"
+                    value={data.preferred_working_hours}
+                    options={PREFERRED_WORKING_HOURS_OPTIONS}
+                    onChange={(value) => setField('preferred_working_hours', value)}
+                    error={errors.preferred_working_hours}
+                  />
+                  <OptionGroup
+                    legend="Quelle est votre disponibilité pour rejoindre Emara Estates ?"
+                    name="availability_period"
+                    value={data.availability_period}
+                    options={AVAILABILITY_PERIOD_OPTIONS}
+                    onChange={(value) => setField('availability_period', value)}
+                    error={errors.availability_period}
+                  />
+                </>
               ) : null}
 
               {step === 3 ? (

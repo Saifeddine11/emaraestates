@@ -42,6 +42,15 @@ $allowedClosing = [
     'Confirmé',
     'Excellent',
 ];
+$allowedWorkingHours = [
+    '09h00 – 12h00 / 13h00 – 17h00',
+    '10h00 – 13h00 / 14h00 – 18h00',
+];
+$allowedAvailabilityPeriod = [
+    'Immédiatement',
+    'Dans les 30 prochains jours',
+    'Entre 1 et 3 mois',
+];
 
 $env = loadEnv(__DIR__ . '/.env');
 
@@ -102,6 +111,8 @@ if (sanitizeValue($input['fields']['company_website'] ?? '', 120) !== '') {
     'real_estate_experience' => $allowedRealEstate,
     'sales_closed_12m' => $allowedSalesClosed,
     'closing_level' => $allowedClosing,
+    'preferred_working_hours' => $allowedWorkingHours,
+    'availability_period' => $allowedAvailabilityPeriod,
 ]);
 
 if (($payload['elapsed_ms'] ?? 0) > 0 && $payload['elapsed_ms'] < MIN_SUBMIT_MS) {
@@ -317,6 +328,8 @@ function validateApplication(array $fields, ?array $cv, array $enums): array
         'real_estate_experience' => sanitizeValue($fields['real_estate_experience'] ?? '', 40),
         'sales_closed_12m' => sanitizeValue($fields['sales_closed_12m'] ?? '', 40),
         'closing_level' => sanitizeValue($fields['closing_level'] ?? '', 40),
+        'preferred_working_hours' => sanitizeValue($fields['preferred_working_hours'] ?? '', 80),
+        'availability_period' => sanitizeValue($fields['availability_period'] ?? '', 80),
         'first_name' => sanitizeValue($fields['first_name'] ?? '', 60),
         'last_name' => sanitizeValue($fields['last_name'] ?? '', 60),
         'email' => sanitizeValue($fields['email'] ?? '', 120),
@@ -589,6 +602,10 @@ function recruitmentTeamEmailPlainBody(array $payload): string
         'Ventes conclues sur les 12 derniers mois : ' . $payload['sales_closed_12m'],
         'Niveau de closing : ' . $payload['closing_level'],
         '',
+        'DISPONIBILITÉ',
+        'Horaires préférés : ' . ($payload['preferred_working_hours'] ?? ''),
+        'Disponibilité : ' . ($payload['availability_period'] ?? ''),
+        '',
         'CV',
         'Voir le CV : ' . ($payload['cv_download_url'] ?? ''),
         '',
@@ -659,6 +676,11 @@ function recruitmentTeamEmailHtmlBody(array $payload): string
     $profileRow2 = '<tr>'
         . recruitmentProfileMiniCardHtml('Ventes — 12 derniers mois', (string) $payload['sales_closed_12m'])
         . recruitmentProfileMiniCardHtml('Niveau de closing', (string) $payload['closing_level'])
+        . '</tr>';
+
+    $availabilityRow = '<tr>'
+        . recruitmentProfileMiniCardHtml('Horaires préférés', (string) ($payload['preferred_working_hours'] ?? ''))
+        . recruitmentProfileMiniCardHtml('Disponibilité', (string) ($payload['availability_period'] ?? ''))
         . '</tr>';
 
     $sourceBlock = ''
@@ -768,6 +790,22 @@ function recruitmentTeamEmailHtmlBody(array $payload): string
                     <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">'
         . $profileRow1
         . $profileRow2
+        . '</table>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+
+          <!-- AVAILABILITY -->
+          <tr>
+            <td style="padding:24px 32px 8px 32px;">
+              <div style="font-family:Georgia,\'Times New Roman\',serif;font-size:13px;letter-spacing:0.16em;text-transform:uppercase;color:#2D3A2D;font-weight:700;margin:0 0 12px 6px;">Disponibilité</div>
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#F5F0E8;border:1px solid #E4D8C4;border-radius:18px;">
+                <tr>
+                  <td style="padding:10px;">
+                    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">'
+        . $availabilityRow
         . '</table>
                   </td>
                 </tr>
