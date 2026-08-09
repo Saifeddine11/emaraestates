@@ -5,7 +5,7 @@
  * and PHP endpoints, so this resolves the export first and falls back to the
  * repo root. Most PHP endpoints return 404 here (no PHP runtime), except
  * recruitment which is handled by the shared Node module so local preview can
- * exercise the real multipart + SMTP path.
+ * exercise the real multipart + PHP-mail-equivalent path (no SMTP).
  */
 
 import { createServer } from 'node:http';
@@ -19,7 +19,7 @@ export const EXPORT_DIR = resolve(here, '../../out');
 export const REPO_ROOT = resolve(here, '../../..');
 
 const require = createRequire(import.meta.url);
-const { handleRecruitmentApply, isRecruitmentPath } = require(
+const { handleRecruitmentApply, handleRecruitmentCv, isRecruitmentPath } = require(
   join(REPO_ROOT, 'recruitment-apply.cjs'),
 );
 
@@ -72,6 +72,11 @@ export async function startServer({ port = 0, log = false } = {}) {
         }
       });
       if (log) console.log(`  POST ${urlPath}  (recruitment)`);
+      return;
+    }
+
+    if (req.method === 'GET' && handleRecruitmentCv(req, res, req.url || '')) {
+      if (log) console.log(`  GET  ${urlPath}  (recruitment-cv)`);
       return;
     }
 

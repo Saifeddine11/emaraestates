@@ -112,7 +112,7 @@ export const LEGACY_KEEP = {
   pages: ['404.html', 'branding.html', 'formulaire.html', 'smap-immo-paris-2026.html'],
   /** Superseded by the export but 301'd away, so harmless and left alone. */
   stalePages: ['residences-honest-678.html'],
-  php: ['contact.php', 'lead-gueliz.php', 'newsletter.php', 'recruitment.php'],
+  php: ['contact.php', 'lead-gueliz.php', 'newsletter.php', 'recruitment.php', 'recruitment-cv.php'],
   config: ['.htaccess', 'sitemap.xml', 'robots.txt', '.user.ini'],
   icons: ['favicon.png', 'favicon-48x48.png', 'apple-touch-icon.png'],
   /** Still used by the four unported pages, so they cannot be pruned yet. */
@@ -134,6 +134,8 @@ export const LEGACY_KEEP = {
 export const ROOT_SYNC = [
   '.htaccess',
   'recruitment.php',
+  'recruitment-cv.php',
+  'recruitment-private',
   '.user.ini',
   'sitemap.xml',
 ];

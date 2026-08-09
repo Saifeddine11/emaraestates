@@ -163,7 +163,7 @@ for (const name of ROOT_SYNC) {
     process.exit(1);
   }
   const dest = join(DEPLOY, name);
-  await cp(src, dest);
+  await cp(src, dest, { recursive: true });
   const { size } = await stat(dest);
   included.push({ path: name, size, note: 'repo-root sync (routing/API)' });
 }
@@ -176,6 +176,8 @@ const deployEntries = await readdir(DEPLOY, { withFileTypes: true });
 for (const entry of deployEntries) {
   if (!entry.isDirectory()) continue;
   if (ASSET_DIRS.includes(entry.name)) continue;
+  // Private CV storage — blocked by .htaccess, must not require index.html.
+  if (entry.name === 'recruitment-private') continue;
   // Any other directory must carry an index.html, or DirectorySlash will 301
   // requests for the extensionless URL into a directory with nothing to serve.
   const hasIndex = await stat(join(DEPLOY, entry.name, 'index.html')).catch(() => null);

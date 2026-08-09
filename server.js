@@ -4,6 +4,7 @@ const path = require('path');
 const tls = require('tls');
 const {
   handleRecruitmentApply,
+  handleRecruitmentCv,
   isRecruitmentPath,
 } = require('./recruitment-apply.cjs');
 
@@ -1026,6 +1027,9 @@ const server = http.createServer(function(req, res) {
   }
   if (req.method === 'POST' && isRecruitmentPath(req.url)) {
     handleRecruitmentApply(req, res);
+    return;
+  }
+  if (req.method === 'GET' && handleRecruitmentCv(req, res, req.url || '')) {
     return;
   }
   if (req.method === 'GET' || req.method === 'HEAD') {

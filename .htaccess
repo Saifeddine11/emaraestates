@@ -9,12 +9,16 @@ AddDefaultCharset UTF-8
   Require all denied
 </FilesMatch>
 
+# Never serve stored recruitment CVs as static files.
+RedirectMatch 404 ^/recruitment-private(/|$)
+
 RewriteEngine On
 RewriteBase /
 
 # Backend/API only — must not intercept frontend routes.
 RewriteRule ^api/recruitment/apply/?$ recruitment.php [L,QSA]
-RewriteRule ^(?:api/contact|contact\.php|recruitment\.php)$ - [L]
+RewriteRule ^api/recruitment/cv/?$ recruitment-cv.php [L,QSA]
+RewriteRule ^(?:api/contact|contact\.php|recruitment\.php|recruitment-cv\.php)$ - [L]
 
 # --- Canonical host: non-www + HTTPS (proxy-safe) ---
 RewriteCond %{HTTP_HOST} ^www\.emaraestates\.com$ [NC]

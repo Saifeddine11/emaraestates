@@ -74,6 +74,8 @@ jobs:
           # API fall through to Hostinger's generic 404.
           test -f deploy/.htaccess
           test -f deploy/recruitment.php
+          test -f deploy/recruitment-cv.php
+          test -d deploy/recruitment-private/cvs
           test -f deploy/contact.html
           test -f deploy/recrutement-commercial-marrakech.html
           test -f deploy/.user.ini

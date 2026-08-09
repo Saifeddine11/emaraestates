@@ -4,6 +4,10 @@
 .env.local
 .env.*.local
 web/deploy/.env
+recruitment-private/cvs/*
+!recruitment-private/cvs/.gitkeep
+!recruitment-private/cvs/.htaccess
+recruitment-private/outbox/
 npm-debug.log*
 .DS_Store
 web/emara-deploy/

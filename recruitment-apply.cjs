@@ -1,12 +1,13 @@
 /**
- * Shared recruitment apply handler (Node).
- * Used by server.js and web/scripts/lib/serve.mjs so preview + local
- * both serve POST /api/recruitment/apply with real SMTP + CV attachment.
+ * Shared recruitment apply handler (Node) for local preview / server.js.
+ * Mirrors production recruitment.php: PHP-mail-equivalent plain text email,
+ * private CV storage + download link. No SMTP.
  */
 
 const fs = require('fs');
 const path = require('path');
-const tls = require('tls');
+const crypto = require('crypto');
+const { spawnSync } = require('child_process');
 
 const ROOT = __dirname;
 const MAX_BODY_BYTES = 6 * 1024 * 1024;
@@ -14,6 +15,8 @@ const MAX_CV_BYTES = 5 * 1024 * 1024;
 const MIN_SUBMIT_MS = 2500;
 const RATE_LIMIT_WINDOW_MS = 60 * 60 * 1000;
 const RATE_LIMIT_MAX = 8;
+const RECRUITMENT_TO_DEFAULT = 'recrutement@emaraestates.com';
+const RECRUITMENT_FROM_DEFAULT = 'contact@emaraestates.com';
 const rateLimitStore = new Map();
 
 const ENUMS = {
@@ -183,11 +186,11 @@ function parseMultipartFormData(buffer, contentType) {
 }
 
 function recruitmentToEmail() {
-  return String(process.env.RECRUITMENT_EMAIL_TO || '').trim() || 'recrutement@emaraestates.com';
+  return String(process.env.RECRUITMENT_EMAIL_TO || '').trim() || RECRUITMENT_TO_DEFAULT;
 }
 
 function recruitmentFromEmail() {
-  return String(process.env.CONTACT_FROM || process.env.SMTP_USER || '').trim() || 'contact@emaraestates.com';
+  return String(process.env.CONTACT_FROM || process.env.CONTACT_TO || '').trim() || RECRUITMENT_FROM_DEFAULT;
 }
 
 function fieldOrDash(value) {
@@ -225,6 +228,14 @@ function recruitmentTeamEmailBody(payload) {
     '',
     'Niveau de closing :',
     payload.closing_level,
+    '',
+    'CV (PDF)',
+    '',
+    'Fichier :',
+    payload.cv_filename,
+    '',
+    'Télécharger le CV :',
+    payload.cv_download_url,
     '',
     'SOURCE',
     '',
@@ -271,119 +282,73 @@ function candidateConfirmationBody(payload) {
   ].join('\r\n');
 }
 
-function smtpReadResponse(socket) {
-  return new Promise(function (resolve, reject) {
-    let data = '';
-    function onData(chunk) {
-      data += chunk;
-      const lines = data.split(/\r?\n/).filter(Boolean);
-      const lastLine = lines[lines.length - 1] || '';
-      if (lastLine.length >= 4 && lastLine[3] === ' ') {
-        socket.removeListener('data', onData);
-        socket.removeListener('error', reject);
-        resolve(data);
-      }
-    }
-    socket.on('data', onData);
-    socket.on('error', reject);
-  });
+function cvStorageDir() {
+  return path.join(ROOT, 'recruitment-private', 'cvs');
 }
 
-async function smtpCommand(socket, command, expectedCodes) {
-  if (command) socket.write(command + '\r\n');
-  const response = await smtpReadResponse(socket);
-  const code = Number(response.slice(0, 3));
-  if (!expectedCodes.includes(code)) {
-    throw new Error('SMTP command failed: ' + code);
-  }
-  return response;
+function storeCvPrivately(payload, baseUrl) {
+  const dir = cvStorageDir();
+  fs.mkdirSync(dir, { recursive: true, mode: 0o700 });
+  const token = crypto.randomBytes(24).toString('hex');
+  const pdfPath = path.join(dir, token + '.pdf');
+  const metaPath = path.join(dir, token + '.json');
+  fs.writeFileSync(pdfPath, payload.cv_bytes, { mode: 0o600 });
+  fs.writeFileSync(
+    metaPath,
+    JSON.stringify(
+      {
+        token,
+        filename: payload.cv_filename,
+        email: payload.email,
+        first_name: payload.first_name,
+        last_name: payload.last_name,
+        created_at: new Date().toISOString(),
+        bytes: payload.cv_bytes.length,
+      },
+      null,
+      2,
+    ),
+    { mode: 0o600 },
+  );
+  return {
+    token,
+    url: baseUrl.replace(/\/$/, '') + '/recruitment-cv.php?t=' + encodeURIComponent(token),
+    path: pdfPath,
+  };
 }
 
-async function sendRawSmtp(to, rawMessage) {
-  const host = process.env.SMTP_HOST || 'smtp.gmail.com';
-  const port = Number(process.env.SMTP_PORT || 465);
-  const user = process.env.SMTP_USER || '';
-  const pass = process.env.SMTP_PASS || '';
+/**
+ * Local stand-in for PHP mail(): try sendmail, else write outbox files.
+ * Never uses SMTP.
+ */
+function sendMailLikePhp(to, subject, body, extraHeaders) {
   const from = recruitmentFromEmail();
-  if (!host || !port || !user || !pass || !from) {
-    throw new Error('SMTP configuration missing.');
-  }
-
-  const message = String(rawMessage).replace(/\r\n\./g, '\r\n..');
-  const socket = tls.connect({ host, port, servername: host });
-  await new Promise(function (resolve, reject) {
-    socket.once('secureConnect', resolve);
-    socket.once('error', reject);
-  });
-
-  try {
-    await smtpCommand(socket, null, [220]);
-    await smtpCommand(socket, 'EHLO emaraestates.com', [250]);
-    await smtpCommand(socket, 'AUTH LOGIN', [334]);
-    await smtpCommand(socket, Buffer.from(user).toString('base64'), [334]);
-    await smtpCommand(socket, Buffer.from(pass).toString('base64'), [235]);
-    await smtpCommand(socket, 'MAIL FROM:<' + from + '>', [250]);
-    await smtpCommand(socket, 'RCPT TO:<' + to + '>', [250, 251]);
-    await smtpCommand(socket, 'DATA', [354]);
-    socket.write(message + '\r\n.\r\n');
-    await smtpCommand(socket, null, [250]);
-    await smtpCommand(socket, 'QUIT', [221]);
-  } finally {
-    socket.end();
-  }
-}
-
-function buildPlainSmtpMessage(to, subject, body) {
-  const from = recruitmentFromEmail();
-  return [
-    'From: Emara Estates <' + from + '>',
-    'To: ' + to,
-    'Subject: ' + subject,
-    'MIME-Version: 1.0',
-    'Content-Type: text/plain; charset=UTF-8',
-    'Content-Transfer-Encoding: 8bit',
-    'Date: ' + new Date().toUTCString(),
-    '',
-    body,
-    '',
-  ].join('\r\n');
-}
-
-function buildTeamSmtpMessage(payload) {
-  const from = recruitmentFromEmail();
-  const to = recruitmentToEmail();
-  const fullName = (payload.first_name + ' ' + payload.last_name).trim();
-  const subject = 'Nouvelle candidature — ' + fullName + ' — Commercial Marrakech';
-  const boundary = 'emara_recruit_' + Date.now().toString(16) + Math.random().toString(16).slice(2);
-  const filename = payload.cv_filename;
-  const encoded = (payload.cv_bytes.toString('base64').match(/.{1,76}/g) || []).join('\r\n');
   const headers = [
     'From: Emara Estates <' + from + '>',
     'To: ' + to,
-    'Reply-To: ' + fullName + ' <' + payload.email + '>',
     'Subject: ' + subject,
     'MIME-Version: 1.0',
-    'Content-Type: multipart/mixed; boundary="' + boundary + '"',
-    'Date: ' + new Date().toUTCString(),
-  ];
-  const parts = [
-    '--' + boundary,
     'Content-Type: text/plain; charset=UTF-8',
     'Content-Transfer-Encoding: 8bit',
-    '',
-    recruitmentTeamEmailBody(payload),
-    '',
-    '--' + boundary,
-    'Content-Type: application/pdf; name="' + filename + '"',
-    'Content-Transfer-Encoding: base64',
-    'Content-Disposition: attachment; filename="' + filename + '"',
-    '',
-    encoded,
-    '',
-    '--' + boundary + '--',
-    '',
-  ];
-  return headers.join('\r\n') + '\r\n\r\n' + parts.join('\r\n');
+  ].concat(extraHeaders || []);
+  const raw = headers.join('\r\n') + '\r\n\r\n' + body + '\r\n';
+
+  const sendmail = spawnSync('sendmail', ['-t', '-i'], {
+    input: raw,
+    encoding: 'utf8',
+    timeout: 8000,
+  });
+  if (!sendmail.error && sendmail.status === 0) {
+    return { ok: true, method: 'sendmail' };
+  }
+
+  const outbox = path.join(ROOT, 'recruitment-private', 'outbox');
+  fs.mkdirSync(outbox, { recursive: true, mode: 0o700 });
+  const stamp = new Date().toISOString().replace(/[:.]/g, '-');
+  const file = path.join(outbox, stamp + '-' + to.replace(/[^A-Za-z0-9@._+-]/g, '_') + '.eml');
+  fs.writeFileSync(file, raw, { mode: 0o600 });
+  console.info('[recruitment] mail outbox (no SMTP):', file);
+  return { ok: true, method: 'outbox', file };
 }
 
 function validateCv(file, firstName, lastName) {
@@ -457,6 +422,12 @@ function validatePayload(fields, file) {
   return { payload, errors };
 }
 
+function requestBaseUrl(req) {
+  const host = String(req.headers.host || 'localhost:5601');
+  const proto = String(req.headers['x-forwarded-proto'] || 'http');
+  return proto + '://' + host;
+}
+
 async function handleRecruitmentApply(req, res) {
   const ip = clientIp(req);
   const contentType = String(req.headers['content-type'] || '');
@@ -507,21 +478,28 @@ async function handleRecruitmentApply(req, res) {
     if (!looksLikeEmail(teamTo)) {
       throw new Error('RECRUITMENT_EMAIL_TO is invalid.');
     }
-    await sendRawSmtp(teamTo, buildTeamSmtpMessage(result.payload));
-    await sendRawSmtp(
+
+    const stored = storeCvPrivately(result.payload, requestBaseUrl(req));
+    result.payload.cv_token = stored.token;
+    result.payload.cv_download_url = stored.url;
+
+    const fullName = (result.payload.first_name + ' ' + result.payload.last_name).trim();
+    const teamSubject = 'Nouvelle candidature — ' + fullName + ' — Commercial Marrakech';
+    sendMailLikePhp(teamTo, teamSubject, recruitmentTeamEmailBody(result.payload), [
+      'Reply-To: ' + fullName + ' <' + result.payload.email + '>',
+    ]);
+    sendMailLikePhp(
       result.payload.email,
-      buildPlainSmtpMessage(
-        result.payload.email,
-        'Votre candidature chez Emara Estates a bien été reçue',
-        candidateConfirmationBody(result.payload),
-      ),
+      'Votre candidature chez Emara Estates a bien été reçue',
+      candidateConfirmationBody(result.payload),
     );
+
     sendJson(res, 200, { success: true, first_name: result.payload.first_name });
   } catch (error) {
     console.error('Recruitment apply error:', error.message);
     sendJson(res, 500, {
       success: false,
-      error: 'Votre candidature n’a pas pu être envoyée. Réessayez dans un moment.',
+      error: error.message || 'Votre candidature n’a pas pu être envoyée. Réessayez dans un moment.',
     });
   }
 }
@@ -531,7 +509,50 @@ function isRecruitmentPath(urlPath) {
   return clean === '/api/recruitment/apply' || clean === '/recruitment.php';
 }
 
+function handleRecruitmentCv(req, res, urlPath) {
+  const clean = String(urlPath || '').split('?')[0];
+  if (clean !== '/recruitment-cv.php' && clean !== '/api/recruitment/cv') {
+    return false;
+  }
+  const query = String(urlPath || '').split('?')[1] || '';
+  const params = new URLSearchParams(query);
+  const token = String(params.get('t') || '').replace(/[^a-f0-9]/gi, '');
+  if (token.length < 32) {
+    res.writeHead(404, { 'Content-Type': 'text/plain; charset=utf-8' });
+    res.end('CV introuvable.');
+    return true;
+  }
+  const pdfPath = path.join(cvStorageDir(), token + '.pdf');
+  const metaPath = path.join(cvStorageDir(), token + '.json');
+  if (!fs.existsSync(pdfPath)) {
+    res.writeHead(404, { 'Content-Type': 'text/plain; charset=utf-8' });
+    res.end('CV introuvable.');
+    return true;
+  }
+  let filename = 'CV.pdf';
+  if (fs.existsSync(metaPath)) {
+    try {
+      const meta = JSON.parse(fs.readFileSync(metaPath, 'utf8'));
+      if (meta && typeof meta.filename === 'string' && meta.filename.toLowerCase().endsWith('.pdf')) {
+        filename = meta.filename.replace(/[^A-Za-z0-9._-]+/g, '-');
+      }
+    } catch (_) {
+      /* ignore */
+    }
+  }
+  const bytes = fs.readFileSync(pdfPath);
+  res.writeHead(200, {
+    'Content-Type': 'application/pdf',
+    'Content-Disposition': 'attachment; filename="' + filename + '"',
+    'Cache-Control': 'private, no-store',
+    'Content-Length': String(bytes.length),
+  });
+  res.end(bytes);
+  return true;
+}
+
 module.exports = {
   handleRecruitmentApply,
+  handleRecruitmentCv,
   isRecruitmentPath,
 };
