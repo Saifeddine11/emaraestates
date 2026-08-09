@@ -49,6 +49,16 @@ if (
     $_SERVER['REQUEST_METHOD'] === 'GET'
     && ($_GET['debug'] ?? '') === RECRUITMENT_DEBUG_KEY
 ) {
+    $cvDir = cvStorageDir();
+    $cvCount = 0;
+    if (is_dir($cvDir)) {
+        foreach (scandir($cvDir) ?: [] as $entry) {
+            if (str_ends_with(strtolower($entry), '.pdf')) {
+                $cvCount += 1;
+            }
+        }
+    }
+
     sendJson(200, [
         'success' => true,
         'php' => PHP_VERSION,
@@ -57,7 +67,8 @@ if (
         'env_file' => is_file(__DIR__ . '/.env'),
         'recruitment_to' => recruitmentToEmail($env),
         'contact_from' => recruitmentFromEmail($env),
-        'cv_storage_writable' => is_writable(cvStorageDir()) || is_writable(dirname(cvStorageDir())),
+        'cv_storage_writable' => is_writable($cvDir) || is_writable(dirname($cvDir)),
+        'cv_stored_count' => $cvCount,
         'upload_max_filesize' => (string) ini_get('upload_max_filesize'),
         'post_max_size' => (string) ini_get('post_max_size'),
         'file_uploads' => (string) ini_get('file_uploads'),
