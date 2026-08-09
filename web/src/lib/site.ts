@@ -76,8 +76,12 @@ export const WHATSAPP_FLOAT_BY_ROUTE: Record<string, string> = {
   '/immobilier-luxe-marrakech': WHATSAPP.bare,
   '/appartement-neuf-gueliz-marrakech': WHATSAPP.bare,
   '/investissement-immobilier-marrakech': WHATSAPP.bare,
-  '/recrutement-commercial-marrakech': WHATSAPP.bare,
 };
+
+/** Routes that must not render the floating WhatsApp button. */
+export const WHATSAPP_FLOAT_HIDDEN_ROUTES = new Set([
+  '/recrutement-commercial-marrakech',
+]);
 
 export const SOCIAL = {
   instagram: 'https://www.instagram.com/emara.estates',

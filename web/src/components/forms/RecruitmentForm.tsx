@@ -40,14 +40,6 @@ const INITIAL: FormState = {
   email: '',
 };
 
-function isLocalHost() {
-  if (typeof window === 'undefined') return false;
-  return (
-    window.location.hostname === 'localhost' ||
-    window.location.hostname === '127.0.0.1'
-  );
-}
-
 function readUtmParams() {
   if (typeof window === 'undefined') {
     return {
@@ -292,12 +284,10 @@ export function RecruitmentForm() {
       try {
         payload = text ? JSON.parse(text) : {};
       } catch {
-        if (isLocalHost()) {
-          console.error('[recruitment] Non-JSON response', {
-            status: response.status,
-            body: text.slice(0, 500),
-          });
-        }
+        console.error('[recruitment] Non-JSON response', {
+          status: response.status,
+          body: text.slice(0, 800),
+        });
         setFeedback(
           response.status === 404
             ? 'Endpoint recrutement indisponible. Vérifiez le déploiement de recruitment.php.'
@@ -306,12 +296,10 @@ export function RecruitmentForm() {
         return;
       }
 
-      if (isLocalHost() && !payload.success) {
-        console.error('[recruitment] Apply failed', {
-          status: response.status,
-          payload,
-        });
-      }
+      console.info('[recruitment] API response', {
+        status: response.status,
+        payload,
+      });
 
       if (response.ok && payload.success === true) {
         setSuccessName(payload.first_name || data.first_name.trim());
@@ -319,14 +307,17 @@ export function RecruitmentForm() {
       }
 
       if (payload.errors) setErrors(payload.errors);
-      setFeedback(
+      const preciseError =
         payload.error ||
-          'Votre candidature n’a pas pu être envoyée. Réessayez dans un moment.',
-      );
+        'Votre candidature n’a pas pu être envoyée. Réessayez dans un moment.';
+      console.error('[recruitment] Apply failed', {
+        status: response.status,
+        error: preciseError,
+        payload,
+      });
+      setFeedback(preciseError);
     } catch (error) {
-      if (isLocalHost()) {
-        console.error('[recruitment] Network error', error);
-      }
+      console.error('[recruitment] Network error', error);
       setFeedback('Votre candidature n’a pas pu être envoyée. Réessayez dans un moment.');
     } finally {
       setSubmitting(false);

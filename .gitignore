@@ -3,6 +3,7 @@
 !.env.example
 .env.local
 .env.*.local
+web/deploy/.env
 npm-debug.log*
 .DS_Store
 web/emara-deploy/

@@ -17,6 +17,7 @@ const MAX_CV_BYTES = 5 * 1024 * 1024;
 const RATE_LIMIT_WINDOW = 3600;
 const RATE_LIMIT_MAX = 8;
 const MIN_SUBMIT_MS = 2500;
+const RECRUITMENT_DEBUG_KEY = 'emara-recruit-debug-20260809';
 
 $allowedSalesExperience = [
     'Non',
@@ -39,6 +40,44 @@ $allowedClosing = [
 ];
 
 $env = loadEnv(__DIR__ . '/.env');
+
+if (
+    $_SERVER['REQUEST_METHOD'] === 'GET'
+    && ($_GET['debug'] ?? '') === RECRUITMENT_DEBUG_KEY
+) {
+    $debugPayload = [
+        'success' => true,
+        'php' => PHP_VERSION,
+        'env_file' => is_file(__DIR__ . '/.env'),
+        'smtp_host_configured' => trim((string) ($env['SMTP_HOST'] ?? '')) !== '',
+        'smtp_port' => (int) ($env['SMTP_PORT'] ?? 465),
+        'smtp_user_configured' => trim((string) ($env['SMTP_USER'] ?? '')) !== '',
+        'smtp_pass_configured' => trim((string) ($env['SMTP_PASS'] ?? '')) !== '',
+        'smtp_pass_length' => strlen(trim((string) ($env['SMTP_PASS'] ?? ''))),
+        'contact_from_configured' => trim((string) ($env['CONTACT_FROM'] ?? '')) !== '',
+        'recruitment_to_configured' => trim((string) ($env['RECRUITMENT_EMAIL_TO'] ?? '')) !== '',
+        'recruitment_to_defaulted' => trim((string) ($env['RECRUITMENT_EMAIL_TO'] ?? '')) === '',
+        'upload_max_filesize' => (string) ini_get('upload_max_filesize'),
+        'post_max_size' => (string) ini_get('post_max_size'),
+        'memory_limit' => (string) ini_get('memory_limit'),
+        'max_execution_time' => (string) ini_get('max_execution_time'),
+        'file_uploads' => (string) ini_get('file_uploads'),
+        'openssl' => extension_loaded('openssl'),
+    ];
+
+    if (($_GET['smtp_test'] ?? '') === '1') {
+        try {
+            probeSmtpAuth($env);
+            $debugPayload['smtp_auth'] = 'ok';
+        } catch (Throwable $error) {
+            $debugPayload['smtp_auth'] = 'failed';
+            $debugPayload['smtp_auth_error'] = publicRecruitmentError($error);
+            $debugPayload['smtp_auth_detail'] = $error->getMessage();
+        }
+    }
+
+    sendJson(200, $debugPayload);
+}
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     sendJson(405, ['success' => false, 'error' => 'Méthode non autorisée.']);
@@ -88,6 +127,9 @@ if (isRateLimited($ip)) {
 }
 
 try {
+    if (($payload['cv_bytes'] ?? '') === '' || ($payload['cv_filename'] ?? '') === '') {
+        throw new RuntimeException('CV attachment could not be read.');
+    }
     sendRecruitmentEmails($payload, $env);
     sendJson(200, [
         'success' => true,
@@ -97,7 +139,7 @@ try {
     error_log('Recruitment apply error: ' . $error->getMessage());
     sendJson(500, [
         'success' => false,
-        'error' => 'Votre candidature n’a pas pu être envoyée. Réessayez dans un moment.',
+        'error' => publicRecruitmentError($error),
     ]);
 }
 
@@ -114,24 +156,78 @@ function sendJson(int $status, array $payload): never
 
 function loadEnv(string $filePath): array
 {
-    if (!is_file($filePath)) {
-        return [];
-    }
     $env = [];
-    foreach (file($filePath, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES) ?: [] as $line) {
-        $line = trim($line);
-        if ($line === '' || str_starts_with($line, '#')) {
-            continue;
+    if (is_file($filePath)) {
+        foreach (file($filePath, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES) ?: [] as $line) {
+            $line = trim($line);
+            if ($line === '' || str_starts_with($line, '#')) {
+                continue;
+            }
+            $separator = strpos($line, '=');
+            if ($separator === false) {
+                continue;
+            }
+            $key = trim(substr($line, 0, $separator));
+            $value = trim(substr($line, $separator + 1));
+            $env[$key] = trim($value, "\"'");
         }
-        $separator = strpos($line, '=');
-        if ($separator === false) {
-            continue;
-        }
-        $key = trim(substr($line, 0, $separator));
-        $value = trim(substr($line, $separator + 1));
-        $env[$key] = trim($value, "\"'");
     }
+
+    // Hostinger / PHP-FPM may inject values via the process environment.
+    // File values win when present; getenv fills gaps.
+    foreach ([
+        'SMTP_HOST',
+        'SMTP_PORT',
+        'SMTP_USER',
+        'SMTP_PASS',
+        'CONTACT_FROM',
+        'CONTACT_TO',
+        'RECRUITMENT_EMAIL_TO',
+    ] as $key) {
+        if (trim((string) ($env[$key] ?? '')) !== '') {
+            continue;
+        }
+        $fromEnv = getenv($key);
+        if (is_string($fromEnv) && trim($fromEnv) !== '') {
+            $env[$key] = trim($fromEnv);
+        }
+    }
+
     return $env;
+}
+
+function publicRecruitmentError(Throwable $error): string
+{
+    $message = $error->getMessage();
+    $normalized = strtolower($message);
+
+    if (str_contains($normalized, 'cv attachment') || str_contains($normalized, 'cv ')) {
+        return 'CV attachment could not be read';
+    }
+    if (str_contains($normalized, 'configuration missing')) {
+        return 'SMTP configuration missing';
+    }
+    if (
+        str_contains($normalized, '535')
+        || str_contains($normalized, 'auth')
+        || str_contains($normalized, 'authentication')
+    ) {
+        return 'SMTP authentication failed';
+    }
+    if (str_contains($normalized, 'connection failed') || str_contains($normalized, 'greeting failed')) {
+        return 'SMTP connection failed';
+    }
+    if (str_contains($normalized, 'recruitment_email_to')) {
+        return 'RECRUITMENT_EMAIL_TO is invalid';
+    }
+    if (str_contains($normalized, 'smtp data failed') || str_contains($normalized, 'smtp command failed')) {
+        return 'SMTP send failed';
+    }
+    if (str_contains($normalized, 'mail()')) {
+        return 'Server mail() send failed';
+    }
+
+    return 'Votre candidature n’a pas pu être envoyée. Réessayez dans un moment.';
 }
 
 function sanitizeValue(mixed $value, int $maxLength): string
@@ -499,35 +595,68 @@ function smtpCommand($socket, string $command, array $expectedCodes): string
     $response = smtpRead($socket);
     $code = (int) substr($response, 0, 3);
     if (!in_array($code, $expectedCodes, true)) {
-        throw new RuntimeException('SMTP command failed: ' . $code);
+        $detail = trim(preg_replace('/\s+/', ' ', $response) ?? (string) $code);
+        throw new RuntimeException('SMTP command failed: ' . $detail);
     }
     return $response;
 }
 
-function sendRawSmtpMessage(array $env, string $to, string $rawMessage): void
+function openSmtpSocket(array $env)
 {
-    $host = $env['SMTP_HOST'] ?? 'smtp.gmail.com';
+    $host = trim((string) ($env['SMTP_HOST'] ?? 'smtp.gmail.com'));
     $port = (int) ($env['SMTP_PORT'] ?? 465);
-    $user = $env['SMTP_USER'] ?? '';
-    $pass = $env['SMTP_PASS'] ?? '';
+    $user = trim((string) ($env['SMTP_USER'] ?? ''));
+    $pass = (string) ($env['SMTP_PASS'] ?? '');
     $from = recruitmentFromEmail($env);
 
     if ($host === '' || $port <= 0 || $user === '' || $pass === '' || $from === '') {
         throw new RuntimeException('SMTP configuration missing.');
     }
 
-    $socket = stream_socket_client('ssl://' . $host . ':' . $port, $errno, $errstr, 20, STREAM_CLIENT_CONNECT);
+    $remote = ($port === 465 ? 'ssl://' : 'tcp://') . $host . ':' . $port;
+    $socket = @stream_socket_client($remote, $errno, $errstr, 12, STREAM_CLIENT_CONNECT);
     if (!$socket) {
         throw new RuntimeException('SMTP connection failed: ' . $errstr);
     }
-    stream_set_timeout($socket, 20);
+    stream_set_timeout($socket, 12);
 
-    try {
-        $greeting = smtpRead($socket);
-        if ((int) substr($greeting, 0, 3) !== 220) {
-            throw new RuntimeException('SMTP greeting failed.');
+    $greeting = smtpRead($socket);
+    if ((int) substr($greeting, 0, 3) !== 220) {
+        fclose($socket);
+        throw new RuntimeException('SMTP greeting failed.');
+    }
+    smtpCommand($socket, 'EHLO emaraestates.com', [250]);
+
+    if ($port !== 465) {
+        smtpCommand($socket, 'STARTTLS', [220]);
+        if (!stream_socket_enable_crypto($socket, true, STREAM_CRYPTO_METHOD_TLS_CLIENT)) {
+            fclose($socket);
+            throw new RuntimeException('SMTP connection failed: STARTTLS');
         }
         smtpCommand($socket, 'EHLO emaraestates.com', [250]);
+    }
+
+    return [$socket, $user, $pass, $from];
+}
+
+function probeSmtpAuth(array $env): void
+{
+    [$socket, $user, $pass] = openSmtpSocket($env);
+    try {
+        smtpCommand($socket, 'AUTH LOGIN', [334]);
+        smtpCommand($socket, base64_encode($user), [334]);
+        smtpCommand($socket, base64_encode($pass), [235]);
+        smtpCommand($socket, 'QUIT', [221]);
+    } finally {
+        fclose($socket);
+    }
+}
+
+function sendRawSmtpMessage(array $env, string $to, string $rawMessage): void
+{
+    [$socket, $user, $pass, $from] = openSmtpSocket($env);
+
+    try {
         smtpCommand($socket, 'AUTH LOGIN', [334]);
         smtpCommand($socket, base64_encode($user), [334]);
         smtpCommand($socket, base64_encode($pass), [235]);
@@ -537,7 +666,7 @@ function sendRawSmtpMessage(array $env, string $to, string $rawMessage): void
         fwrite($socket, str_replace("\r\n.", "\r\n..", $rawMessage) . "\r\n.\r\n");
         $dataResponse = smtpRead($socket);
         if (!in_array((int) substr($dataResponse, 0, 3), [250], true)) {
-            throw new RuntimeException('SMTP data failed.');
+            throw new RuntimeException('SMTP data failed: ' . trim($dataResponse));
         }
         smtpCommand($socket, 'QUIT', [221]);
     } finally {
@@ -602,6 +731,72 @@ function buildTeamMessageWithAttachment(array $env, array $payload): string
     return implode("\r\n", $headers) . "\r\n\r\n" . implode("\r\n", $parts);
 }
 
+function sendTeamEmailWithPhpMail(array $payload, array $env): void
+{
+    $to = recruitmentToEmail($env);
+    $from = recruitmentFromEmail($env);
+    $fullName = trim($payload['first_name'] . ' ' . $payload['last_name']);
+    $subject = 'Nouvelle candidature — ' . $fullName . ' — Commercial Marrakech';
+    $boundary = 'emara_recruit_' . bin2hex(random_bytes(12));
+    $filename = $payload['cv_filename'];
+    $encoded = chunk_split(base64_encode($payload['cv_bytes']));
+
+    $headers = [
+        'From: Emara Estates <' . $from . '>',
+        'Reply-To: ' . encodeHeader($fullName) . ' <' . $payload['email'] . '>',
+        'MIME-Version: 1.0',
+        'Content-Type: multipart/mixed; boundary="' . $boundary . '"',
+    ];
+
+    $body = implode("\r\n", [
+        '--' . $boundary,
+        'Content-Type: text/plain; charset=UTF-8',
+        'Content-Transfer-Encoding: 8bit',
+        '',
+        recruitmentTeamEmailBody($payload),
+        '',
+        '--' . $boundary,
+        'Content-Type: application/pdf; name="' . $filename . '"',
+        'Content-Transfer-Encoding: base64',
+        'Content-Disposition: attachment; filename="' . $filename . '"',
+        '',
+        rtrim($encoded),
+        '',
+        '--' . $boundary . '--',
+        '',
+    ]);
+
+    $params = '-f' . $from;
+    $sent = mail($to, encodeHeader($subject), $body, implode("\r\n", $headers), $params);
+    if (!$sent) {
+        throw new RuntimeException('mail() returned false for team email.');
+    }
+}
+
+function sendCandidateEmailWithPhpMail(array $payload, array $env): void
+{
+    $from = recruitmentFromEmail($env);
+    $subject = 'Votre candidature chez Emara Estates a bien été reçue';
+    $headers = [
+        'From: Emara Estates <' . $from . '>',
+        'MIME-Version: 1.0',
+        'Content-Type: text/plain; charset=UTF-8',
+        'Content-Transfer-Encoding: 8bit',
+    ];
+
+    $params = '-f' . $from;
+    $sent = mail(
+        $payload['email'],
+        encodeHeader($subject),
+        candidateConfirmationBody($payload),
+        implode("\r\n", $headers),
+        $params,
+    );
+    if (!$sent) {
+        throw new RuntimeException('mail() returned false for candidate email.');
+    }
+}
+
 function sendRecruitmentEmails(array $payload, array $env): void
 {
     $teamTo = recruitmentToEmail($env);
@@ -609,15 +804,36 @@ function sendRecruitmentEmails(array $payload, array $env): void
         throw new RuntimeException('RECRUITMENT_EMAIL_TO is invalid.');
     }
 
-    sendRawSmtpMessage($env, $teamTo, buildTeamMessageWithAttachment($env, $payload));
-    sendRawSmtpMessage(
-        $env,
-        $payload['email'],
-        buildPlainMessage(
-            $env,
-            $payload['email'],
-            'Votre candidature chez Emara Estates a bien été reçue',
-            candidateConfirmationBody($payload),
-        ),
-    );
+    if (($payload['cv_bytes'] ?? '') === '' || ($payload['cv_filename'] ?? '') === '') {
+        throw new RuntimeException('CV attachment could not be read.');
+    }
+
+    // Prefer Hostinger/local mail() first — shared hosts often block outbound Gmail SMTP.
+    // Contact form already succeeds this way in production (~1s).
+    try {
+        sendTeamEmailWithPhpMail($payload, $env);
+        sendCandidateEmailWithPhpMail($payload, $env);
+        return;
+    } catch (Throwable $mailError) {
+        error_log('Recruitment PHP mail failed, falling back to SMTP: ' . $mailError->getMessage());
+        try {
+            sendRawSmtpMessage($env, $teamTo, buildTeamMessageWithAttachment($env, $payload));
+            sendRawSmtpMessage(
+                $env,
+                $payload['email'],
+                buildPlainMessage(
+                    $env,
+                    $payload['email'],
+                    'Votre candidature chez Emara Estates a bien été reçue',
+                    candidateConfirmationBody($payload),
+                ),
+            );
+            return;
+        } catch (Throwable $smtpError) {
+            error_log('Recruitment SMTP fallback failed: ' . $smtpError->getMessage());
+            throw new RuntimeException(
+                'mail() failed (' . $mailError->getMessage() . '); SMTP failed (' . $smtpError->getMessage() . ')',
+            );
+        }
+    }
 }

@@ -1,7 +1,11 @@
 'use client';
 
 import { usePathname } from 'next/navigation';
-import { WHATSAPP, WHATSAPP_FLOAT_BY_ROUTE } from '@/lib/site';
+import {
+  WHATSAPP,
+  WHATSAPP_FLOAT_BY_ROUTE,
+  WHATSAPP_FLOAT_HIDDEN_ROUTES,
+} from '@/lib/site';
 
 /**
  * Fixed WhatsApp entry point, rendered once by the root layout.
@@ -12,7 +16,10 @@ import { WHATSAPP, WHATSAPP_FLOAT_BY_ROUTE } from '@/lib/site';
  */
 export function WhatsAppFloat() {
   const pathname = usePathname();
-  const href = WHATSAPP_FLOAT_BY_ROUTE[pathname.replace(/\/+$/, '')] ?? WHATSAPP.general;
+  const route = pathname.replace(/\/+$/, '');
+  if (WHATSAPP_FLOAT_HIDDEN_ROUTES.has(route)) return null;
+
+  const href = WHATSAPP_FLOAT_BY_ROUTE[route] ?? WHATSAPP.general;
 
   return (
     <a
