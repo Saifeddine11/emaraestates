@@ -602,16 +602,31 @@ function recruitmentTeamEmailPlainBody(array $payload): string
     ]);
 }
 
-function recruitmentProfileRowHtml(string $label, string $value): string
+function recruitmentProfileMiniCardHtml(string $label, string $value): string
+{
+    return ''
+        . '<td width="50%" valign="top" style="padding:6px;">'
+        . '<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#FFFFFF;border:1px solid #E8DFD0;border-radius:14px;">'
+        . '<tr><td style="padding:16px 16px 6px 16px;font-family:Arial,Helvetica,sans-serif;font-size:11px;line-height:1.3;letter-spacing:0.12em;text-transform:uppercase;color:#7A8B68;">'
+        . eHtml($label)
+        . '</td></tr>'
+        . '<tr><td style="padding:0 16px 16px 16px;font-family:Georgia,\'Times New Roman\',serif;font-size:20px;line-height:1.3;font-weight:700;color:#2D3A2D;">'
+        . eHtml($value)
+        . '</td></tr>'
+        . '</table>'
+        . '</td>';
+}
+
+function recruitmentSourceLineHtml(string $label, string $value): string
 {
     return ''
         . '<tr>'
-        . '<td style="padding:14px 0 4px 0;font-family:Georgia,\'Times New Roman\',serif;font-size:12px;letter-spacing:0.12em;text-transform:uppercase;color:#9b7040;">'
+        . '<td style="padding:0 0 4px 0;font-family:Arial,Helvetica,sans-serif;font-size:11px;letter-spacing:0.1em;text-transform:uppercase;color:#7A8B68;">'
         . eHtml($label)
         . '</td>'
         . '</tr>'
         . '<tr>'
-        . '<td style="padding:0 0 10px 0;font-family:-apple-system,BlinkMacSystemFont,\'Segoe UI\',Arial,sans-serif;font-size:20px;line-height:1.35;font-weight:700;color:#1a1a1a;">'
+        . '<td style="padding:0 0 14px 0;font-family:Arial,Helvetica,sans-serif;font-size:15px;line-height:1.4;font-weight:700;color:#2D3A2D;">'
         . eHtml($value)
         . '</td>'
         . '</tr>';
@@ -622,140 +637,198 @@ function recruitmentTeamEmailHtmlBody(array $payload): string
     $fullName = trim($payload['first_name'] . ' ' . $payload['last_name']);
     $priority = isPriorityRecruitmentProfile($payload);
     $badgeLabel = $priority ? 'PROFIL À PRIORISER' : 'CANDIDATURE À ÉTUDIER';
-    $badgeBg = $priority ? '#2d3a2d' : '#9b7040';
-    $badgeText = '#ffffff';
+    $badgeBg = $priority ? '#2D3A2D' : '#9B7040';
     $cvUrl = trim((string) ($payload['cv_download_url'] ?? ''));
     $phone = (string) $payload['telephone'];
     $email = (string) $payload['email'];
     $phoneHref = 'tel:' . preg_replace('/\s+/', '', $phone);
     $mailHref = 'mailto:' . $email;
 
-    $rows = ''
-        . recruitmentProfileRowHtml('Expérience en vente', (string) $payload['sales_experience'])
-        . recruitmentProfileRowHtml('Expérience dans l’immobilier', (string) $payload['real_estate_experience'])
-        . recruitmentProfileRowHtml('Ventes conclues sur les 12 derniers mois', (string) $payload['sales_closed_12m'])
-        . recruitmentProfileRowHtml('Niveau de closing', (string) $payload['closing_level']);
+    $cvButtonHref = $cvUrl !== '' ? $cvUrl : '#';
+    $cvNote = $cvUrl !== ''
+        ? 'Lien sécurisé vers le PDF du candidat'
+        : 'CV PDF joint à cet email';
+
+    $utmSource = trim((string) ($payload['utm_source'] ?? ''));
+    $sourceValue = $utmSource !== '' ? $utmSource : recruitmentSourceLabel($payload);
+
+    $profileRow1 = '<tr>'
+        . recruitmentProfileMiniCardHtml('Expérience en vente', (string) $payload['sales_experience'])
+        . recruitmentProfileMiniCardHtml('Expérience immobilière', (string) $payload['real_estate_experience'])
+        . '</tr>';
+    $profileRow2 = '<tr>'
+        . recruitmentProfileMiniCardHtml('Ventes — 12 derniers mois', (string) $payload['sales_closed_12m'])
+        . recruitmentProfileMiniCardHtml('Niveau de closing', (string) $payload['closing_level'])
+        . '</tr>';
+
+    $sourceBlock = ''
+        . recruitmentSourceLineHtml('Campagne', fieldOrDash($payload['utm_campaign'] ?? ''))
+        . recruitmentSourceLineHtml('Publicité', fieldOrDash($payload['utm_content'] ?? ''))
+        . recruitmentSourceLineHtml('Source', $sourceValue)
+        . recruitmentSourceLineHtml('Date', (string) ($payload['submitted_at'] ?? ''));
 
     return '<!DOCTYPE html>
 <html lang="fr">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
 <title>Nouvelle candidature Emara Estates</title>
 </head>
-<body style="margin:0;padding:0;background:#f5f0e8;">
-  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#f5f0e8;padding:24px 12px;">
+<body style="margin:0;padding:0;background:#F5F0E8;-webkit-text-size-adjust:100%;-ms-text-size-adjust:100%;">
+  <div style="display:none;max-height:0;overflow:hidden;opacity:0;">
+    Nouvelle candidature — ' . eHtml($fullName) . ' — ' . eHtml($badgeLabel) . '
+  </div>
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#F5F0E8;margin:0;padding:0;">
     <tr>
-      <td align="center">
-        <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="max-width:620px;background:#ffffff;border:1px solid #e6dccb;">
+      <td align="center" style="padding:28px 14px;">
+        <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="max-width:660px;width:100%;background:#FFFFFF;border:1px solid #E4D8C4;border-radius:22px;overflow:hidden;">
+
+          <!-- HEADER -->
           <tr>
-            <td style="padding:28px 28px 18px 28px;border-bottom:3px solid #d2b178;">
-              <div style="font-family:Georgia,\'Times New Roman\',serif;font-size:22px;letter-spacing:0.08em;text-transform:uppercase;color:#2d3a2d;font-weight:700;">Emara Estates</div>
-              <div style="margin-top:8px;font-family:-apple-system,BlinkMacSystemFont,\'Segoe UI\',Arial,sans-serif;font-size:15px;color:#7a8b68;letter-spacing:0.04em;">Nouvelle candidature commerciale</div>
+            <td style="background:#2D3A2D;padding:0;">
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+                <tr>
+                  <td style="padding:28px 32px 22px 32px;">
+                    <div style="font-family:Georgia,\'Times New Roman\',serif;font-size:13px;letter-spacing:0.28em;text-transform:uppercase;color:#D2B178;font-weight:700;">Emara Estates</div>
+                    <div style="margin-top:8px;font-family:Arial,Helvetica,sans-serif;font-size:11px;letter-spacing:0.22em;text-transform:uppercase;color:#7A8B68;">Recrutement · Marrakech</div>
+                  </td>
+                </tr>
+                <tr>
+                  <td style="height:3px;background:#9B7040;font-size:0;line-height:0;">&nbsp;</td>
+                </tr>
+              </table>
             </td>
           </tr>
+
+          <!-- TITLE + NAME + BADGE -->
           <tr>
-            <td style="padding:22px 28px 8px 28px;">
-              <span style="display:inline-block;background:' . $badgeBg . ';color:' . $badgeText . ';font-family:-apple-system,BlinkMacSystemFont,\'Segoe UI\',Arial,sans-serif;font-size:12px;font-weight:700;letter-spacing:0.14em;text-transform:uppercase;padding:10px 14px;">'
+            <td style="padding:32px 32px 8px 32px;background:#FFFFFF;">
+              <div style="font-family:Arial,Helvetica,sans-serif;font-size:13px;letter-spacing:0.08em;text-transform:uppercase;color:#7A8B68;">Nouvelle candidature commerciale</div>
+              <div style="margin-top:12px;font-family:Georgia,\'Times New Roman\',serif;font-size:34px;line-height:1.15;font-weight:700;color:#2D3A2D;">'
+        . eHtml($fullName)
+        . '</div>
+              <div style="margin-top:18px;">
+                <span style="display:inline-block;background:' . $badgeBg . ';color:#FFFFFF;font-family:Arial,Helvetica,sans-serif;font-size:11px;font-weight:700;letter-spacing:0.16em;text-transform:uppercase;padding:10px 16px;border-radius:999px;">'
         . eHtml($badgeLabel)
         . '</span>
+              </div>
             </td>
           </tr>
+
+          <!-- CONTACT CARD -->
           <tr>
-            <td style="padding:12px 28px 8px 28px;">
-              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#faf8f4;border:1px solid #e6dccb;">
+            <td style="padding:24px 32px 8px 32px;">
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#F5F0E8;border:1px solid #E4D8C4;border-radius:18px;">
                 <tr>
-                  <td style="padding:22px 22px 8px 22px;font-family:Georgia,\'Times New Roman\',serif;font-size:12px;letter-spacing:0.14em;text-transform:uppercase;color:#2d3a2d;font-weight:700;">Candidat</td>
+                  <td style="padding:22px 24px 8px 24px;font-family:Georgia,\'Times New Roman\',serif;font-size:12px;letter-spacing:0.16em;text-transform:uppercase;color:#2D3A2D;font-weight:700;">Coordonnées</td>
                 </tr>
                 <tr>
-                  <td style="padding:0 22px 16px 22px;font-family:Georgia,\'Times New Roman\',serif;font-size:28px;line-height:1.25;color:#1a1a1a;font-weight:700;">'
-        . eHtml($fullName)
-        . '</td>
-                </tr>
-                <tr>
-                  <td style="padding:0 22px 6px 22px;font-family:-apple-system,BlinkMacSystemFont,\'Segoe UI\',Arial,sans-serif;font-size:13px;color:#9b7040;letter-spacing:0.08em;text-transform:uppercase;">Téléphone</td>
-                </tr>
-                <tr>
-                  <td style="padding:0 22px 14px 22px;font-family:-apple-system,BlinkMacSystemFont,\'Segoe UI\',Arial,sans-serif;font-size:18px;font-weight:700;color:#1a1a1a;">
-                    <a href="' . eHtml($phoneHref) . '" style="color:#1a1a1a;text-decoration:none;">' . eHtml($phone) . '</a>
+                  <td style="padding:8px 24px 0 24px;">
+                    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+                      <tr>
+                        <td width="50%" valign="top" style="padding:0 10px 16px 0;">
+                          <div style="font-family:Arial,Helvetica,sans-serif;font-size:11px;letter-spacing:0.12em;text-transform:uppercase;color:#7A8B68;">Téléphone</div>
+                          <div style="margin-top:6px;font-family:Arial,Helvetica,sans-serif;font-size:18px;font-weight:700;color:#2D3A2D;">
+                            <a href="' . eHtml($phoneHref) . '" style="color:#2D3A2D;text-decoration:none;">' . eHtml($phone) . '</a>
+                          </div>
+                        </td>
+                        <td width="50%" valign="top" style="padding:0 0 16px 10px;">
+                          <div style="font-family:Arial,Helvetica,sans-serif;font-size:11px;letter-spacing:0.12em;text-transform:uppercase;color:#7A8B68;">Email</div>
+                          <div style="margin-top:6px;font-family:Arial,Helvetica,sans-serif;font-size:16px;font-weight:700;color:#2D3A2D;word-break:break-all;">
+                            <a href="' . eHtml($mailHref) . '" style="color:#2D3A2D;text-decoration:none;">' . eHtml($email) . '</a>
+                          </div>
+                        </td>
+                      </tr>
+                    </table>
                   </td>
                 </tr>
                 <tr>
-                  <td style="padding:0 22px 6px 22px;font-family:-apple-system,BlinkMacSystemFont,\'Segoe UI\',Arial,sans-serif;font-size:13px;color:#9b7040;letter-spacing:0.08em;text-transform:uppercase;">Email</td>
-                </tr>
-                <tr>
-                  <td style="padding:0 22px 22px 22px;font-family:-apple-system,BlinkMacSystemFont,\'Segoe UI\',Arial,sans-serif;font-size:18px;font-weight:700;color:#1a1a1a;">
-                    <a href="' . eHtml($mailHref) . '" style="color:#1a1a1a;text-decoration:none;">' . eHtml($email) . '</a>
+                  <td style="padding:4px 24px 24px 24px;" align="left">
+                    <table role="presentation" cellpadding="0" cellspacing="0" border="0">
+                      <tr>
+                        <td style="background:#9B7040;border-radius:999px;">
+                          <a href="' . eHtml($phoneHref) . '" style="display:inline-block;padding:14px 26px;font-family:Arial,Helvetica,sans-serif;font-size:12px;font-weight:700;letter-spacing:0.16em;text-transform:uppercase;color:#FFFFFF;text-decoration:none;">Appeler le candidat</a>
+                        </td>
+                      </tr>
+                    </table>
                   </td>
                 </tr>
               </table>
             </td>
           </tr>
+
+          <!-- PROFILE -->
           <tr>
-            <td style="padding:20px 28px 8px 28px;">
-              <div style="font-family:Georgia,\'Times New Roman\',serif;font-size:14px;letter-spacing:0.14em;text-transform:uppercase;color:#2d3a2d;font-weight:700;margin-bottom:8px;">Profil commercial</div>
-              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="border-top:1px solid #e6dccb;">'
-        . $rows
+            <td style="padding:24px 32px 8px 32px;">
+              <div style="font-family:Georgia,\'Times New Roman\',serif;font-size:13px;letter-spacing:0.16em;text-transform:uppercase;color:#2D3A2D;font-weight:700;margin:0 0 12px 6px;">Profil commercial</div>
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#F5F0E8;border:1px solid #E4D8C4;border-radius:18px;">
+                <tr>
+                  <td style="padding:10px;">
+                    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">'
+        . $profileRow1
+        . $profileRow2
         . '</table>
-            </td>
-          </tr>
-          <tr>
-            <td style="padding:18px 28px 8px 28px;">
-              <div style="font-family:Georgia,\'Times New Roman\',serif;font-size:14px;letter-spacing:0.14em;text-transform:uppercase;color:#2d3a2d;font-weight:700;margin-bottom:12px;">CV</div>
-              <table role="presentation" cellpadding="0" cellspacing="0" border="0">
-                <tr>
-                  <td style="background:#2d3a2d;border-radius:2px;">
-                    <a href="' . eHtml($cvUrl) . '" style="display:inline-block;padding:14px 22px;font-family:-apple-system,BlinkMacSystemFont,\'Segoe UI\',Arial,sans-serif;font-size:13px;font-weight:700;letter-spacing:0.14em;text-transform:uppercase;color:#ffffff;text-decoration:none;">Voir le CV</a>
                   </td>
                 </tr>
               </table>
-              <div style="margin-top:12px;font-family:-apple-system,BlinkMacSystemFont,\'Segoe UI\',Arial,sans-serif;font-size:13px;color:#7a8b68;">Lien sécurisé vers le PDF du candidat</div>
             </td>
           </tr>
+
+          <!-- CV -->
           <tr>
-            <td style="padding:22px 28px 10px 28px;">
-              <div style="font-family:Georgia,\'Times New Roman\',serif;font-size:13px;letter-spacing:0.14em;text-transform:uppercase;color:#2d3a2d;font-weight:700;margin-bottom:12px;">Source de la candidature</div>
-              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#faf8f4;border:1px solid #e6dccb;">
+            <td style="padding:24px 32px 8px 32px;">
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#2D3A2D;border-radius:18px;">
                 <tr>
-                  <td style="padding:16px 18px 4px 18px;font-family:-apple-system,BlinkMacSystemFont,\'Segoe UI\',Arial,sans-serif;font-size:12px;letter-spacing:0.08em;text-transform:uppercase;color:#9b7040;">Source</td>
-                </tr>
-                <tr>
-                  <td style="padding:0 18px 12px 18px;font-family:-apple-system,BlinkMacSystemFont,\'Segoe UI\',Arial,sans-serif;font-size:15px;color:#1a1a1a;font-weight:600;">'
-        . eHtml(recruitmentSourceLabel($payload))
-        . '</td>
-                </tr>
-                <tr>
-                  <td style="padding:0 18px 4px 18px;font-family:-apple-system,BlinkMacSystemFont,\'Segoe UI\',Arial,sans-serif;font-size:12px;letter-spacing:0.08em;text-transform:uppercase;color:#9b7040;">Campagne</td>
-                </tr>
-                <tr>
-                  <td style="padding:0 18px 12px 18px;font-family:-apple-system,BlinkMacSystemFont,\'Segoe UI\',Arial,sans-serif;font-size:15px;color:#1a1a1a;font-weight:600;">'
-        . eHtml(fieldOrDash($payload['utm_campaign'] ?? ''))
-        . '</td>
-                </tr>
-                <tr>
-                  <td style="padding:0 18px 4px 18px;font-family:-apple-system,BlinkMacSystemFont,\'Segoe UI\',Arial,sans-serif;font-size:12px;letter-spacing:0.08em;text-transform:uppercase;color:#9b7040;">Contenu / publicité</td>
-                </tr>
-                <tr>
-                  <td style="padding:0 18px 12px 18px;font-family:-apple-system,BlinkMacSystemFont,\'Segoe UI\',Arial,sans-serif;font-size:15px;color:#1a1a1a;font-weight:600;">'
-        . eHtml(fieldOrDash($payload['utm_content'] ?? ''))
-        . '</td>
-                </tr>
-                <tr>
-                  <td style="padding:0 18px 4px 18px;font-family:-apple-system,BlinkMacSystemFont,\'Segoe UI\',Arial,sans-serif;font-size:12px;letter-spacing:0.08em;text-transform:uppercase;color:#9b7040;">Date</td>
-                </tr>
-                <tr>
-                  <td style="padding:0 18px 16px 18px;font-family:-apple-system,BlinkMacSystemFont,\'Segoe UI\',Arial,sans-serif;font-size:15px;color:#1a1a1a;font-weight:600;">'
-        . eHtml((string) ($payload['submitted_at'] ?? ''))
-        . '</td>
+                  <td style="padding:26px 28px;">
+                    <div style="font-family:Georgia,\'Times New Roman\',serif;font-size:13px;letter-spacing:0.18em;text-transform:uppercase;color:#D2B178;font-weight:700;">CV du candidat</div>
+                    <div style="margin-top:10px;font-family:Arial,Helvetica,sans-serif;font-size:14px;line-height:1.5;color:#C8BBA8;">'
+        . eHtml($cvNote)
+        . '</div>
+                    <div style="margin-top:20px;">
+                      <table role="presentation" cellpadding="0" cellspacing="0" border="0">
+                        <tr>
+                          <td style="background:#9B7040;border-radius:999px;">
+                            <a href="' . eHtml($cvButtonHref) . '" style="display:inline-block;padding:15px 28px;font-family:Arial,Helvetica,sans-serif;font-size:12px;font-weight:700;letter-spacing:0.18em;text-transform:uppercase;color:#FFFFFF;text-decoration:none;">Voir le CV</a>
+                          </td>
+                        </tr>
+                      </table>
+                    </div>
+                  </td>
                 </tr>
               </table>
             </td>
           </tr>
+
+          <!-- SOURCE -->
           <tr>
-            <td style="padding:18px 28px 28px 28px;font-family:-apple-system,BlinkMacSystemFont,\'Segoe UI\',Arial,sans-serif;font-size:12px;line-height:1.5;color:#7a8b68;border-top:1px solid #e6dccb;">
-              Candidature reçue via emaraestates.com/recrutement-commercial-marrakech
+            <td style="padding:24px 32px 8px 32px;">
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#FFFFFF;border:1px solid #E4D8C4;border-radius:18px;">
+                <tr>
+                  <td style="padding:20px 22px 8px 22px;font-family:Georgia,\'Times New Roman\',serif;font-size:12px;letter-spacing:0.14em;text-transform:uppercase;color:#2D3A2D;font-weight:700;">Source de la candidature</td>
+                </tr>
+                <tr>
+                  <td style="padding:8px 22px 10px 22px;">
+                    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">'
+        . $sourceBlock
+        . '</table>
+                  </td>
+                </tr>
+              </table>
             </td>
           </tr>
+
+          <!-- FOOTER -->
+          <tr>
+            <td style="padding:28px 32px 32px 32px;">
+              <div style="height:1px;background:#E4D8C4;line-height:1px;font-size:0;">&nbsp;</div>
+              <div style="margin-top:18px;font-family:Arial,Helvetica,sans-serif;font-size:12px;line-height:1.6;color:#7A8B68;text-align:center;">
+                Candidature reçue via Emara Estates<br>
+                <a href="https://emaraestates.com/recrutement-commercial-marrakech" style="color:#9B7040;text-decoration:none;">emaraestates.com/recrutement-commercial-marrakech</a>
+              </div>
+            </td>
+          </tr>
+
         </table>
       </td>
     </tr>
