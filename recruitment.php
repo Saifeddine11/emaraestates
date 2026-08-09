@@ -66,7 +66,9 @@ if (
         'smtp_used' => false,
         'env_file' => is_file(__DIR__ . '/.env'),
         'recruitment_to' => recruitmentToEmail($env),
+        'recruitment_to_hardcoded' => recruitmentToEmail($env) === 'contact@emaraestates.com',
         'contact_from' => recruitmentFromEmail($env),
+        'hr_mail_mode' => 'contact_style_single_part_html_plus_plain',
         'cv_storage_writable' => is_writable($cvDir) || is_writable(dirname($cvDir)),
         'cv_stored_count' => $cvCount,
         'upload_max_filesize' => (string) ini_get('upload_max_filesize'),
@@ -189,11 +191,14 @@ function publicRecruitmentError(Throwable $error): string
     if (str_contains($normalized, 'cv')) {
         return 'CV attachment could not be read';
     }
+    if (str_contains($normalized, 'hr email') || str_contains($normalized, 'contact@emaraestates.com')) {
+        return 'HR email to contact@emaraestates.com failed';
+    }
+    if (str_contains($normalized, 'candidate confirmation')) {
+        return 'Candidate confirmation email failed';
+    }
     if (str_contains($normalized, 'mail()')) {
         return 'Server mail() send failed';
-    }
-    if (str_contains($normalized, 'recruitment_email_to')) {
-        return 'RECRUITMENT_EMAIL_TO is invalid';
     }
 
     return 'Votre candidature n’a pas pu être envoyée. Réessayez dans un moment.';
@@ -447,17 +452,29 @@ function buildCvFilename(string $firstName, string $lastName): string
     return 'CV-' . asciiSlug($firstName) . '-' . asciiSlug($lastName) . '.pdf';
 }
 
-function recruitmentToEmail(array $env): string
+function recruitmentToEmail(array $_env = []): string
 {
-    $to = trim($env['RECRUITMENT_EMAIL_TO'] ?? '');
-    return $to !== '' ? $to : RECRUITMENT_TO_DEFAULT;
+    // Hard requirement: HR applications always go to the working contact mailbox.
+    // Do not use recrutement@emaraestates.com.
+    return 'contact@emaraestates.com';
 }
 
+/**
+ * Same From resolution as contact.php → sendLeadEmailWithPhpMail().
+ */
 function recruitmentFromEmail(array $env): string
 {
     $from = trim($env['CONTACT_FROM'] ?? '');
     if ($from === '') {
         $from = trim($env['CONTACT_TO'] ?? '');
+    }
+    if ($from === '') {
+        $fromEnv = getenv('CONTACT_FROM');
+        $from = is_string($fromEnv) ? trim($fromEnv) : '';
+    }
+    if ($from === '') {
+        $toEnv = getenv('CONTACT_TO');
+        $from = is_string($toEnv) ? trim($toEnv) : '';
     }
     return $from !== '' ? $from : RECRUITMENT_FROM_DEFAULT;
 }
@@ -763,70 +780,99 @@ function candidateConfirmationBody(array $payload): string
 }
 
 /**
- * Same delivery method as contact.php → PHP mail().
- * Team email is multipart HTML + plain; candidate confirmation stays simple plain text.
+ * Build the same header set as contact.php → sendLeadEmailWithPhpMail().
+ *
+ * @return list<string>
+ */
+function contactStyleMailHeaders(string $from, string $replyToHeader, string $contentType): array
+{
+    return [
+        'From: Emara Estates <' . $from . '>',
+        'Reply-To: ' . $replyToHeader,
+        'MIME-Version: 1.0',
+        'Content-Type: ' . $contentType,
+        'Content-Transfer-Encoding: 8bit',
+    ];
+}
+
+/**
+ * Same delivery method as contact.php → sendLeadEmailWithPhpMail(): PHP mail().
+ *
+ * Important production finding: candidate confirmation (plain text, external) works,
+ * while multipart HR mail to the local mailbox was accepted by mail() but never
+ * arrived. HR mail is therefore sent with the contact form's single-part header
+ * shape. HTML is sent as text/html (single part). A contact-identical text/plain
+ * copy is also sent so the application still reaches contact@ if HTML is filtered.
+ *
+ * API success requires:
+ * - at least one HR mail() success to contact@emaraestates.com
+ * - candidate confirmation mail() success
  */
 function sendRecruitmentEmailsWithPhpMail(array $payload, array $env): void
 {
-    $to = recruitmentToEmail($env);
-    if (!looksLikeEmail($to)) {
-        throw new RuntimeException('RECRUITMENT_EMAIL_TO is invalid.');
+    $hrTo = recruitmentToEmail($env);
+    if ($hrTo !== 'contact@emaraestates.com') {
+        throw new RuntimeException('HR recipient must be contact@emaraestates.com');
     }
 
     $from = recruitmentFromEmail($env);
     $fullName = trim($payload['first_name'] . ' ' . $payload['last_name']);
     $subject = 'Nouvelle candidature — ' . $fullName . ' — Commercial Marrakech';
-
-    // For multipart bodies, pass headers separately from the MIME body.
-    $boundary = 'emara_recruit_' . bin2hex(random_bytes(10));
-    $teamHeaders = [
-        'From: Emara Estates <' . $from . '>',
-        'Reply-To: ' . encodeHeader($fullName) . ' <' . $payload['email'] . '>',
-        'MIME-Version: 1.0',
-        'Content-Type: multipart/alternative; boundary="' . $boundary . '"',
-    ];
-    $teamBody = implode("\r\n", [
-        '--' . $boundary,
-        'Content-Type: text/plain; charset=UTF-8',
-        'Content-Transfer-Encoding: 8bit',
-        '',
-        recruitmentTeamEmailPlainBody($payload),
-        '',
-        '--' . $boundary,
-        'Content-Type: text/html; charset=UTF-8',
-        'Content-Transfer-Encoding: 8bit',
-        '',
-        recruitmentTeamEmailHtmlBody($payload),
-        '',
-        '--' . $boundary . '--',
-        '',
-    ]);
-
-    $teamSent = mail(
-        $to,
-        encodeHeader($subject),
-        $teamBody,
-        implode("\r\n", $teamHeaders),
-    );
-    if (!$teamSent) {
-        throw new RuntimeException('mail() returned false for team email.');
+    $candidateEmail = trim((string) ($payload['email'] ?? ''));
+    if (!looksLikeEmail($candidateEmail)) {
+        throw new RuntimeException('Candidate email is invalid.');
     }
 
+    $replyTo = encodeHeader($fullName !== '' ? $fullName : 'Candidat') . ' <' . $candidateEmail . '>';
+
+    // Hostinger: -f sets the envelope sender (still PHP mail(), not SMTP auth).
+    // Matches the domain of the working contact From address.
+    $envelope = '-f' . $from;
+
+    // 1) Branded HTML — single-part (not multipart/alternative).
+    $hrHtmlHeaders = contactStyleMailHeaders($from, $replyTo, 'text/html; charset=UTF-8');
+    $hrHtmlSent = mail(
+        $hrTo,
+        encodeHeader($subject),
+        recruitmentTeamEmailHtmlBody($payload),
+        implode("\r\n", $hrHtmlHeaders),
+        $envelope,
+    );
+    error_log('Recruitment HR HTML mail() to=' . $hrTo . ' from=' . $from . ' result=' . ($hrHtmlSent ? 'true' : 'false'));
+
+    // 2) Exact contact.php plain-text Content-Type (delivery insurance for local mailbox).
+    $hrPlainHeaders = contactStyleMailHeaders($from, $replyTo, 'text/plain; charset=UTF-8');
+    $hrPlainSent = mail(
+        $hrTo,
+        encodeHeader($subject),
+        recruitmentTeamEmailPlainBody($payload),
+        implode("\r\n", $hrPlainHeaders),
+        $envelope,
+    );
+    error_log('Recruitment HR plain mail() to=' . $hrTo . ' from=' . $from . ' result=' . ($hrPlainSent ? 'true' : 'false'));
+
+    $hrSent = $hrHtmlSent || $hrPlainSent;
+    if (!$hrSent) {
+        throw new RuntimeException('mail() returned false for HR email to contact@emaraestates.com');
+    }
+
+    // 3) Candidate confirmation — same plain-text shape as contact.php.
     $candidateHeaders = [
         'From: Emara Estates <' . $from . '>',
         'MIME-Version: 1.0',
         'Content-Type: text/plain; charset=UTF-8',
         'Content-Transfer-Encoding: 8bit',
     ];
-
     $candidateSent = mail(
-        $payload['email'],
+        $candidateEmail,
         encodeHeader('Votre candidature chez Emara Estates a bien été reçue'),
         candidateConfirmationBody($payload),
         implode("\r\n", $candidateHeaders),
+        $envelope,
     );
+    error_log('Recruitment candidate mail() to=' . $candidateEmail . ' result=' . ($candidateSent ? 'true' : 'false'));
+
     if (!$candidateSent) {
-        // Team mail already accepted — log only; do not fail the application.
-        error_log('Recruitment candidate confirmation mail() returned false for ' . $payload['email']);
+        throw new RuntimeException('mail() returned false for candidate confirmation');
     }
 }

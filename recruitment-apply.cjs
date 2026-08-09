@@ -186,7 +186,8 @@ function parseMultipartFormData(buffer, contentType) {
 }
 
 function recruitmentToEmail() {
-  return String(process.env.RECRUITMENT_EMAIL_TO || '').trim() || RECRUITMENT_TO_DEFAULT;
+  // Hard requirement — same mailbox as the working contact form.
+  return 'contact@emaraestates.com';
 }
 
 function recruitmentFromEmail() {
@@ -603,18 +604,34 @@ async function handleRecruitmentApply(req, res) {
     result.payload.cv_token = stored.token;
     result.payload.cv_download_url = stored.url;
 
+    if (teamTo !== 'contact@emaraestates.com') {
+      throw new Error('HR recipient must be contact@emaraestates.com');
+    }
+
     const fullName = (result.payload.first_name + ' ' + result.payload.last_name).trim();
     const teamSubject = 'Nouvelle candidature — ' + fullName + ' — Commercial Marrakech';
-    const teamMime = buildTeamMultipartBody(result.payload);
-    sendMailLikePhp(teamTo, teamSubject, teamMime.body, {
-      contentType: teamMime.contentType,
-      extraHeaders: ['Reply-To: ' + fullName + ' <' + result.payload.email + '>'],
+    const replyTo = fullName + ' <' + result.payload.email + '>';
+
+    const hrHtml = sendMailLikePhp(teamTo, teamSubject, recruitmentTeamEmailHtmlBody(result.payload), {
+      contentType: 'text/html; charset=UTF-8',
+      extraHeaders: ['Reply-To: ' + replyTo],
     });
-    sendMailLikePhp(
+    const hrPlain = sendMailLikePhp(teamTo, teamSubject, recruitmentTeamEmailPlainBody(result.payload), {
+      contentType: 'text/plain; charset=UTF-8',
+      extraHeaders: ['Reply-To: ' + replyTo],
+    });
+    if (!hrHtml.ok && !hrPlain.ok) {
+      throw new Error('mail() returned false for HR email to contact@emaraestates.com');
+    }
+
+    const candidate = sendMailLikePhp(
       result.payload.email,
       'Votre candidature chez Emara Estates a bien été reçue',
       candidateConfirmationBody(result.payload),
     );
+    if (!candidate.ok) {
+      throw new Error('mail() returned false for candidate confirmation');
+    }
 
     sendJson(res, 200, { success: true, first_name: result.payload.first_name });
   } catch (error) {
