@@ -65,6 +65,13 @@ jobs:
           node scripts/deploy-check.mjs
           test -f deploy/index.html
           test -d deploy/_next
+          # Routing-critical: without these, extensionless URLs and recruitment
+          # API fall through to Hostinger's generic 404.
+          test -f deploy/.htaccess
+          test -f deploy/recruitment.php
+          test -f deploy/contact.html
+          test -f deploy/recrutement-commercial-marrakech.html
+          test -f deploy/.user.ini
 
       - name: Check FTP secrets
         env:

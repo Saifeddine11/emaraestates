@@ -1,9 +1,9 @@
 /**
  * Assembles `web/deploy/` — an exact image of what should be uploaded.
  *
- * This script **never touches production**. It only reads `web/out/` and writes
- * `web/deploy/`, both local. Nothing is uploaded, no remote file is deleted,
- * and `.htaccess` is not read or written.
+ * This script **never touches production**. It only reads `web/out/` (+ a small
+ * set of repo-root routing files) and writes `web/deploy/`, both local. Nothing
+ * is uploaded and no remote file is deleted.
  *
  * Why a generated folder rather than a documented rsync incantation: the
  * exclusions are load-bearing (uploading the per-route RSC directories 301s
@@ -27,6 +27,7 @@ import {
   EXCLUDED_PATTERNS,
   FLAT_PAGES,
   LEGACY_KEEP,
+  ROOT_SYNC,
   SLASHED_PAGES,
   VIDEO_MEDIA_ASSETS,
 } from './lib/deploy-manifest.mjs';
@@ -151,6 +152,20 @@ for (const asset of VIDEO_MEDIA_ASSETS) {
     console.error(`\n  Missing carousel media in deploy image: ${asset}\n`);
     process.exit(1);
   }
+}
+
+/* ── routing-critical repo-root files (htaccess, recruitment endpoint, …) ── */
+
+for (const name of ROOT_SYNC) {
+  const src = join(REPO, name);
+  if (!(await stat(src).catch(() => null))) {
+    console.error(`\n  Missing ROOT_SYNC file for deploy: ${name}\n`);
+    process.exit(1);
+  }
+  const dest = join(DEPLOY, name);
+  await cp(src, dest);
+  const { size } = await stat(dest);
+  included.push({ path: name, size, note: 'repo-root sync (routing/API)' });
 }
 
 /* ── self-check: the image must not be able to break Apache routing ───────── */

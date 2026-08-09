@@ -121,6 +121,23 @@ export const LEGACY_KEEP = {
   legacyRouteDirs: ['residences-honest-678'],
 };
 
+/**
+ * Repo-root files that MUST be copied into `web/deploy/` and uploaded by CI.
+ *
+ * Measured production failure (2026-08-09): extensionless URLs such as
+ * `/contact` and `/recrutement-commercial-marrakech` returned Hostinger's
+ * generic 404 while the matching `*.html` files returned 200. That means the
+ * HTML export was uploaded, but Apache rewrite rules were not applied — and
+ * `recruitment.php` was absent. Relying on "must survive, never uploaded"
+ * is not enough for routing-critical files.
+ */
+export const ROOT_SYNC = [
+  '.htaccess',
+  'recruitment.php',
+  '.user.ini',
+  'sitemap.xml',
+];
+
 /** Routes to probe, with the behaviour each must show. */
 export const EXPECTED_ROUTES = [
   { url: '/', status: 200, canonical: 'https://emaraestates.com/', indexed: true },

@@ -3,16 +3,17 @@ DirectoryIndex index.html
 ErrorDocument 404 /404.html
 AddDefaultCharset UTF-8
 
-<FilesMatch "^\.env">
+# Apache 2.4 only — do not mix in legacy "Deny from all" (breaks .htaccess on
+# hosts without mod_access_compat, which disables every rewrite below).
+<FilesMatch "^\.(env|user\.ini)">
   Require all denied
-  Deny from all
 </FilesMatch>
 
 RewriteEngine On
 RewriteBase /
 
-# Backend/API: no SEO redirects
-RewriteRule ^api/recruitment/apply$ recruitment.php [L]
+# Backend/API only — must not intercept frontend routes.
+RewriteRule ^api/recruitment/apply/?$ recruitment.php [L,QSA]
 RewriteRule ^(?:api/contact|contact\.php|recruitment\.php)$ - [L]
 
 # --- Canonical host: non-www + HTTPS (proxy-safe) ---
