@@ -2,6 +2,10 @@ const http = require('http');
 const fs = require('fs');
 const path = require('path');
 const tls = require('tls');
+const {
+  handleRecruitmentApply,
+  isRecruitmentPath,
+} = require('./recruitment-apply.cjs');
 
 loadEnvFile(path.join(__dirname, '.env'));
 
@@ -932,7 +936,9 @@ const CANONICAL_REDIRECTS = {
   '/index.html': '/',
   '/immobilier-luxe-marrakech.html': '/immobilier-luxe-marrakech',
   '/appartement-neuf-gueliz-marrakech.html': '/appartement-neuf-gueliz-marrakech',
-  '/investissement-immobilier-marrakech.html': '/investissement-immobilier-marrakech'
+  '/investissement-immobilier-marrakech.html': '/investissement-immobilier-marrakech',
+  '/recrutement-commercial-marrakech.html': '/recrutement-commercial-marrakech',
+  '/recrutement-commercial-marrakech/': '/recrutement-commercial-marrakech'
 };
 
 const CANONICAL_PAGES = {
@@ -943,7 +949,8 @@ const CANONICAL_PAGES = {
   '/immobilier-luxe-marrakech': 'immobilier-luxe-marrakech.html',
   '/appartement-neuf-gueliz-marrakech': 'appartement-neuf-gueliz-marrakech.html',
   '/investissement-immobilier-marrakech': 'investissement-immobilier-marrakech.html',
-  '/offre-gueliz': 'offre-gueliz.html'
+  '/offre-gueliz': 'offre-gueliz.html',
+  '/recrutement-commercial-marrakech': 'recrutement-commercial-marrakech.html'
 };
 
 function redirectTo(res, location) {
@@ -1015,6 +1022,10 @@ const server = http.createServer(function(req, res) {
   }
   if (req.method === 'POST' && (req.url === '/api/lead-gueliz' || req.url === '/lead-gueliz.php')) {
     handleGuelizLead(req, res);
+    return;
+  }
+  if (req.method === 'POST' && isRecruitmentPath(req.url)) {
+    handleRecruitmentApply(req, res);
     return;
   }
   if (req.method === 'GET' || req.method === 'HEAD') {

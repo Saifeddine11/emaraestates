@@ -21,6 +21,7 @@ export const FLAT_PAGES = [
   'appartement-neuf-gueliz-marrakech.html',
   'investissement-immobilier-marrakech.html',
   'offre-gueliz.html',
+  'recrutement-commercial-marrakech.html',
 ];
 
 /**
@@ -111,8 +112,8 @@ export const LEGACY_KEEP = {
   pages: ['404.html', 'branding.html', 'formulaire.html', 'smap-immo-paris-2026.html'],
   /** Superseded by the export but 301'd away, so harmless and left alone. */
   stalePages: ['residences-honest-678.html'],
-  php: ['contact.php', 'lead-gueliz.php', 'newsletter.php'],
-  config: ['.htaccess', 'sitemap.xml', 'robots.txt'],
+  php: ['contact.php', 'lead-gueliz.php', 'newsletter.php', 'recruitment.php'],
+  config: ['.htaccess', 'sitemap.xml', 'robots.txt', '.user.ini'],
   icons: ['favicon.png', 'favicon-48x48.png', 'apple-touch-icon.png'],
   /** Still used by the four unported pages, so they cannot be pruned yet. */
   dirs: ['css', 'js', 'img'],
@@ -167,6 +168,18 @@ export const EXPECTED_ROUTES = [
     newRoute: true,
   },
   { url: '/offre-gueliz.html', status: 301, to: '/offre-gueliz' },
+  {
+    url: '/recrutement-commercial-marrakech',
+    status: 200,
+    canonical: 'https://emaraestates.com/recrutement-commercial-marrakech',
+    indexed: true,
+    newRoute: true,
+  },
+  {
+    url: '/recrutement-commercial-marrakech.html',
+    status: 301,
+    to: '/recrutement-commercial-marrakech',
+  },
   // Unported legacy pages must keep working untouched.
   { url: '/formulaire', status: 200, legacy: true },
   { url: '/smap-immo-paris-2026', status: 200, legacy: true },
@@ -175,6 +188,7 @@ export const EXPECTED_ROUTES = [
   { url: '/contact.php', status: 200, legacy: true },
   { url: '/lead-gueliz.php', status: 200, legacy: true },
   { url: '/newsletter.php', status: 200, legacy: true },
+  { url: '/recruitment.php', status: 200, legacy: true },
   { url: '/sitemap.xml', status: 200, legacy: true },
   { url: '/robots.txt', status: 200, legacy: true },
   { url: '/img/logo.webp', status: 200, legacy: true },
@@ -194,4 +208,5 @@ export const BROWSER_ROUTES = [
   '/appartement-neuf-gueliz-marrakech',
   '/investissement-immobilier-marrakech',
   '/offre-gueliz',
+  '/recrutement-commercial-marrakech',
 ];

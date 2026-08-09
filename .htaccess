@@ -12,7 +12,8 @@ RewriteEngine On
 RewriteBase /
 
 # Backend/API: no SEO redirects
-RewriteRule ^(?:api/contact|contact\.php)$ - [L]
+RewriteRule ^api/recruitment/apply$ recruitment.php [L]
+RewriteRule ^(?:api/contact|contact\.php|recruitment\.php)$ - [L]
 
 # --- Canonical host: non-www + HTTPS (proxy-safe) ---
 RewriteCond %{HTTP_HOST} ^www\.emaraestates\.com$ [NC]

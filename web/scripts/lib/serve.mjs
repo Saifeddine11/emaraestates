@@ -3,12 +3,13 @@
  *
  * Apache serves the Next export alongside the repo's existing `/img`, `/css`
  * and PHP endpoints, so this resolves the export first and falls back to the
- * repo root. PHP is answered with a 404 rather than the file's source, so
- * client code takes its real network-failure path instead of parsing a script
- * as JSON.
+ * repo root. Most PHP endpoints return 404 here (no PHP runtime), except
+ * recruitment which is handled by the shared Node module so local preview can
+ * exercise the real multipart + SMTP path.
  */
 
 import { createServer } from 'node:http';
+import { createRequire } from 'node:module';
 import { createReadStream, existsSync, statSync } from 'node:fs';
 import { dirname, extname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -16,6 +17,11 @@ import { fileURLToPath } from 'node:url';
 const here = dirname(fileURLToPath(import.meta.url));
 export const EXPORT_DIR = resolve(here, '../../out');
 export const REPO_ROOT = resolve(here, '../../..');
+
+const require = createRequire(import.meta.url);
+const { handleRecruitmentApply, isRecruitmentPath } = require(
+  join(REPO_ROOT, 'recruitment-apply.cjs'),
+);
 
 const MIME = {
   '.html': 'text/html; charset=utf-8',
@@ -55,7 +61,21 @@ export async function startServer({ port = 0, log = false } = {}) {
   }
 
   const server = createServer((req, res) => {
-    if (/\.php($|\?)/.test(req.url)) {
+    const urlPath = decodeURIComponent((req.url || '/').split('?')[0] || '/');
+
+    if (req.method === 'POST' && isRecruitmentPath(urlPath)) {
+      handleRecruitmentApply(req, res).catch((error) => {
+        console.error('Recruitment preview handler failed:', error);
+        if (!res.headersSent) {
+          res.writeHead(500, { 'content-type': 'application/json; charset=utf-8' });
+          res.end(JSON.stringify({ success: false, error: 'Erreur serveur recrutement.' }));
+        }
+      });
+      if (log) console.log(`  POST ${urlPath}  (recruitment)`);
+      return;
+    }
+
+    if (/\.php($|\?)/.test(req.url || '')) {
       res.writeHead(404, { 'content-type': 'text/plain' });
       res.end('no php runtime here — this endpoint only exists in production');
       if (log) console.log(`  404  ${req.url}  (php, expected)`);

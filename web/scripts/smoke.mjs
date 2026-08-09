@@ -26,7 +26,7 @@ const record = (name, ok, detail = '') => {
  *    asserted directly and re-checked by URL at the end.
  */
 const HARNESS_NOISE = /React DevTools|Fast Refresh|webpack|HMR|Ignoring Event: localhost/i;
-const PHP_ENDPOINTS = /contact\.php|newsletter\.php|lead-gueliz\.php/;
+const PHP_ENDPOINTS = /contact\.php|newsletter\.php|lead-gueliz\.php|recruitment\.php|api\/recruitment\/apply/;
 
 const browser = await chromium.launch();
 

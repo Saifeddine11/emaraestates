@@ -13,5 +13,5 @@ const { base } = await startServer({ port, log: true });
 console.log(`\n  Emara Estates — production export`);
 console.log(`  ${base.replace('127.0.0.1', 'localhost')}\n`);
 console.log(`  Serving web/out, falling back to the repo root for /img and /css.`);
-console.log(`  The PHP form endpoints return 404 here; they only run in production.\n`);
+console.log(`  Most PHP endpoints return 404 here; recruitment uses the Node handler at /api/recruitment/apply.\n`);
 console.log(`  Ctrl+C to stop.\n`);

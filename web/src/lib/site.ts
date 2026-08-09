@@ -16,6 +16,7 @@ export const ROUTES = {
   immobilierLuxe: '/immobilier-luxe-marrakech',
   appartementNeufGueliz: '/appartement-neuf-gueliz-marrakech',
   investissement: '/investissement-immobilier-marrakech',
+  recrutement: '/recrutement-commercial-marrakech',
 } as const;
 
 /** Homepage section anchors. `nos-réalisations` is intentionally accented. */
@@ -75,6 +76,7 @@ export const WHATSAPP_FLOAT_BY_ROUTE: Record<string, string> = {
   '/immobilier-luxe-marrakech': WHATSAPP.bare,
   '/appartement-neuf-gueliz-marrakech': WHATSAPP.bare,
   '/investissement-immobilier-marrakech': WHATSAPP.bare,
+  '/recrutement-commercial-marrakech': WHATSAPP.bare,
 };
 
 export const SOCIAL = {
@@ -95,10 +97,15 @@ export const EXTERNAL = {
  * Form endpoints. These stay as PHP paths: the site is served by Apache and the
  * handlers (contact.php, newsletter.php, lead-gueliz.php) are untouched by this
  * migration. Field names are wire contracts consumed by HubSpot/Zapier/SMTP.
+ *
+ * Recruitment is a dedicated email-only pipeline (no HubSpot / Zapier).
+ * `/api/recruitment/apply` is rewritten to `recruitment.php` on Apache and
+ * handled natively by `server.js` in local preview.
  */
 export const ENDPOINTS = {
   contact: '/contact.php',
   newsletter: '/newsletter.php',
+  recruitment: '/api/recruitment/apply',
 } as const;
 
 export const ANALYTICS_AHREFS_KEY = 'Tyd763kKZT871KqrdS45Sg';

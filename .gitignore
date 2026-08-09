@@ -1,5 +1,10 @@
 .env
+.env.*
+!.env.example
 .env.local
 .env.*.local
 npm-debug.log*
 .DS_Store
+web/emara-deploy/
+web/emara-deploy.zip
+web/emara-videos.zip
