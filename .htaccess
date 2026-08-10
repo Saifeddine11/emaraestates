@@ -1,0 +1,63 @@
+Options -MultiViews
+DirectoryIndex index.html
+ErrorDocument 404 /404.html
+AddDefaultCharset UTF-8
+
+# Apache 2.4 only — do not mix in legacy "Deny from all" (breaks .htaccess on
+# hosts without mod_access_compat, which disables every rewrite below).
+<FilesMatch "^\.(env|user\.ini)">
+  Require all denied
+</FilesMatch>
+
+# Never serve stored recruitment CVs as static files.
+RedirectMatch 404 ^/recruitment-private(/|$)
+
+RewriteEngine On
+RewriteBase /
+
+# Backend/API only — must not intercept frontend routes.
+RewriteRule ^api/recruitment/apply/?$ recruitment.php [L,QSA]
+RewriteRule ^api/recruitment/cv/?$ recruitment-cv.php [L,QSA]
+RewriteRule ^(?:api/contact|contact\.php|recruitment\.php|recruitment-cv\.php)$ - [L]
+
+# --- Canonical host: non-www + HTTPS (proxy-safe) ---
+RewriteCond %{HTTP_HOST} ^www\.emaraestates\.com$ [NC]
+RewriteRule ^ https://emaraestates.com%{REQUEST_URI} [R=301,L,NE]
+
+RewriteCond %{HTTPS} !=on
+RewriteCond %{HTTP:X-Forwarded-Proto} !https [NC]
+RewriteCond %{HTTP_HOST} ^emaraestates\.com$ [NC]
+RewriteRule ^ https://emaraestates.com%{REQUEST_URI} [R=301,L,NE]
+
+# --- 301 vers les URLs canoniques ---
+RewriteCond %{THE_REQUEST} \s/+residences-honest-678\.html[\s?] [NC]
+RewriteRule ^ /residences-honest-678/ [R=301,L,NE]
+
+RewriteCond %{THE_REQUEST} \s/+residences-honest-678[\s?] [NC]
+RewriteRule ^ /residences-honest-678/ [R=301,L,NE]
+
+RewriteCond %{THE_REQUEST} \s/+contact/[\s?] [NC]
+RewriteRule ^ /contact [R=301,L,NE]
+
+RewriteCond %{THE_REQUEST} \s/+contact\.html[\s?] [NC]
+RewriteRule ^ /contact [R=301,L,NE]
+
+RewriteCond %{THE_REQUEST} \s/+formulaire\.html[\s?] [NC]
+RewriteRule ^ /formulaire [R=301,L,NE]
+
+RewriteCond %{THE_REQUEST} \s/+index\.html[\s?] [NC]
+RewriteRule ^ / [R=301,L,NE]
+
+# Autres .html publics → URL propre (404.html exclu)
+RewriteCond %{THE_REQUEST} \s/+(.+?)\.html[\s?] [NC]
+RewriteCond %{REQUEST_URI} !^/404\.html$ [NC]
+RewriteRule ^(.+)\.html$ /$1 [R=301,L,NE]
+
+# --- Réécritures internes vers les fichiers canoniques ---
+RewriteRule ^contact$ contact.html [L]
+RewriteRule ^formulaire$ formulaire.html [L]
+
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteCond %{DOCUMENT_ROOT}/$1.html -f
+RewriteRule ^(.+?)/?$ $1.html [L]
