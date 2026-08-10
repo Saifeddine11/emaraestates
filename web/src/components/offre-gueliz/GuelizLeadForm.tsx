@@ -5,6 +5,7 @@ import { motion } from 'motion/react';
 import { PhoneCountryInput } from '@/components/forms/PhoneCountryInput';
 import { COUNTRIES, type Country } from '@/lib/countries';
 import { captureAttribution, readAttribution, track } from '@/lib/gueliz-attribution';
+import { fireSnapEvent, SNAP_EVENT_BUYER_LEAD } from '@/lib/snap-pixel';
 import {
   OG_FORM,
   OG_SUCCESS_WHATSAPP,
@@ -74,6 +75,8 @@ export function GuelizLeadForm() {
   const startedRef = useRef(false);
   const startedAtRef = useRef(0);
   const questionRefs = useRef<(HTMLHeadingElement | null)[]>([]);
+  /** One confirmed Guéliz lead = one Snap BuyerLead (blocks double-submit). */
+  const buyerLeadSnapFired = useRef(false);
 
   // Attribution is captured once on mount, exactly like the legacy IIFE.
   useEffect(() => {
@@ -203,6 +206,9 @@ export function GuelizLeadForm() {
       if (!response.ok || data.success === false) {
         throw new Error(data.message || OG_FORM.errors.network);
       }
+      // Snap BuyerLead only after lead-gueliz.php confirms success — never on
+      // honeypot short-circuit (showSuccess alone) or recruitment forms.
+      fireSnapEvent(SNAP_EVENT_BUYER_LEAD, buyerLeadSnapFired);
       showSuccess(payload);
     } catch (error) {
       setFormError(error instanceof Error ? error.message : OG_FORM.errors.network);

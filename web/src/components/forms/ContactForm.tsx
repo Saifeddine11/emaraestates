@@ -5,6 +5,7 @@ import { PhoneCountryInput } from '@/components/forms/PhoneCountryInput';
 import { SuccessModal } from '@/components/forms/SuccessModal';
 import { findCountry, normalizeLocalNumber, type Country } from '@/lib/countries';
 import { ENDPOINTS } from '@/lib/site';
+import { fireSnapEvent, SNAP_EVENT_BUYER_LEAD } from '@/lib/snap-pixel';
 import { cn } from '@/lib/cn';
 import { fieldInput, fieldLabel } from '@/components/ui/form-tokens';
 
@@ -87,6 +88,8 @@ export function ContactForm({
   // Anti-spam timer: the server rejects anything submitted in under 3 seconds.
   // Started on mount, not during render, so the server and client agree.
   const startedAt = useRef(0);
+  /** One successful buyer lead = one Snap BuyerLead (blocks double-submit). */
+  const buyerLeadSnapFired = useRef(false);
   useEffect(() => {
     startedAt.current = Date.now();
   }, []);
@@ -106,6 +109,7 @@ export function ContactForm({
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    if (submitting) return;
     setErrors({});
     setFeedback('');
 
@@ -164,6 +168,12 @@ export function ContactForm({
       if (typeof payload.message !== 'string') {
         setFeedback(BAD_RESPONSE);
         return;
+      }
+
+      // Snap BuyerLead — only after /contact.php confirms success. Never on
+      // honeypot, validation errors, or recruitment forms.
+      if (hadLeadContent) {
+        fireSnapEvent(SNAP_EVENT_BUYER_LEAD, buyerLeadSnapFired);
       }
 
       resetForm();

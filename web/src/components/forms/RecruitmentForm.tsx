@@ -19,6 +19,11 @@ import {
 import { findCountry, normalizeLocalNumber, type Country } from '@/lib/countries';
 import { cn } from '@/lib/cn';
 import { ENDPOINTS, ROUTES } from '@/lib/site';
+import {
+  fireMetaCustomEvent,
+  META_EVENT_RECRUITMENT,
+} from '@/lib/meta-pixel';
+import { fireSnapEvent, SNAP_EVENT_RECRUITMENT } from '@/lib/snap-pixel';
 
 type Step = 1 | 2 | 3;
 
@@ -143,6 +148,9 @@ export function RecruitmentForm() {
   const formRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const startedAt = useRef(0);
+  /** One successful application = one Meta + one Snap RecruitmentApplication. */
+  const recruitmentMetaFired = useRef(false);
+  const recruitmentSnapFired = useRef(false);
 
   const [step, setStep] = useState<Step>(1);
   const [direction, setDirection] = useState(1);
@@ -243,6 +251,7 @@ export function RecruitmentForm() {
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    if (submitting) return;
     setFeedback('');
     if (!validateStep(3)) return;
 
@@ -312,6 +321,9 @@ export function RecruitmentForm() {
       });
 
       if (response.ok && payload.success === true) {
+        // Recruitment only — never initial_lead / marketingqualifiedlead / buyer Lead.
+        fireMetaCustomEvent(META_EVENT_RECRUITMENT, recruitmentMetaFired);
+        fireSnapEvent(SNAP_EVENT_RECRUITMENT, recruitmentSnapFired);
         setSuccessName(payload.first_name || data.first_name.trim());
         return;
       }

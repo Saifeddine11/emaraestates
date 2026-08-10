@@ -1,5 +1,10 @@
 import type { Metadata } from 'next';
 import { Cormorant_Garamond, Jost } from 'next/font/google';
+import {
+  SnapPixel,
+  SNAP_PIXEL_ID,
+  snapPixelInlineScript,
+} from '@/components/analytics/SnapPixel';
 import { SITE_ORIGIN } from '@/lib/site';
 import './globals.css';
 
@@ -49,8 +54,18 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <noscript>
           <style>{`[data-reveal]{opacity:1!important;transform:none!important;filter:none!important}`}</style>
         </noscript>
+        {/* Snap Pixel base — once globally for emaraestates.com (all routes). */}
+        {SNAP_PIXEL_ID ? (
+          <script
+            id="snap-pixel"
+            dangerouslySetInnerHTML={{ __html: snapPixelInlineScript(SNAP_PIXEL_ID) }}
+          />
+        ) : null}
       </head>
-      <body>{children}</body>
+      <body>
+        <SnapPixel />
+        {children}
+      </body>
     </html>
   );
 }

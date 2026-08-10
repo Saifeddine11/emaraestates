@@ -108,7 +108,13 @@ export function track(eventName: string, data: Record<string, unknown> = {}) {
       w.ttq.track(eventName, data);
     }
     if (typeof w.snaptr === 'function') {
-      w.snaptr('track', eventName === 'Lead' ? 'SIGN_UP' : 'CUSTOM_EVENT', data);
+      // BuyerLead is fired explicitly after confirmed property-form success
+      // (ContactForm / GuelizLeadForm). Do not map Meta `Lead` → Snap SIGN_UP
+      // here: that would also fire on Guéliz honeypot short-circuits and mix
+      // with the dedicated BuyerLead conversion used for Snap property ads.
+      if (eventName !== 'Lead') {
+        w.snaptr('track', 'CUSTOM_EVENT', data);
+      }
     }
     if (typeof w.gtag === 'function') {
       w.gtag('event', eventName, data);
