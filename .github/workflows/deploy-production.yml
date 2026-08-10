@@ -38,7 +38,8 @@ concurrency:
 
 jobs:
   build-and-deploy:
-    runs-on: macos-latest
+    # ubuntu-latest: macos runners recently fail to provision (0 steps / ~4s).
+    runs-on: ubuntu-latest
     timeout-minutes: 45
 
     steps:
@@ -58,7 +59,7 @@ jobs:
 
       - name: Install Playwright browser
         working-directory: web
-        run: npx playwright install chromium
+        run: npx playwright install --with-deps chromium
 
       - name: Build, verify, and assemble web/deploy
         working-directory: web
@@ -151,7 +152,9 @@ jobs:
           fi
 
       - name: Install lftp
-        run: brew install lftp
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y lftp
 
       - name: Deploy web/deploy via FTP
         env:
