@@ -13,3 +13,5 @@ npm-debug.log*
 web/emara-deploy/
 web/emara-deploy.zip
 web/emara-videos.zip
+.DS_Store
+*.zip
