@@ -321,9 +321,14 @@ export function RecruitmentForm() {
       });
 
       if (response.ok && payload.success === true) {
-        // Recruitment only — never initial_lead / marketingqualifiedlead / buyer Lead.
-        fireMetaCustomEvent(META_EVENT_RECRUITMENT, recruitmentMetaFired);
-        fireSnapEvent(SNAP_EVENT_RECRUITMENT, recruitmentSnapFired);
+        // Real qualified apply returns first_name. Honeypot / too-fast bot
+        // short-circuits return bare { success: true } — do not track those.
+        const qualified = Boolean(payload.first_name?.trim());
+        if (qualified) {
+          // Recruitment only — never initial_lead / marketingqualifiedlead / buyer Lead.
+          fireMetaCustomEvent(META_EVENT_RECRUITMENT, recruitmentMetaFired);
+          fireSnapEvent(SNAP_EVENT_RECRUITMENT, recruitmentSnapFired);
+        }
         setSuccessName(payload.first_name || data.first_name.trim());
         return;
       }

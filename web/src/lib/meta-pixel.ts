@@ -1,7 +1,7 @@
 /**
  * Meta (Facebook) Pixel helpers.
  *
- * Base code (init + PageView) lives in `<MetaPixel />` once, globally.
+ * Base code (init + PageView) lives in root layout once, globally.
  * Conversion events must fire only after the relevant backend confirms success,
  * and buyer vs recruitment events must never mix.
  */
@@ -32,6 +32,10 @@ export function fireMetaCustomEvent(
   if (alreadyFired.current) return;
   alreadyFired.current = true;
   try {
+    const fbqAvailable = typeof (window as MetaWindow).fbq === 'function';
+    // Temporary production debugging — remove after Meta Events Manager confirms.
+    console.log('[Meta] RecruitmentApplication firing', { fbqAvailable });
+
     const fbq = (window as MetaWindow).fbq;
     if (typeof fbq === 'function') {
       fbq('trackCustom', eventName);

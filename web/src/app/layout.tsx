@@ -1,6 +1,11 @@
 import type { Metadata } from 'next';
 import { Cormorant_Garamond, Jost } from 'next/font/google';
 import {
+  MetaPixel,
+  META_PIXEL_ID,
+  metaPixelInlineScript,
+} from '@/components/analytics/MetaPixel';
+import {
   SnapPixel,
   SNAP_PIXEL_ID,
   snapPixelInlineScript,
@@ -15,6 +20,9 @@ import './globals.css';
  * `(site)/layout.tsx` instead, because `/offre-gueliz` is a paid-ads landing
  * page that deliberately ships none of them. Route groups do not affect URLs,
  * so this split is invisible to routing.
+ *
+ * Meta + Snap base pixels live here so every route (including `/offre-gueliz`)
+ * gets PageView. Conversion events stay in form success handlers only.
  */
 
 const cormorant = Cormorant_Garamond({
@@ -54,6 +62,13 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <noscript>
           <style>{`[data-reveal]{opacity:1!important;transform:none!important;filter:none!important}`}</style>
         </noscript>
+        {/* Meta Pixel base — once globally (Pixel ID 1049553054304565). */}
+        {META_PIXEL_ID ? (
+          <script
+            id="meta-pixel"
+            dangerouslySetInnerHTML={{ __html: metaPixelInlineScript(META_PIXEL_ID) }}
+          />
+        ) : null}
         {/* Snap Pixel base — once globally for emaraestates.com (all routes). */}
         {SNAP_PIXEL_ID ? (
           <script
@@ -63,6 +78,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         ) : null}
       </head>
       <body>
+        <MetaPixel />
         <SnapPixel />
         {children}
       </body>
