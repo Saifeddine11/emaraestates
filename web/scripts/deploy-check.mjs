@@ -46,6 +46,14 @@ const remoteBase = process.argv.find((a) => a.startsWith('--base='))?.slice('--b
 const results = [];
 const record = (name, ok, detail = '') => results.push({ name, ok, detail });
 
+/** Third-party analytics / maps noise must not block a first-party deploy. */
+const THIRD_PARTY_NOISE =
+  /facebook\.com|connect\.facebook\.net|fbevents|sc-static\.net|snapchat\.com|pixel\.tapad\.com|tr\.snapchat\.com|analytics\.ahrefs\.com|maps\.googleapis\.com|maps\.gstatic\.com|www\.google\.com\/maps|googletagmanager|google-analytics|doubleclick\.net/i;
+
+function isFirstPartyNoise(text) {
+  return THIRD_PARTY_NOISE.test(text);
+}
+
 /* ── local Apache harness ─────────────────────────────────────────────────── */
 
 function findHttpd() {
@@ -318,12 +326,24 @@ async function checkRuntime(base) {
       const page = await browser.newPage({ viewport, ...extra });
       const failed = [];
       const errors = [];
-      page.on('requestfailed', (r) => failed.push(`${r.url()} ${r.failure()?.errorText}`));
-      page.on('response', (r) => {
-        if (r.status() >= 400) failed.push(`${r.status()} ${r.url().replace(base, '')}`);
+      page.on('requestfailed', (r) => {
+        const line = `${r.url()} ${r.failure()?.errorText}`;
+        if (!isFirstPartyNoise(line)) failed.push(line);
       });
-      page.on('console', (m) => m.type() === 'error' && errors.push(m.text()));
-      page.on('pageerror', (e) => errors.push(String(e)));
+      page.on('response', (r) => {
+        if (r.status() < 400) return;
+        const line = `${r.status()} ${r.url().replace(base, '')}`;
+        if (!isFirstPartyNoise(line) && !isFirstPartyNoise(r.url())) failed.push(line);
+      });
+      page.on('console', (m) => {
+        if (m.type() !== 'error') return;
+        const text = m.text();
+        if (!isFirstPartyNoise(text)) errors.push(text);
+      });
+      page.on('pageerror', (e) => {
+        const text = String(e);
+        if (!isFirstPartyNoise(text)) errors.push(text);
+      });
 
       await page.goto(base + route, { waitUntil: 'networkidle' });
       // Scroll so lazy images and reveals actually fire.
