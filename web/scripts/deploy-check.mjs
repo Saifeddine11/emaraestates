@@ -23,6 +23,7 @@
  */
 
 import { spawnSync } from 'node:child_process';
+import { existsSync } from 'node:fs';
 import { cp, mkdir, mkdtemp, readdir, rm, stat, writeFile } from 'node:fs/promises';
 import { createServer } from 'node:http';
 import { tmpdir } from 'node:os';
@@ -134,7 +135,19 @@ async function startApache() {
   await stageDocroot(root);
 
   const port = await freePort();
-  const mod = (name, file) => `LoadModule ${name} "${modules}/${file}"`;
+  // Only LoadModule when the .so exists. On modern Ubuntu Apache, several
+  // modules (e.g. unixd) are built-in and `LoadModule` fails the start.
+  const mod = (name, file) => {
+    const so = join(modules, file);
+    return existsSync(so) ? `LoadModule ${name} "${so}"` : `# ${name} built-in or absent (${file})`;
+  };
+  const mimeCandidates = [
+    '/etc/apache2/mime.types',
+    '/etc/mime.types',
+    '/private/etc/apache2/mime.types',
+    '/etc/httpd/conf/mime.types',
+  ];
+  const typesConfig = mimeCandidates.find((p) => existsSync(p));
   const conf = `
 ServerName localhost
 Listen ${port}
@@ -157,7 +170,7 @@ ${mod('rewrite_module', 'mod_rewrite.so')}
 ${mod('filter_module', 'mod_filter.so')}
 ${mod('headers_module', 'mod_headers.so')}
 
-TypesConfig /private/etc/apache2/mime.types
+${typesConfig ? `TypesConfig ${typesConfig}` : '# TypesConfig not found — using Apache defaults'}
 DocumentRoot "${root}"
 
 <Directory "${root}">
