@@ -18,9 +18,9 @@ import {
 } from '@/lib/simulator-attribution';
 import { ENDPOINTS } from '@/lib/site';
 
-type Currency = 'EUR' | 'MAD';
+export type Currency = 'EUR' | 'MAD';
 
-type Simulation = {
+export type Simulation = {
   budget: number;
   currency: Currency;
   propertyType: string;
@@ -89,24 +89,24 @@ function sendPartialLead(simulation: Simulation, honeypot: string) {
 const SUBMIT_ERROR =
   'Votre demande n’a pas pu être envoyée. Réessayez ou contactez-nous directement sur WhatsApp.';
 
-function parseBudget(raw: string) {
+export function parseBudget(raw: string) {
   const normalized = raw.replace(/\s/g, '').replace(',', '.').replace(/[^\d.]/g, '');
   const value = Number.parseFloat(normalized);
   return Number.isFinite(value) && value > 0 ? Math.round(value) : 0;
 }
 
 /** Display-only grouping for the budget input: "1900000" → "1 900 000". */
-function groupDigits(raw: string) {
+export function groupDigits(raw: string) {
   return raw.replace(/\D/g, '').replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
 }
 
-function formatAmount(value: number, currency: Currency) {
+export function formatAmount(value: number, currency: Currency) {
   const formatted = new Intl.NumberFormat('fr-FR', { maximumFractionDigits: 0 }).format(value);
   return currency === 'EUR' ? `${formatted}\u00a0€` : `${formatted}\u00a0MAD`;
 }
 
 /** Rounding is balanced into handover so the displayed amounts always equal the budget. */
-function calculateSchedule(budget: number, currency: Currency, propertyType: string, email: string): Simulation {
+export function calculateSchedule(budget: number, currency: Currency, propertyType: string, email: string): Simulation {
   const reservation = Math.round(budget * 0.3);
   const installment = Math.round(budget * 0.15);
   const handover = budget - reservation - installment * 3;

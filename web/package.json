@@ -16,6 +16,8 @@
     "lighthouse": "node scripts/lighthouse.mjs",
     "video-gallery": "node scripts/video-gallery-check.mjs",
     "simulator-check": "node scripts/simulator-check.mjs",
+    "showroom-check": "node scripts/showroom-check.mjs",
+    "sales-check": "node scripts/sales-check.mjs",
     "check": "next build && node scripts/verify-preservation.mjs && node scripts/smoke.mjs && node scripts/form-parity.mjs",
     "deploy:layout": "node scripts/deploy-layout.mjs",
     "deploy:check": "node scripts/deploy-check.mjs",

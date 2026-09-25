@@ -985,6 +985,8 @@ async function handleContact(req, res) {
 const CANONICAL_REDIRECTS = {
   '/simulateur': '/simulateur/',
   '/simulateur.html': '/simulateur/',
+  '/appartements-temoins': '/appartements-temoins/',
+  '/appartements-temoins.html': '/appartements-temoins/',
   '/residences-honest-678': '/residences-honest-678/',
   '/residences-honest-678.html': '/residences-honest-678/',
   '/contact/': '/contact',

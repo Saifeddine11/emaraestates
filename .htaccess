@@ -36,6 +36,12 @@ RewriteRule ^ /simulateur/ [R=301,L,NE]
 RewriteCond %{THE_REQUEST} \s/+simulateur[\s?] [NC]
 RewriteRule ^ /simulateur/ [R=301,L,NE]
 
+RewriteCond %{THE_REQUEST} \s/+appartements-temoins\.html[\s?] [NC]
+RewriteRule ^ /appartements-temoins/ [R=301,L,NE]
+
+RewriteCond %{THE_REQUEST} \s/+appartements-temoins[\s?] [NC]
+RewriteRule ^ /appartements-temoins/ [R=301,L,NE]
+
 RewriteCond %{THE_REQUEST} \s/+residences-honest-678\.html[\s?] [NC]
 RewriteRule ^ /residences-honest-678/ [R=301,L,NE]
 

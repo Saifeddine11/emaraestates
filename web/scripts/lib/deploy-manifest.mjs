@@ -22,6 +22,8 @@ export const FLAT_PAGES = [
   'investissement-immobilier-marrakech.html',
   'offre-gueliz.html',
   'recrutement-commercial-marrakech.html',
+  // Internal sales calculator — noindex, not in the sitemap.
+  'simulateur-equipe.html',
 ];
 
 /**
@@ -31,6 +33,7 @@ export const FLAT_PAGES = [
 export const SLASHED_PAGES = [
   { from: 'residences-honest-678.html', to: 'residences-honest-678/index.html' },
   { from: 'simulateur.html', to: 'simulateur/index.html' },
+  { from: 'appartements-temoins.html', to: 'appartements-temoins/index.html' },
 ];
 
 /**
@@ -45,6 +48,8 @@ export const ASSET_FILES = [
   // New to the document root; it does not replace the existing PNG icons,
   // which the same pages still reference.
   'favicon.ico',
+  // OG image for /appartements-temoins/ — /img itself is not uploaded.
+  'og-appartements-temoins.jpg',
 ];
 
 /**
@@ -155,6 +160,15 @@ export const EXPECTED_ROUTES = [
   },
   { url: '/simulateur', status: 301, to: '/simulateur/' },
   { url: '/simulateur.html', status: 301, to: '/simulateur/' },
+  {
+    url: '/appartements-temoins/',
+    status: 200,
+    canonical: 'https://emaraestates.com/appartements-temoins/',
+    indexed: true,
+    newRoute: true,
+  },
+  { url: '/appartements-temoins', status: 301, to: '/appartements-temoins/' },
+  { url: '/appartements-temoins.html', status: 301, to: '/appartements-temoins/' },
   { url: '/contact', status: 200, canonical: 'https://emaraestates.com/contact', indexed: true },
   { url: '/contact/', status: 301, to: '/contact' },
   { url: '/contact.html', status: 301, to: '/contact' },
@@ -199,6 +213,14 @@ export const EXPECTED_ROUTES = [
   },
   { url: '/offre-gueliz.html', status: 301, to: '/offre-gueliz' },
   {
+    url: '/simulateur-equipe',
+    status: 200,
+    canonical: null,
+    robots: 'noindex, nofollow',
+    newRoute: true,
+  },
+  { url: '/simulateur-equipe.html', status: 301, to: '/simulateur-equipe' },
+  {
     url: '/recrutement-commercial-marrakech',
     status: 200,
     canonical: 'https://emaraestates.com/recrutement-commercial-marrakech',
@@ -233,11 +255,13 @@ export const EXPECTED_ROUTES = [
 export const BROWSER_ROUTES = [
   '/',
   '/simulateur/',
+  '/appartements-temoins/',
   '/contact',
   '/residences-honest-678/',
   '/immobilier-luxe-marrakech',
   '/appartement-neuf-gueliz-marrakech',
   '/investissement-immobilier-marrakech',
   '/offre-gueliz',
+  '/simulateur-equipe',
   '/recrutement-commercial-marrakech',
 ];
