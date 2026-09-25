@@ -30,7 +30,7 @@ const record = (name, ok, detail = '') => {
 const HARNESS_NOISE = /React DevTools|Fast Refresh|webpack|HMR|Ignoring Event: localhost/i;
 const PHP_ENDPOINTS = /contact\.php|newsletter\.php|lead-gueliz\.php|recruitment\.php|api\/recruitment\/apply/;
 const THIRD_PARTY_PIXEL =
-  /facebook\.com|connect\.facebook\.net|fbevents|sc-static\.net|snapchat\.com|pixel\.tapad\.com|tr\.snapchat\.com|analytics\.ahrefs\.com/i;
+  /facebook\.com|connect\.facebook\.net|fbevents|sc-static\.net|snapchat\.com|pixel\.tapad\.com|tr\.snapchat\.com|analytics\.ahrefs\.com|api\.country\.is/i;
 
 const browser = await chromium.launch();
 

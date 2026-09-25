@@ -48,7 +48,7 @@ const record = (name, ok, detail = '') => results.push({ name, ok, detail });
 
 /** Third-party analytics / maps noise must not block a first-party deploy. */
 const THIRD_PARTY_NOISE =
-  /facebook\.com|connect\.facebook\.net|fbevents|sc-static\.net|snapchat\.com|pixel\.tapad\.com|tr\.snapchat\.com|analytics\.ahrefs\.com|maps\.googleapis\.com|maps\.gstatic\.com|www\.google\.com\/maps|googletagmanager|google-analytics|doubleclick\.net/i;
+  /facebook\.com|connect\.facebook\.net|fbevents|sc-static\.net|snapchat\.com|pixel\.tapad\.com|tr\.snapchat\.com|analytics\.ahrefs\.com|maps\.googleapis\.com|maps\.gstatic\.com|www\.google\.com\/maps|googletagmanager|google-analytics|doubleclick\.net|api\.country\.is/i;
 
 function isFirstPartyNoise(text) {
   return THIRD_PARTY_NOISE.test(text);
