@@ -50,6 +50,8 @@ export const ASSET_FILES = [
   'favicon.ico',
   // OG image for /appartements-temoins/ — /img itself is not uploaded.
   'og-appartements-temoins.jpg',
+  // Forest logo for the /simulateur-equipe printable payment plan.
+  'logo-emara-forest.png',
 ];
 
 /**
