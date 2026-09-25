@@ -30,6 +30,7 @@ export const FLAT_PAGES = [
  */
 export const SLASHED_PAGES = [
   { from: 'residences-honest-678.html', to: 'residences-honest-678/index.html' },
+  { from: 'simulateur.html', to: 'simulateur/index.html' },
 ];
 
 /**
@@ -133,6 +134,7 @@ export const LEGACY_KEEP = {
  */
 export const ROOT_SYNC = [
   '.htaccess',
+  'contact.php',
   'recruitment.php',
   'recruitment-cv.php',
   'recruitment-private',
@@ -144,6 +146,15 @@ export const ROOT_SYNC = [
 export const EXPECTED_ROUTES = [
   { url: '/', status: 200, canonical: 'https://emaraestates.com/', indexed: true },
   { url: '/index.html', status: 301, to: '/' },
+  {
+    url: '/simulateur/',
+    status: 200,
+    canonical: 'https://emaraestates.com/simulateur/',
+    indexed: true,
+    newRoute: true,
+  },
+  { url: '/simulateur', status: 301, to: '/simulateur/' },
+  { url: '/simulateur.html', status: 301, to: '/simulateur/' },
   { url: '/contact', status: 200, canonical: 'https://emaraestates.com/contact', indexed: true },
   { url: '/contact/', status: 301, to: '/contact' },
   { url: '/contact.html', status: 301, to: '/contact' },
@@ -221,6 +232,7 @@ export const EXPECTED_ROUTES = [
 /** Routes rendered in a browser during the runtime pass. */
 export const BROWSER_ROUTES = [
   '/',
+  '/simulateur/',
   '/contact',
   '/residences-honest-678/',
   '/immobilier-luxe-marrakech',

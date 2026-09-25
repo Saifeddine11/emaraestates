@@ -281,6 +281,7 @@ function shouldSilentlyAccept(payload) {
 function validatePayload(input) {
   const phonePayload = normalizePhonePayload(input);
   const payload = {
+    form_type: sanitize(input.form_type, 40),
     nom_complet: sanitize(input.nom_complet, 80),
     email: sanitize(input.email, 120),
     telephone: phonePayload.telephone,
@@ -294,7 +295,33 @@ function validatePayload(input) {
     jour_visite: sanitize(input.jour_visite, 80),
     source: sanitize(input.source, 120),
     company_website: sanitize(input.company_website, 120),
-    elapsed_ms: Number(input.elapsed_ms || 0)
+    elapsed_ms: Number(input.elapsed_ms || 0),
+    projectName: sanitize(input.projectName, 120),
+    propertyType: sanitize(input.propertyType, 120),
+    budgetValue: Math.round(parseSimulatorBudget(input.budgetValue)),
+    currency: sanitize(input.currency, 3),
+    reservationAmount: Math.round(parseSimulatorBudget(input.reservationAmount)),
+    installmentAmount: Math.round(parseSimulatorBudget(input.installmentAmount)),
+    handoverAmount: Math.round(parseSimulatorBudget(input.handoverAmount)),
+    leadSource: sanitize(input.leadSource, 120),
+    adPlatform: sanitize(input.adPlatform, 120),
+    campaign: sanitize(input.campaign, 200),
+    adset: sanitize(input.adset, 200),
+    ad: sanitize(input.ad, 200),
+    landingPageUrl: sanitize(input.landingPageUrl, 500),
+    utmSource: sanitize(input.utmSource, 200),
+    utmMedium: sanitize(input.utmMedium, 200),
+    utmCampaign: sanitize(input.utmCampaign, 200),
+    utmContent: sanitize(input.utmContent, 200),
+    utmTerm: sanitize(input.utmTerm, 200),
+    campaignId: sanitize(input.campaignId, 200),
+    adsetId: sanitize(input.adsetId, 200),
+    adId: sanitize(input.adId, 200),
+    fbclid: sanitize(input.fbclid, 255),
+    fbc: sanitize(input.fbc, 255),
+    fbp: sanitize(input.fbp, 255),
+    referrer: sanitize(input.referrer, 500),
+    submissionDate: sanitize(input.submissionDate, 60)
   };
   return { payload, errors: {} };
 }
@@ -348,6 +375,7 @@ async function forwardLead(payload) {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
+      form_type: escapeHtml(payload.form_type),
       nom_complet: escapeHtml(payload.nom_complet),
       email: escapeHtml(payload.email),
       telephone: escapeHtml(payload.telephone),
@@ -361,7 +389,34 @@ async function forwardLead(payload) {
       jour_visite: escapeHtml(payload.jour_visite),
       company_website: escapeHtml(payload.company_website),
       elapsed_ms: payload.elapsed_ms,
-      source: escapeHtml(payload.source || 'emaraestates.com')
+      source: escapeHtml(payload.source || 'emaraestates.com'),
+      form_id: payload.form_type === 'simulateur_request' ? 'simulateurForm' : 'contactForm',
+      projectName: escapeHtml(payload.projectName),
+      propertyType: escapeHtml(payload.propertyType),
+      budgetValue: payload.budgetValue,
+      currency: escapeHtml(payload.currency),
+      reservationAmount: payload.reservationAmount,
+      installmentAmount: payload.installmentAmount,
+      handoverAmount: payload.handoverAmount,
+      leadSource: escapeHtml(payload.leadSource),
+      adPlatform: escapeHtml(payload.adPlatform),
+      campaign: escapeHtml(payload.campaign),
+      adset: escapeHtml(payload.adset),
+      ad: escapeHtml(payload.ad),
+      landingPageUrl: escapeHtml(payload.landingPageUrl),
+      utmSource: escapeHtml(payload.utmSource),
+      utmMedium: escapeHtml(payload.utmMedium),
+      utmCampaign: escapeHtml(payload.utmCampaign),
+      utmContent: escapeHtml(payload.utmContent),
+      utmTerm: escapeHtml(payload.utmTerm),
+      campaignId: escapeHtml(payload.campaignId),
+      adsetId: escapeHtml(payload.adsetId),
+      adId: escapeHtml(payload.adId),
+      fbclid: escapeHtml(payload.fbclid),
+      fbc: escapeHtml(payload.fbc),
+      fbp: escapeHtml(payload.fbp),
+      referrer: escapeHtml(payload.referrer),
+      submissionDate: escapeHtml(payload.submissionDate)
     })
   });
   if (!response.ok) throw new Error(`Zapier webhook failed: ${response.status}`);
@@ -928,6 +983,8 @@ async function handleContact(req, res) {
 }
 
 const CANONICAL_REDIRECTS = {
+  '/simulateur': '/simulateur/',
+  '/simulateur.html': '/simulateur/',
   '/residences-honest-678': '/residences-honest-678/',
   '/residences-honest-678.html': '/residences-honest-678/',
   '/contact/': '/contact',

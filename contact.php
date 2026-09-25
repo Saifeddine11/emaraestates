@@ -321,6 +321,7 @@ function validatePayload(array $input, array $validBudgets, array $blockedTerms)
 {
     $phonePayload = normalizePhonePayload($input);
     $payload = [
+        'form_type' => sanitizeValue($input['form_type'] ?? '', 40),
         'nom_complet' => sanitizeValue($input['nom_complet'] ?? '', 80),
         'email' => sanitizeValue($input['email'] ?? '', 120),
         'telephone' => $phonePayload['telephone'],
@@ -334,6 +335,35 @@ function validatePayload(array $input, array $validBudgets, array $blockedTerms)
         'source' => sanitizeValue($input['source'] ?? '', 120),
         'company_website' => sanitizeValue($input['company_website'] ?? '', 120),
         'elapsed_ms' => (int) ($input['elapsed_ms'] ?? 0),
+        // Optional simulator context. These keys follow the established
+        // Guéliz/HubSpot attribution vocabulary and stay empty for every
+        // existing contact form submission.
+        'projectName' => sanitizeValue($input['projectName'] ?? '', 120),
+        'propertyType' => sanitizeValue($input['propertyType'] ?? '', 120),
+        'budgetValue' => (int) round(parseSimulatorBudget($input['budgetValue'] ?? 0)),
+        'currency' => sanitizeValue($input['currency'] ?? '', 3),
+        'reservationAmount' => (int) round(parseSimulatorBudget($input['reservationAmount'] ?? 0)),
+        'installmentAmount' => (int) round(parseSimulatorBudget($input['installmentAmount'] ?? 0)),
+        'handoverAmount' => (int) round(parseSimulatorBudget($input['handoverAmount'] ?? 0)),
+        'leadSource' => sanitizeValue($input['leadSource'] ?? '', 120),
+        'adPlatform' => sanitizeValue($input['adPlatform'] ?? '', 120),
+        'campaign' => sanitizeValue($input['campaign'] ?? '', 200),
+        'adset' => sanitizeValue($input['adset'] ?? '', 200),
+        'ad' => sanitizeValue($input['ad'] ?? '', 200),
+        'landingPageUrl' => sanitizeValue($input['landingPageUrl'] ?? '', 500),
+        'utmSource' => sanitizeValue($input['utmSource'] ?? '', 200),
+        'utmMedium' => sanitizeValue($input['utmMedium'] ?? '', 200),
+        'utmCampaign' => sanitizeValue($input['utmCampaign'] ?? '', 200),
+        'utmContent' => sanitizeValue($input['utmContent'] ?? '', 200),
+        'utmTerm' => sanitizeValue($input['utmTerm'] ?? '', 200),
+        'campaignId' => sanitizeValue($input['campaignId'] ?? '', 200),
+        'adsetId' => sanitizeValue($input['adsetId'] ?? '', 200),
+        'adId' => sanitizeValue($input['adId'] ?? '', 200),
+        'fbclid' => sanitizeValue($input['fbclid'] ?? '', 255),
+        'fbc' => sanitizeValue($input['fbc'] ?? '', 255),
+        'fbp' => sanitizeValue($input['fbp'] ?? '', 255),
+        'referrer' => sanitizeValue($input['referrer'] ?? '', 500),
+        'submissionDate' => sanitizeValue($input['submissionDate'] ?? '', 60),
     ];
     return [$payload, []];
 }
@@ -392,6 +422,7 @@ function sendLeadToZapier(array $payload, array $env, string $ip): void
     }
 
     $zapierPayload = [
+        'form_type' => $payload['form_type'],
         'nom_complet' => $payload['nom_complet'],
         'email' => $payload['email'],
         'telephone' => $payload['telephone'],
@@ -405,11 +436,37 @@ function sendLeadToZapier(array $payload, array $env, string $ip): void
         'company_website' => $payload['company_website'],
         'elapsed_ms' => $payload['elapsed_ms'],
         'source' => $payload['source'] !== '' ? $payload['source'] : 'emaraestates.com',
-        'form_id' => 'contactForm',
+        'form_id' => $payload['form_type'] === 'simulateur_request' ? 'simulateurForm' : 'contactForm',
         'submitted_at' => date(DATE_ATOM),
         'ip' => $ip,
         'user_agent' => sanitizeValue($_SERVER['HTTP_USER_AGENT'] ?? '', 300),
         'page_url' => leadPageUrl($payload),
+        'projectName' => $payload['projectName'],
+        'propertyType' => $payload['propertyType'],
+        'budgetValue' => $payload['budgetValue'],
+        'currency' => $payload['currency'],
+        'reservationAmount' => $payload['reservationAmount'],
+        'installmentAmount' => $payload['installmentAmount'],
+        'handoverAmount' => $payload['handoverAmount'],
+        'leadSource' => $payload['leadSource'],
+        'adPlatform' => $payload['adPlatform'],
+        'campaign' => $payload['campaign'],
+        'adset' => $payload['adset'],
+        'ad' => $payload['ad'],
+        'landingPageUrl' => $payload['landingPageUrl'],
+        'utmSource' => $payload['utmSource'],
+        'utmMedium' => $payload['utmMedium'],
+        'utmCampaign' => $payload['utmCampaign'],
+        'utmContent' => $payload['utmContent'],
+        'utmTerm' => $payload['utmTerm'],
+        'campaignId' => $payload['campaignId'],
+        'adsetId' => $payload['adsetId'],
+        'adId' => $payload['adId'],
+        'fbclid' => $payload['fbclid'],
+        'fbc' => $payload['fbc'],
+        'fbp' => $payload['fbp'],
+        'referrer' => $payload['referrer'],
+        'submissionDate' => $payload['submissionDate'],
     ];
 
     $context = stream_context_create([
@@ -469,6 +526,9 @@ function sendLeadEmail(array $payload, array $env): void
 
 function leadPageUrl(array $payload): string
 {
+    if (($payload['landingPageUrl'] ?? '') !== '') {
+        return $payload['landingPageUrl'];
+    }
     $referer = sanitizeValue($_SERVER['HTTP_REFERER'] ?? '', 500);
     if ($referer !== '') {
         return $referer;
@@ -481,7 +541,7 @@ function leadPageUrl(array $payload): string
 
 function leadEmailBody(array $payload): string
 {
-    return implode("\r\n", [
+    $lines = [
         'Nouvelle demande — Emara Estates',
         '',
         'Nom complet :',
@@ -504,7 +564,28 @@ function leadEmailBody(array $payload): string
         '',
         'Date :',
         date('d/m/Y H:i'),
-    ]);
+    ];
+
+    if (($payload['form_type'] ?? '') === 'simulateur_request') {
+        $lines = array_merge($lines, [
+            '',
+            'Projet :',
+            fieldOrDefault($payload['projectName']),
+            '',
+            'Type de bien :',
+            fieldOrDefault($payload['propertyType']),
+            '',
+            'Échéancier indicatif (' . fieldOrDefault($payload['currency']) . ') :',
+            'Réservation 30 % : ' . $payload['reservationAmount'],
+            '3 versements de 15 % : ' . $payload['installmentAmount'] . ' chacun',
+            'Remise des clés 25 % : ' . $payload['handoverAmount'],
+            '',
+            'Campagne :',
+            fieldOrDefault($payload['utmCampaign']),
+        ]);
+    }
+
+    return implode("\r\n", $lines);
 }
 
 function sendLeadEmailWithPhpMail(array $payload, array $env): void
