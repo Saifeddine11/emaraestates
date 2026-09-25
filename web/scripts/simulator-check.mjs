@@ -258,6 +258,56 @@ console.log('\nSIMULATOR CHECK\n');
 
 {
   const { context, page } = await open({ width: 1280, height: 800 });
+  await page.evaluate(() => {
+    window.dataLayer = [];
+    window.__partial = [];
+    // Never resolves: the estimate must appear without waiting on the server.
+    window.fetch = (url, init) => {
+      if (String(url).includes('/contact.php')) {
+        window.__partial.push({ url: String(url), keepalive: init.keepalive, body: JSON.parse(init.body) });
+      }
+      return new Promise(() => {});
+    };
+  });
+  const revealBtn = page.locator('button[type="submit"]', { hasText: 'Voir mon apport estimé' });
+  await reveal(page, 150000, 'EUR');
+  let partial = await page.evaluate(() => window.__partial);
+  const lead = partial[0]?.body ?? {};
+  record('partial lead: reveal shows the result without waiting for the server', true);
+  record('partial lead: one request sent on reveal', partial.length === 1, `${partial.length} request(s)`);
+  record(
+    'partial lead: existing apport_simulator contract to /contact.php',
+    partial[0]?.url === '/contact.php' &&
+      lead.form_type === 'apport_simulator' &&
+      lead.email === 'client@example.com' &&
+      lead.budget_value === 150000 &&
+      lead.currency === 'EUR' &&
+      lead.typologie === 'Appartement 2 chambres' &&
+      lead.apport_eur === 45000 &&
+      lead.apport_mad === 450000 &&
+      lead.company_website === '' &&
+      lead.source_page.includes('utm_campaign=hs7-test'),
+    JSON.stringify(lead),
+  );
+  record('partial lead: survives the visitor leaving (keepalive)', partial[0]?.keepalive === true);
+  await revealBtn.click();
+  partial = await page.evaluate(() => window.__partial);
+  record('partial lead: same inputs are not re-sent', partial.length === 1, `${partial.length} request(s)`);
+  for (const value of ['160000', '170000', '190000']) {
+    await page.fill('#simulator-budget', value);
+    await revealBtn.click();
+  }
+  partial = await page.evaluate(() => window.__partial);
+  record('partial lead: capped at 3 per visit', partial.length === 3, `${partial.length} request(s)`);
+  record(
+    'partial lead: no Lead conversion fires',
+    await page.evaluate(() => !window.dataLayer.some((entry) => entry.event === 'Lead')),
+  );
+  await context.close();
+}
+
+{
+  const { context, page } = await open({ width: 1280, height: 800 });
   await page.locator('button[type="submit"]', { hasText: 'Voir mon apport estimé' }).click();
   record('validation: budget error appears', await page.locator('#simulator-budget-error').isVisible());
   record('validation: email error appears', await page.locator('#simulator-email-error').isVisible());

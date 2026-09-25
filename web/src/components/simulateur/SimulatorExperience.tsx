@@ -46,6 +46,46 @@ type Intention = (typeof INTENTIONS)[number];
 
 const CONSENT =
   'En envoyant ce formulaire, vous acceptez d’être contacté par un conseiller Emara Estates concernant votre projet immobilier.';
+/**
+ * Step-1 leads share contact.php's per-IP rate limit with the step-2 form, so
+ * a visitor re-simulating many times must never lock themselves out of it.
+ */
+const MAX_PARTIAL_LEADS = 3;
+
+/**
+ * Records a step-1 lead (email + budget) even if step 2 is never completed.
+ * Uses the existing `apport_simulator` contract of contact.php — the same
+ * payload as the homepage ApportSimulator — which emails it to the team.
+ * Fire-and-forget: the estimate is already shown locally and a failure here
+ * must never surface to the visitor. `keepalive` lets it finish if they leave.
+ */
+function sendPartialLead(simulation: Simulation, honeypot: string) {
+  const apportEur =
+    simulation.currency === 'EUR' ? simulation.reservation : Math.round(simulation.reservation / 10);
+  const apportMad =
+    simulation.currency === 'EUR' ? Math.round(simulation.reservation * 10) : simulation.reservation;
+  try {
+    void fetch(ENDPOINTS.contact, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      keepalive: true,
+      body: JSON.stringify({
+        form_type: 'apport_simulator',
+        email: simulation.email,
+        budget_value: simulation.budget,
+        currency: simulation.currency,
+        typologie: simulation.propertyType,
+        apport_mad: apportMad,
+        apport_eur: apportEur,
+        source_page: window.location.href,
+        company_website: honeypot,
+      }),
+    }).catch(() => {});
+  } catch {
+    // Never let lead capture break the reveal.
+  }
+}
+
 const SUBMIT_ERROR =
   'Votre demande n’a pas pu être envoyée. Réessayez ou contactez-nous directement sur WhatsApp.';
 
@@ -88,6 +128,9 @@ export function SimulatorExperience() {
   const [email, setEmail] = useState('');
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [simulation, setSimulation] = useState<Simulation | null>(null);
+  const [honeypot, setHoneypot] = useState('');
+  /** Inputs already sent as a step-1 lead, so re-clicking reveal doesn't re-email. */
+  const sentPartialLeads = useRef(new Set<string>());
   const resultRef = useRef<HTMLDivElement>(null);
   const experienceStartedAt = useRef(0);
   const prefersReducedMotion = useReducedMotion();
@@ -132,6 +175,11 @@ export function SimulatorExperience() {
       project: 'Honest Signature 7',
     });
 
+    const leadKey = [next.email.toLowerCase(), next.budget, next.currency, next.propertyType].join('|');
+    if (!sentPartialLeads.current.has(leadKey) && sentPartialLeads.current.size < MAX_PARTIAL_LEADS) {
+      sentPartialLeads.current.add(leadKey);
+      sendPartialLead(next, honeypot);
+    }
   }
 
   return (
@@ -169,6 +217,17 @@ export function SimulatorExperience() {
               noValidate
               className="bg-white p-6 text-forest sm:p-8 lg:p-[42px]"
             >
+              {/* Same honeypot contract as the step-2 and homepage forms. */}
+              <input
+                type="text"
+                name="company_website"
+                tabIndex={-1}
+                autoComplete="off"
+                aria-hidden="true"
+                value={honeypot}
+                onChange={(event) => setHoneypot(event.target.value)}
+                className="absolute -left-[9999px] size-px overflow-hidden"
+              />
               <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-olive">
                 Étape 1 sur 2 · Simulation
               </p>
