@@ -16,20 +16,53 @@ import { CONTACT } from '@/lib/site';
 /**
  * Internal calculator for the sales team (/simulateur-equipe).
  *
- * Same schedule as the public /simulateur/ — it imports that page's own
- * calculation — applied to the total price, which here always includes the
- * mandatory parking space. The public simulator is unchanged. No email, no
+ * The apartment price is surface × price per m² (the team quotes this way,
+ * never a direct price). The same schedule as the public /simulateur/ — it
+ * imports that page's own calculation — is applied to the total price, which
+ * always includes the mandatory parking space. The public simulator is unchanged. No email, no
  * lead capture, no tracking: nothing leaves the browser. "Imprimer en PDF"
  * prints a branded payment plan through the browser's own print dialog.
  */
 
-const LAUNCH_PRICE_EUR = 129000;
 /** Mandatory parking space, priced in dirhams. */
 const PARKING_MAD = 50000;
 /** EUR equivalent at the site's fixed 1 € = 10 MAD rate (same as the homepage simulator). */
 const PARKING = { MAD: PARKING_MAD, EUR: PARKING_MAD / 10 } as const;
 
 const PRINT_ID = 'payment-plan-print';
+
+/** "65,5" / "65.5" → 65.5 (up to 2 decimals); 0 when empty or invalid. */
+function parseSurface(raw: string) {
+  const value = Number.parseFloat(raw.replace(/\s/g, '').replace(',', '.'));
+  return Number.isFinite(value) && value > 0 ? Math.round(value * 100) / 100 : 0;
+}
+
+/** Keeps digits and one decimal comma (max 2 decimals, 4 integer digits). */
+function cleanSurface(raw: string) {
+  const [whole = '', ...rest] = raw.replace(/\./g, ',').replace(/[^\d,]/g, '').split(',');
+  const intPart = whole.slice(0, 4);
+  return rest.length ? `${intPart},${rest.join('').slice(0, 2)}` : intPart;
+}
+
+function formatSurface(value: number) {
+  return `${new Intl.NumberFormat('fr-FR', { maximumFractionDigits: 2 }).format(value)}\u00a0m²`;
+}
+
+/** Re-groups digits by thousands while keeping the caret after the same digit. */
+function onGroupedChange(event: React.ChangeEvent<HTMLInputElement>, set: (value: string) => void) {
+  const input = event.target;
+  const caret = input.selectionStart ?? input.value.length;
+  const digitsBeforeCaret = input.value.slice(0, caret).replace(/\D/g, '').length;
+  const next = groupDigits(input.value);
+  set(next);
+  window.requestAnimationFrame(() => {
+    let position = 0;
+    for (let seen = 0; position < next.length && seen < digitsBeforeCaret; position += 1) {
+      if (/\d/.test(next[position])) seen += 1;
+    }
+    input.setSelectionRange(position, position);
+  });
+}
 
 const noopSubscribe = () => () => {};
 /** False during SSR and hydration, true afterwards — the portal needs `document.body`. */
@@ -38,12 +71,15 @@ function useIsClient() {
 }
 
 export function SalesCalculator() {
-  const [price, setPrice] = useState('');
+  const [surface, setSurface] = useState('');
+  const [pricePerM2, setPricePerM2] = useState('');
   const [currency, setCurrency] = useState<Currency>('EUR');
   const [clientName, setClientName] = useState('');
   const mounted = useIsClient();
 
-  const apartment = parseBudget(price);
+  const area = parseSurface(surface);
+  const rate = parseBudget(pricePerM2);
+  const apartment = area && rate ? Math.round(area * rate) : 0;
   const parking = PARKING[currency];
   const total = apartment ? apartment + parking : 0;
   const schedule = total ? calculateSchedule(total, currency, '', '') : null;
@@ -58,6 +94,8 @@ export function SalesCalculator() {
     : [];
   const priceLines = schedule
     ? ([
+        ['Superficie', formatSurface(area)],
+        ['Prix au m²', formatAmount(rate, currency)],
         ['Prix de l’appartement', formatAmount(apartment, currency)],
         [
           'Place de parking (obligatoire)',
@@ -95,39 +133,45 @@ export function SalesCalculator() {
             Calculatrice d’échéancier Honest Signature 7
           </h1>
           <p className="mx-auto mt-3 max-w-[640px] text-[15.5px] leading-[1.65] text-forest/65">
-            Saisissez le prix de l’appartement : la place de parking obligatoire est ajoutée et
-            l’échéancier se calcule sur le prix total.
+            Saisissez la superficie et le prix au m² : le prix de l’appartement est calculé, la
+            place de parking obligatoire est ajoutée et l’échéancier porte sur le prix total.
           </p>
         </div>
 
         <div className="mt-8 grid overflow-hidden rounded-[26px] border border-forest/10 bg-white shadow-[0_25px_85px_rgba(33,53,37,0.08)] lg:grid-cols-[0.9fr_1.1fr]">
           <div className="p-6 sm:p-8 lg:p-[42px]">
-            <label htmlFor="sales-budget" className={fieldLabel}>
-              Prix de l’appartement
+            <label htmlFor="sales-surface" className={fieldLabel}>
+              Superficie
+            </label>
+            <div className="relative">
+              <input
+                id="sales-surface"
+                type="text"
+                inputMode="decimal"
+                autoComplete="off"
+                autoFocus
+                placeholder="Ex : 65,5"
+                value={surface}
+                onChange={(event) => setSurface(cleanSurface(event.target.value))}
+                className={cn(fieldInput, 'pr-14 text-[20px] font-semibold tracking-[-0.02em]')}
+              />
+              <span aria-hidden="true" className="pointer-events-none absolute right-5 top-1/2 -translate-y-1/2 text-[15px] font-semibold text-forest/50">
+                m²
+              </span>
+            </div>
+
+            <label htmlFor="sales-price-m2" className={cn(fieldLabel, 'mt-5')}>
+              Prix au m²
             </label>
             <div className="grid grid-cols-[minmax(0,1fr)_auto] gap-3">
               <input
-                id="sales-budget"
+                id="sales-price-m2"
                 type="text"
                 inputMode="numeric"
                 autoComplete="off"
-                autoFocus
-                placeholder={currency === 'EUR' ? 'Ex : 180 000' : 'Ex : 1 900 000'}
-                value={price}
-                onChange={(event) => {
-                  const input = event.target;
-                  const caret = input.selectionStart ?? input.value.length;
-                  const digitsBeforeCaret = input.value.slice(0, caret).replace(/\D/g, '').length;
-                  const next = groupDigits(input.value);
-                  setPrice(next);
-                  window.requestAnimationFrame(() => {
-                    let position = 0;
-                    for (let seen = 0; position < next.length && seen < digitsBeforeCaret; position += 1) {
-                      if (/\d/.test(next[position])) seen += 1;
-                    }
-                    input.setSelectionRange(position, position);
-                  });
-                }}
+                placeholder={currency === 'EUR' ? 'Ex : 2 500' : 'Ex : 25 000'}
+                value={pricePerM2}
+                onChange={(event) => onGroupedChange(event, setPricePerM2)}
                 className={cn(fieldInput, 'text-[20px] font-semibold tracking-[-0.02em]')}
               />
               <div role="group" aria-label="Devise" className="flex rounded-[14px] border border-forest/12 p-1">
@@ -148,24 +192,13 @@ export function SalesCalculator() {
               </div>
             </div>
 
-            <button
-              type="button"
-              onClick={() => {
-                setCurrency('EUR');
-                setPrice(groupDigits(String(LAUNCH_PRICE_EUR)));
-              }}
-              className="mt-3 inline-flex min-h-11 cursor-pointer items-center rounded-full border border-forest/12 px-4 text-[13.5px] font-semibold text-forest/75 transition-colors hover:border-forest/35 hover:text-forest"
-            >
-              Prix d’appel : 129 000 €
-            </button>
+            {apartment > 0 && (
+              <p data-apartment-price={apartment} className="mt-4 rounded-2xl bg-forest/[0.04] px-4 py-3 text-[14.5px] text-forest/75">
+                {formatSurface(area)} × {formatAmount(rate, currency)} ={' '}
+                <strong className="font-semibold text-forest">{formatAmount(apartment, currency)}</strong>
+              </p>
+            )}
 
-
-            <p className="mt-6 text-[13px] leading-relaxed text-forest/55">
-              Place de parking obligatoire : {formatAmount(PARKING_MAD, 'MAD')}, soit{' '}
-              {formatAmount(PARKING.EUR, 'EUR')} au taux fixe du site (1 € = 10 MAD). Montants
-              calculés dans la devise choisie. Estimation indicative : prix, échéances contractuelles
-              et disponibilités à confirmer.
-            </p>
           </div>
 
           <div className="bg-[#eaf0e9] p-6 sm:p-8 lg:p-[42px]" aria-live="polite">
@@ -196,7 +229,7 @@ export function SalesCalculator() {
                     >
                       <dt className="text-[14.5px] text-forest/75">
                         {label}
-                        <span className="ml-2 text-[11px] font-semibold uppercase tracking-[0.12em] text-olive">
+                        <span className="ml-2 whitespace-nowrap text-[11px] font-semibold uppercase tracking-[0.12em] text-olive">
                           {percent}
                         </span>
                       </dt>
@@ -234,10 +267,16 @@ export function SalesCalculator() {
               </>
             ) : (
               <p className="mt-3 text-[15px] leading-relaxed text-forest/60">
-                Saisissez un prix pour afficher le plan de paiement : 30 % à la réservation, 15 % tous
+                Saisissez la superficie et le prix au m² pour afficher le plan de paiement : 30 % à la réservation, 15 % tous
                 les six mois (3 fois), 25 % à la remise des clés — parking obligatoire inclus.
               </p>
             )}
+            <p className="mt-5 text-[13px] leading-relaxed text-forest/55">
+              Place de parking obligatoire : {formatAmount(PARKING_MAD, 'MAD')}, soit{' '}
+              {formatAmount(PARKING.EUR, 'EUR')} au taux fixe du site (1 € = 10 MAD). Montants
+              calculés dans la devise choisie. Estimation indicative : prix, échéances contractuelles
+              et disponibilités à confirmer.
+            </p>
           </div>
         </div>
       </div>
@@ -248,9 +287,9 @@ export function SalesCalculator() {
         schedule &&
         createPortal(
           <div id={PRINT_ID} className="hidden text-forest">
-            <div className="flex items-start justify-between gap-8 border-b border-forest/20 pb-6">
+            <div className="flex items-start justify-between gap-8 border-b border-forest/20 pb-5">
               {/* eslint-disable-next-line @next/next/no-img-element -- print-only; next/image adds nothing here */}
-              <img src="/logo-emara-forest.png" alt="Emara Estates" className="h-[64px] w-auto" />
+              <img src="/logo-emara-forest.png" alt="Emara Estates" className="h-[56px] w-auto" />
               <div className="text-right text-[11px] leading-[1.6] text-forest/70">
                 <p>{CONTACT.phoneDisplay}</p>
                 <p>{CONTACT.email}</p>
@@ -258,7 +297,7 @@ export function SalesCalculator() {
               </div>
             </div>
 
-            <p className="mt-8 text-[11px] font-semibold uppercase tracking-[0.18em] text-bronze">
+            <p className="mt-6 text-[11px] font-semibold uppercase tracking-[0.18em] text-bronze">
               Honest Signature 7 · Guéliz, Marrakech
             </p>
             <h1 className="mt-2 font-sans text-[30px] font-semibold tracking-[-0.03em]">Plan de paiement</h1>
@@ -267,22 +306,22 @@ export function SalesCalculator() {
               {today}
             </p>
 
-            <table className="mt-8 w-full border-collapse text-[13px]">
+            <table className="mt-6 w-full border-collapse text-[13px]">
               <tbody>
                 {priceLines.map(([label, value]) => (
                   <tr key={label} className="border-b border-forest/12">
-                    <td className="py-2.5">{label}</td>
-                    <td className="py-2.5 text-right">{value}</td>
+                    <td className="py-2">{label}</td>
+                    <td className="py-2 text-right">{value}</td>
                   </tr>
                 ))}
                 <tr>
-                  <td className="py-3 text-[14px] font-semibold">Prix total</td>
-                  <td className="py-3 text-right text-[16px] font-semibold">{formatAmount(schedule.budget, currency)}</td>
+                  <td className="py-2.5 text-[14px] font-semibold">Prix total</td>
+                  <td className="py-2.5 text-right text-[16px] font-semibold">{formatAmount(schedule.budget, currency)}</td>
                 </tr>
               </tbody>
             </table>
 
-            <h2 className="mt-8 font-sans text-[11px] font-semibold uppercase tracking-[0.16em] text-olive">
+            <h2 className="mt-6 font-sans text-[11px] font-semibold uppercase tracking-[0.16em] text-olive">
               Échéancier
             </h2>
             <table className="mt-3 w-full border-collapse text-[13px]">
@@ -296,20 +335,20 @@ export function SalesCalculator() {
               <tbody>
                 {rows.map(([label, percent, amount]) => (
                   <tr key={label} className="border-b border-forest/12">
-                    <td className="py-3">{label}</td>
-                    <td className="py-3 text-center">{percent}</td>
-                    <td className="py-3 text-right font-semibold">{formatAmount(amount, currency)}</td>
+                    <td className="py-2.5">{label}</td>
+                    <td className="py-2.5 text-center">{percent}</td>
+                    <td className="py-2.5 text-right font-semibold">{formatAmount(amount, currency)}</td>
                   </tr>
                 ))}
                 <tr>
-                  <td className="py-3 font-semibold">Total</td>
-                  <td className="py-3 text-center font-semibold">100 %</td>
-                  <td className="py-3 text-right font-semibold">{formatAmount(schedule.budget, currency)}</td>
+                  <td className="py-2.5 font-semibold">Total</td>
+                  <td className="py-2.5 text-center font-semibold">100 %</td>
+                  <td className="py-2.5 text-right font-semibold">{formatAmount(schedule.budget, currency)}</td>
                 </tr>
               </tbody>
             </table>
 
-            <div className="mt-10 border-t border-forest/15 pt-5 text-[10.5px] leading-[1.7] text-forest/65">
+            <div className="mt-7 border-t border-forest/15 pt-5 text-[10.5px] leading-[1.7] text-forest/65">
               <p>
                 Le prix total inclut la place de parking obligatoire ({formatAmount(PARKING_MAD, 'MAD')}
                 {currency === 'EUR' ? `, soit ${formatAmount(PARKING.EUR, 'EUR')} au taux 1 € = 10 MAD` : ''}).

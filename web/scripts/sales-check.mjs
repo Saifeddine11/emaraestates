@@ -52,17 +52,24 @@ console.log('\nSALES CALCULATOR CHECK\n');
   record('shared header and footer render', (await page.locator('#nav').count()) === 1 && (await page.locator('footer').count()) >= 1);
   record('empty state shows no amounts', (await page.locator('[data-payment-value]').count()) === 0);
 
-  await page.locator('#sales-budget').pressSequentially('180001');
-  record('price input groups digits', (await page.inputValue('#sales-budget')) === '180 001', await page.inputValue('#sales-budget'));
+  record('no direct price field', (await page.locator('#sales-budget').count()) === 0);
+  await page.locator('#sales-surface').pressSequentially('72.5');
+  record('surface accepts decimals (dot → comma)', (await page.inputValue('#sales-surface')) === '72,5', await page.inputValue('#sales-surface'));
+  record('nothing computed with surface only', (await page.locator('[data-payment-value]').count()) === 0);
+  await page.locator('#sales-price-m2').pressSequentially('2483');
+  record('price per m² groups digits', (await page.inputValue('#sales-price-m2')) === '2 483', await page.inputValue('#sales-price-m2'));
+  const aptEur = await page.locator('[data-apartment-price]').evaluate((el) => Number(el.dataset.apartmentPrice));
+  // 72,5 × 2 483 = 180 017,5 → 180 018 € (rounded to the euro)
+  record('apartment = surface × price per m²', aptEur === 180018, String(aptEur));
   const eurTotal = await page.locator('[data-total]').evaluate((el) => Number(el.dataset.total));
-  record('EUR: total = apartment + 5 000 € parking', eurTotal === 185001, String(eurTotal));
+  record('EUR: total = apartment + 5 000 € parking', eurTotal === 185018, String(eurTotal));
   const eur = await values(page);
   record(
     'EUR: public simulator schedule applied to the total',
-    JSON.stringify(eur) === JSON.stringify([55500, 27750, 27750, 27750, 46251]),
+    JSON.stringify(eur) === JSON.stringify([55505, 27753, 27753, 27753, 46254]),
     eur.join(' + '),
   );
-  record('EUR: payments add exactly to the total', sum(eur) === 185001);
+  record('EUR: payments add exactly to the total', sum(eur) === 185018);
   const labels = await page.locator('[data-payment-value] dt').allInnerTexts();
   record(
     'labels: 15 % every six months',
@@ -73,22 +80,20 @@ console.log('\nSALES CALCULATOR CHECK\n');
   );
 
   await page.getByRole('button', { name: 'MAD', exact: true }).click();
-  await page.fill('#sales-budget', '1900001');
+  await page.fill('#sales-surface', '100');
+  await page.fill('#sales-price-m2', '19000');
   const madTotal = await page.locator('[data-total]').evaluate((el) => Number(el.dataset.total));
-  record('MAD: total = apartment + 50 000 MAD parking', madTotal === 1950001, String(madTotal));
+  record('MAD: total = 100 m² × 19 000 + 50 000 MAD parking', madTotal === 1950000, String(madTotal));
   const mad = await values(page);
-  record('MAD: payments add exactly to the total', sum(mad) === 1950001, mad.join(' + '));
+  record('MAD: payments add exactly to the total', sum(mad) === 1950000, mad.join(' + '));
   record('MAD: amounts shown in MAD', (await page.locator('[data-payment-value]').first().innerText()).includes('MAD'));
 
-  await page.getByRole('button', { name: /Prix d’appel/ }).click();
-  record(
-    'preset: launch price fills 129 000 € in EUR',
-    (await page.inputValue('#sales-budget')) === '129 000' &&
-      (await page.getByRole('button', { name: 'EUR', exact: true }).getAttribute('aria-pressed')) === 'true',
-  );
-  record('preset: total includes parking (134 000 €)', sum(await values(page)) === 134000);
+  record('no launch-price shortcut (direct prices removed)', (await page.getByRole('button', { name: /Prix d’appel/ }).count()) === 0);
   record('no copy button any more', (await page.getByRole('button', { name: /Copier/ }).count()) === 0);
 
+  await page.getByRole('button', { name: 'EUR', exact: true }).click();
+  await page.fill('#sales-surface', '1234,56');
+  await page.fill('#sales-price-m2', '12345');
   await page.fill('#sales-client', 'Client Test');
   await page.evaluate(() => {
     window.__printed = [];
@@ -110,6 +115,9 @@ console.log('\nSALES CALCULATOR CHECK\n');
       sheetText.includes('Plan de paiement') &&
       sheetText.includes('Établi pour Client Test') &&
       sheetText.includes('Place de parking (obligatoire)') &&
+      sheetText.includes('Superficie') &&
+      /1\s?234,56\s?m²/.test(sheetText) &&
+      sheetText.includes('Prix au m²') &&
       sheetText.includes('18 mois après la réservation') &&
       sheetText.includes('non contractuel'),
   );
@@ -129,7 +137,8 @@ console.log('\nSALES CALCULATOR CHECK\n');
 
 {
   const { context, page } = await open({ width: 390, height: 844, isMobile: true, hasTouch: true });
-  await page.locator('#sales-budget').fill('250000');
+  await page.locator('#sales-surface').fill('85');
+  await page.locator('#sales-price-m2').fill('2600');
   const lastTop = await page.locator('[data-payment-value]').last().evaluate((el) => el.getBoundingClientRect().top);
   record('mobile: result shows without a submit button', (await page.locator('[data-payment-value]').count()) === 5);
   const overflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
