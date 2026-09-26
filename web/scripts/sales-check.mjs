@@ -53,23 +53,31 @@ console.log('\nSALES CALCULATOR CHECK\n');
   record('empty state shows no amounts', (await page.locator('[data-payment-value]').count()) === 0);
 
   record('no direct price field', (await page.locator('#sales-budget').count()) === 0);
+  record('no euro option (dirhams only)', (await page.getByRole('button', { name: 'EUR', exact: true }).count()) === 0);
+  const pressed = (name) => page.getByRole('button', { name: new RegExp(`^${name}`) }).getAttribute('aria-pressed');
+  record('type: Appartement selected by default', (await pressed('Appartement')) === 'true');
+  record('type: Appartement fills 27 000 MAD/m²', (await page.inputValue('#sales-price-m2')) === '27 000', await page.inputValue('#sales-price-m2'));
+
   await page.locator('#sales-surface').pressSequentially('72.5');
   record('surface accepts decimals (dot → comma)', (await page.inputValue('#sales-surface')) === '72,5', await page.inputValue('#sales-surface'));
-  record('nothing computed with surface only', (await page.locator('[data-payment-value]').count()) === 0);
-  await page.locator('#sales-price-m2').pressSequentially('2483');
-  record('price per m² groups digits', (await page.inputValue('#sales-price-m2')) === '2 483', await page.inputValue('#sales-price-m2'));
-  const aptEur = await page.locator('[data-apartment-price]').evaluate((el) => Number(el.dataset.apartmentPrice));
-  // 72,5 × 2 483 = 180 017,5 → 180 018 € (rounded to the euro)
-  record('apartment = surface × price per m²', aptEur === 180018, String(aptEur));
-  const eurTotal = await page.locator('[data-total]').evaluate((el) => Number(el.dataset.total));
-  record('EUR: total = apartment + 5 000 € parking', eurTotal === 185018, String(eurTotal));
-  const eur = await values(page);
+  const apt = await page.locator('[data-apartment-price]').evaluate((el) => Number(el.dataset.apartmentPrice));
+  record('Appartement: 72,5 m² × 27 000 = 1 957 500 MAD', apt === 1957500, String(apt));
+  const aptTotal = await page.locator('[data-total]').evaluate((el) => Number(el.dataset.total));
+  record('total = apartment + 50 000 MAD parking', aptTotal === 2007500, String(aptTotal));
+  const aptPlan = await values(page);
   record(
-    'EUR: public simulator schedule applied to the total',
-    JSON.stringify(eur) === JSON.stringify([55505, 27753, 27753, 27753, 46254]),
-    eur.join(' + '),
+    'public simulator schedule applied to the total',
+    JSON.stringify(aptPlan) === JSON.stringify([602250, 301125, 301125, 301125, 501875]),
+    aptPlan.join(' + '),
   );
-  record('EUR: payments add exactly to the total', sum(eur) === 185018);
+  record('payments add exactly to the total', sum(aptPlan) === 2007500);
+  record('amounts shown in MAD', (await page.locator('[data-payment-value]').first().innerText()).includes('MAD'));
+  const shown = await page.locator('[data-payment-value] dd').first().textContent();
+  record(
+    'amounts: a visible space every 3 digits',
+    shown === '602\u00a0250\u00a0MAD' && !(await page.locator('main').innerText()).includes('\u202f'),
+    JSON.stringify(shown),
+  );
   const labels = await page.locator('[data-payment-value] dt').allInnerTexts();
   record(
     'labels: 15 % every six months',
@@ -79,21 +87,25 @@ console.log('\nSALES CALCULATOR CHECK\n');
     labels.join(' | '),
   );
 
-  await page.getByRole('button', { name: 'MAD', exact: true }).click();
-  await page.fill('#sales-surface', '100');
-  await page.fill('#sales-price-m2', '19000');
-  const madTotal = await page.locator('[data-total]').evaluate((el) => Number(el.dataset.total));
-  record('MAD: total = 100 m² × 19 000 + 50 000 MAD parking', madTotal === 1950000, String(madTotal));
-  const mad = await values(page);
-  record('MAD: payments add exactly to the total', sum(mad) === 1950000, mad.join(' + '));
-  record('MAD: amounts shown in MAD', (await page.locator('[data-payment-value]').first().innerText()).includes('MAD'));
+  await page.getByRole('button', { name: /^Duplex/ }).click();
+  record('type: Duplex selected', (await pressed('Duplex')) === 'true' && (await pressed('Appartement')) === 'false');
+  record('type: Duplex fills 23 000 MAD/m²', (await page.inputValue('#sales-price-m2')) === '23 000', await page.inputValue('#sales-price-m2'));
+  const dup = await page.locator('[data-apartment-price]').evaluate((el) => Number(el.dataset.apartmentPrice));
+  record('Duplex: 72,5 m² × 23 000 = 1 667 500 MAD', dup === 1667500, String(dup));
+  record('surface kept when switching type', (await page.inputValue('#sales-surface')) === '72,5');
+
+  await page.fill('#sales-price-m2', '24500');
+  record('price per m² stays editable and grouped', (await page.inputValue('#sales-price-m2')) === '24 500', await page.inputValue('#sales-price-m2'));
+  const edited = await page.locator('[data-apartment-price]').evaluate((el) => Number(el.dataset.apartmentPrice));
+  record('edited price per m² is used', edited === 1776250, String(edited));
 
   record('no launch-price shortcut (direct prices removed)', (await page.getByRole('button', { name: /Prix d’appel/ }).count()) === 0);
   record('no copy button any more', (await page.getByRole('button', { name: /Copier/ }).count()) === 0);
 
-  await page.getByRole('button', { name: 'EUR', exact: true }).click();
+  // Longest case for the page count: large surface and price, long amounts.
+  await page.getByRole('button', { name: /^Appartement/ }).click();
   await page.fill('#sales-surface', '1234,56');
-  await page.fill('#sales-price-m2', '12345');
+  await page.fill('#sales-price-m2', '123456');
   await page.fill('#sales-client', 'Client Test');
   await page.evaluate(() => {
     window.__printed = [];
@@ -118,6 +130,9 @@ console.log('\nSALES CALCULATOR CHECK\n');
       sheetText.includes('Superficie') &&
       /1\s?234,56\s?m²/.test(sheetText) &&
       sheetText.includes('Prix au m²') &&
+      sheetText.includes('Type de bien') &&
+      sheetText.includes('Appartement') &&
+      !sheetText.includes('€') &&
       sheetText.includes('18 mois après la réservation') &&
       sheetText.includes('non contractuel'),
   );
@@ -153,7 +168,8 @@ console.log('\nSALES CALCULATOR CHECK\n');
     'mobile: no client WhatsApp float over the amounts',
     (await page.locator('a[aria-label="Contacter sur WhatsApp"]').count()) === 0,
   );
-  record('mobile: full schedule within ~1.5 screens', lastTop < 844 * 1.5, `${Math.round(lastTop)}px`);
+  // Type choice + surface + price per m² sit above the plan by design: one scroll reaches the last payment.
+  record('mobile: full schedule within ~1.8 screens', lastTop < 844 * 1.8, `${Math.round(lastTop)}px`);
   await context.close();
 }
 

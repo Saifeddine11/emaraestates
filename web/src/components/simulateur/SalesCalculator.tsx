@@ -17,17 +17,24 @@ import { CONTACT } from '@/lib/site';
  * Internal calculator for the sales team (/simulateur-equipe).
  *
  * The apartment price is surface × price per m² (the team quotes this way,
- * never a direct price). The same schedule as the public /simulateur/ — it
+ * never a direct price), in dirhams. Choosing Appartement or Duplex fills the
+ * standard price per m², which stays editable. The same schedule as the public /simulateur/ — it
  * imports that page's own calculation — is applied to the total price, which
  * always includes the mandatory parking space. The public simulator is unchanged. No email, no
  * lead capture, no tracking: nothing leaves the browser. "Imprimer en PDF"
  * prints a branded payment plan through the browser's own print dialog.
  */
 
-/** Mandatory parking space, priced in dirhams. */
+/** The team quotes in dirhams only. */
+const currency: Currency = 'MAD';
+/** Mandatory parking space. */
 const PARKING_MAD = 50000;
-/** EUR equivalent at the site's fixed 1 € = 10 MAD rate (same as the homepage simulator). */
-const PARKING = { MAD: PARKING_MAD, EUR: PARKING_MAD / 10 } as const;
+/** Default price per m² by property type (MAD); the field stays editable. */
+const PROPERTY_TYPES = [
+  { label: 'Appartement', ratePerM2: 27000 },
+  { label: 'Duplex', ratePerM2: 23000 },
+] as const;
+type PropertyType = (typeof PROPERTY_TYPES)[number]['label'];
 
 const PRINT_ID = 'payment-plan-print';
 
@@ -44,8 +51,21 @@ function cleanSurface(raw: string) {
   return rest.length ? `${intPart},${rest.join('').slice(0, 2)}` : intPart;
 }
 
+/**
+ * Intl's fr-FR thousands separator is a narrow no-break space (U+202F), nearly
+ * invisible in the site font ("1 957 500" reads as "1957500"). Use a regular
+ * no-break space so every 3 digits are clearly separated, on screen and in the PDF.
+ */
+function visibleSpaces(text: string) {
+  return text.replace(/\u202f/g, '\u00a0');
+}
+
+function money(value: number) {
+  return visibleSpaces(formatAmount(value, currency));
+}
+
 function formatSurface(value: number) {
-  return `${new Intl.NumberFormat('fr-FR', { maximumFractionDigits: 2 }).format(value)}\u00a0m²`;
+  return visibleSpaces(`${new Intl.NumberFormat('fr-FR', { maximumFractionDigits: 2 }).format(value)}\u00a0m²`);
 }
 
 /** Re-groups digits by thousands while keeping the caret after the same digit. */
@@ -72,15 +92,15 @@ function useIsClient() {
 
 export function SalesCalculator() {
   const [surface, setSurface] = useState('');
-  const [pricePerM2, setPricePerM2] = useState('');
-  const [currency, setCurrency] = useState<Currency>('EUR');
+  const [propertyType, setPropertyType] = useState<PropertyType>(PROPERTY_TYPES[0].label);
+  const [pricePerM2, setPricePerM2] = useState(groupDigits(String(PROPERTY_TYPES[0].ratePerM2)));
   const [clientName, setClientName] = useState('');
   const mounted = useIsClient();
 
   const area = parseSurface(surface);
   const rate = parseBudget(pricePerM2);
   const apartment = area && rate ? Math.round(area * rate) : 0;
-  const parking = PARKING[currency];
+  const parking = PARKING_MAD;
   const total = apartment ? apartment + parking : 0;
   const schedule = total ? calculateSchedule(total, currency, '', '') : null;
   const rows = schedule
@@ -94,15 +114,11 @@ export function SalesCalculator() {
     : [];
   const priceLines = schedule
     ? ([
+        ['Type de bien', propertyType],
         ['Superficie', formatSurface(area)],
-        ['Prix au m²', formatAmount(rate, currency)],
-        ['Prix de l’appartement', formatAmount(apartment, currency)],
-        [
-          'Place de parking (obligatoire)',
-          currency === 'EUR'
-            ? `${formatAmount(parking, 'EUR')} (${formatAmount(PARKING_MAD, 'MAD')})`
-            : formatAmount(parking, 'MAD'),
-        ],
+        ['Prix au m²', money(rate)],
+        ['Prix de l’appartement', money(apartment)],
+        ['Place de parking (obligatoire)', money(parking)],
       ] as const)
     : [];
 
@@ -133,14 +149,43 @@ export function SalesCalculator() {
             Calculatrice d’échéancier Honest Signature 7
           </h1>
           <p className="mx-auto mt-3 max-w-[640px] text-[15.5px] leading-[1.65] text-forest/65">
-            Saisissez la superficie et le prix au m² : le prix de l’appartement est calculé, la
-            place de parking obligatoire est ajoutée et l’échéancier porte sur le prix total.
+            Choisissez le type de bien et saisissez la superficie : le prix est calculé en
+            dirhams, la place de parking obligatoire est ajoutée et l’échéancier porte sur le prix
+            total.
           </p>
         </div>
 
         <div className="mt-8 grid overflow-hidden rounded-[26px] border border-forest/10 bg-white shadow-[0_25px_85px_rgba(33,53,37,0.08)] lg:grid-cols-[0.9fr_1.1fr]">
           <div className="p-6 sm:p-8 lg:p-[42px]">
-            <label htmlFor="sales-surface" className={fieldLabel}>
+            <p id="sales-type-label" className={fieldLabel}>
+              Type de bien
+            </p>
+            <div role="group" aria-labelledby="sales-type-label" className="grid grid-cols-2 gap-2.5">
+              {PROPERTY_TYPES.map((type) => (
+                <button
+                  key={type.label}
+                  type="button"
+                  aria-pressed={propertyType === type.label}
+                  onClick={() => {
+                    setPropertyType(type.label);
+                    setPricePerM2(groupDigits(String(type.ratePerM2)));
+                  }}
+                  className={cn(
+                    'flex min-h-14 cursor-pointer flex-col items-start justify-center rounded-2xl border px-4 py-2.5 text-left transition-colors',
+                    propertyType === type.label
+                      ? 'border-forest bg-forest text-cream'
+                      : 'border-forest/15 text-forest hover:border-forest/40',
+                  )}
+                >
+                  <span className="text-[15px] font-semibold">{type.label}</span>
+                  <span className={cn('text-[12.5px]', propertyType === type.label ? 'text-cream/75' : 'text-forest/55')}>
+                    {money(type.ratePerM2)} / m²
+                  </span>
+                </button>
+              ))}
+            </div>
+
+            <label htmlFor="sales-surface" className={cn(fieldLabel, 'mt-5')}>
               Superficie
             </label>
             <div className="relative">
@@ -163,39 +208,29 @@ export function SalesCalculator() {
             <label htmlFor="sales-price-m2" className={cn(fieldLabel, 'mt-5')}>
               Prix au m²
             </label>
-            <div className="grid grid-cols-[minmax(0,1fr)_auto] gap-3">
+            <div className="relative">
               <input
                 id="sales-price-m2"
                 type="text"
                 inputMode="numeric"
                 autoComplete="off"
-                placeholder={currency === 'EUR' ? 'Ex : 2 500' : 'Ex : 25 000'}
+                placeholder="Ex : 27 000"
                 value={pricePerM2}
                 onChange={(event) => onGroupedChange(event, setPricePerM2)}
-                className={cn(fieldInput, 'text-[20px] font-semibold tracking-[-0.02em]')}
+                className={cn(fieldInput, 'pr-16 text-[20px] font-semibold tracking-[-0.02em]')}
               />
-              <div role="group" aria-label="Devise" className="flex rounded-[14px] border border-forest/12 p-1">
-                {(['EUR', 'MAD'] as const).map((option) => (
-                  <button
-                    key={option}
-                    type="button"
-                    aria-pressed={currency === option}
-                    onClick={() => setCurrency(option)}
-                    className={cn(
-                      'min-h-11 min-w-[58px] cursor-pointer rounded-[10px] px-3 text-[14px] font-semibold transition-colors',
-                      currency === option ? 'bg-forest text-cream' : 'text-forest/65 hover:text-forest',
-                    )}
-                  >
-                    {option}
-                  </button>
-                ))}
-              </div>
+              <span aria-hidden="true" className="pointer-events-none absolute right-5 top-1/2 -translate-y-1/2 text-[15px] font-semibold text-forest/50">
+                MAD
+              </span>
             </div>
+            <p className="mt-2 text-[12.5px] text-forest/55">
+              Prix standard {propertyType.toLowerCase()} rempli automatiquement, modifiable si besoin.
+            </p>
 
             {apartment > 0 && (
               <p data-apartment-price={apartment} className="mt-4 rounded-2xl bg-forest/[0.04] px-4 py-3 text-[14.5px] text-forest/75">
-                {formatSurface(area)} × {formatAmount(rate, currency)} ={' '}
-                <strong className="font-semibold text-forest">{formatAmount(apartment, currency)}</strong>
+                {formatSurface(area)} × {money(rate)} ={' '}
+                <strong className="font-semibold text-forest">{money(apartment)}</strong>
               </p>
             )}
 
@@ -216,7 +251,7 @@ export function SalesCalculator() {
                 <div className="mt-3 flex items-baseline justify-between gap-4 border-t border-forest/15 pt-3">
                   <span className="text-[13px] font-semibold uppercase tracking-[0.12em] text-forest/70">Prix total</span>
                   <span data-total={schedule.budget} className="font-sans text-[clamp(26px,3vw,34px)] font-semibold tracking-[-0.045em] text-forest">
-                    {formatAmount(schedule.budget, currency)}
+                    {money(schedule.budget)}
                   </span>
                 </div>
 
@@ -234,7 +269,7 @@ export function SalesCalculator() {
                         </span>
                       </dt>
                       <dd className="font-sans text-[clamp(19px,2vw,24px)] font-semibold tracking-[-0.04em] text-forest">
-                        {formatAmount(amount, currency)}
+                        {money(amount)}
                       </dd>
                     </div>
                   ))}
@@ -267,15 +302,14 @@ export function SalesCalculator() {
               </>
             ) : (
               <p className="mt-3 text-[15px] leading-relaxed text-forest/60">
-                Saisissez la superficie et le prix au m² pour afficher le plan de paiement : 30 % à la réservation, 15 % tous
+                Saisissez la superficie pour afficher le plan de paiement : 30 % à la réservation, 15 % tous
                 les six mois (3 fois), 25 % à la remise des clés — parking obligatoire inclus.
               </p>
             )}
             <p className="mt-5 text-[13px] leading-relaxed text-forest/55">
-              Place de parking obligatoire : {formatAmount(PARKING_MAD, 'MAD')}, soit{' '}
-              {formatAmount(PARKING.EUR, 'EUR')} au taux fixe du site (1 € = 10 MAD). Montants
-              calculés dans la devise choisie. Estimation indicative : prix, échéances contractuelles
-              et disponibilités à confirmer.
+              Place de parking obligatoire : {money(PARKING_MAD)}. Montants en
+              dirhams. Estimation indicative : prix, échéances contractuelles et disponibilités à
+              confirmer.
             </p>
           </div>
         </div>
@@ -316,7 +350,7 @@ export function SalesCalculator() {
                 ))}
                 <tr>
                   <td className="py-2.5 text-[14px] font-semibold">Prix total</td>
-                  <td className="py-2.5 text-right text-[16px] font-semibold">{formatAmount(schedule.budget, currency)}</td>
+                  <td className="py-2.5 text-right text-[16px] font-semibold">{money(schedule.budget)}</td>
                 </tr>
               </tbody>
             </table>
@@ -337,21 +371,20 @@ export function SalesCalculator() {
                   <tr key={label} className="border-b border-forest/12">
                     <td className="py-2.5">{label}</td>
                     <td className="py-2.5 text-center">{percent}</td>
-                    <td className="py-2.5 text-right font-semibold">{formatAmount(amount, currency)}</td>
+                    <td className="py-2.5 text-right font-semibold">{money(amount)}</td>
                   </tr>
                 ))}
                 <tr>
                   <td className="py-2.5 font-semibold">Total</td>
                   <td className="py-2.5 text-center font-semibold">100 %</td>
-                  <td className="py-2.5 text-right font-semibold">{formatAmount(schedule.budget, currency)}</td>
+                  <td className="py-2.5 text-right font-semibold">{money(schedule.budget)}</td>
                 </tr>
               </tbody>
             </table>
 
             <div className="mt-7 border-t border-forest/15 pt-5 text-[10.5px] leading-[1.7] text-forest/65">
               <p>
-                Le prix total inclut la place de parking obligatoire ({formatAmount(PARKING_MAD, 'MAD')}
-                {currency === 'EUR' ? `, soit ${formatAmount(PARKING.EUR, 'EUR')} au taux 1 € = 10 MAD` : ''}).
+                Le prix total inclut la place de parking obligatoire ({money(PARKING_MAD)}).
                 Les versements de 15 % interviennent tous les six mois à compter de la réservation.
               </p>
               <p className="mt-1.5">
