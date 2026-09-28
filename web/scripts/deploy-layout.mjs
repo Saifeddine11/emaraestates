@@ -178,6 +178,8 @@ for (const entry of deployEntries) {
   if (ASSET_DIRS.includes(entry.name)) continue;
   // Private CV storage — blocked by .htaccess, must not require index.html.
   if (entry.name === 'recruitment-private') continue;
+  // Meta CAPI library — blocked by .htaccess, never an index route.
+  if (entry.name === 'meta-private') continue;
   // Any other directory must carry an index.html, or DirectorySlash will 301
   // requests for the extensionless URL into a directory with nothing to serve.
   const hasIndex = await stat(join(DEPLOY, entry.name, 'index.html')).catch(() => null);

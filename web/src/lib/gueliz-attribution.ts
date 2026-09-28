@@ -77,6 +77,9 @@ export function captureAttribution(): Attribution {
   return stored;
 }
 
+/** `ViewContent` and `Contact` are sent only by /honest-signature-7/. */
+const META_STANDARD_EVENTS = new Set(['Lead', 'ViewContent', 'Contact']);
+
 type Pixels = {
   dataLayer?: unknown[];
   fbq?: (...args: unknown[]) => void;
@@ -91,8 +94,15 @@ type Pixels = {
  * Nothing is loaded here — if a pixel is absent the event is simply skipped, so
  * this never double-counts and never introduces a tag the page did not have.
  * The whole body is wrapped: a broken pixel must not take the funnel with it.
+ *
+ * `metaEventId` is passed to Meta as `eventID` so the Conversions API copy of
+ * the same conversion (sent by the server with that exact ID) is deduplicated.
  */
-export function track(eventName: string, data: Record<string, unknown> = {}) {
+export function track(
+  eventName: string,
+  data: Record<string, unknown> = {},
+  { metaEventId }: { metaEventId?: string } = {},
+) {
   if (!eventName) return;
   const w = window as typeof window & Pixels;
   try {
@@ -100,9 +110,10 @@ export function track(eventName: string, data: Record<string, unknown> = {}) {
       w.dataLayer.push({ event: eventName, ...data });
     }
     if (typeof w.fbq === 'function') {
-      // `Lead` is a Meta standard event; everything else is custom.
-      if (eventName === 'Lead') w.fbq('track', eventName, data);
-      else w.fbq('trackCustom', eventName, data);
+      const options = metaEventId ? [{ eventID: metaEventId }] : [];
+      // Meta standard events go through `track`; everything else is custom.
+      if (META_STANDARD_EVENTS.has(eventName)) w.fbq('track', eventName, data, ...options);
+      else w.fbq('trackCustom', eventName, data, ...options);
     }
     if (w.ttq && typeof w.ttq.track === 'function') {
       w.ttq.track(eventName, data);

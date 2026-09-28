@@ -11,6 +11,7 @@ import { fieldInput, fieldLabel } from '@/components/ui/form-tokens';
 import { findCountry, normalizeLocalNumber, type Country } from '@/lib/countries';
 import { cn } from '@/lib/cn';
 import { track } from '@/lib/gueliz-attribution';
+import { createMetaEventId } from '@/lib/meta-event-id';
 import { fireSnapEvent, SNAP_EVENT_BUYER_LEAD } from '@/lib/snap-pixel';
 import {
   captureSimulatorAttribution,
@@ -131,6 +132,8 @@ export function SimulatorExperience() {
   const [honeypot, setHoneypot] = useState('');
   /** Inputs already sent as a step-1 lead, so re-clicking reveal doesn't re-email. */
   const sentPartialLeads = useRef(new Set<string>());
+  /** Simulations already reported, so re-clicking the same reveal is not a new event. */
+  const trackedReveals = useRef(new Set<string>());
   const resultRef = useRef<HTMLDivElement>(null);
   const experienceStartedAt = useRef(0);
   const prefersReducedMotion = useReducedMotion();
@@ -169,13 +172,22 @@ export function SimulatorExperience() {
 
     const next = calculateSchedule(value, currency, propertyType, normalizedEmail);
     setSimulation(next);
-    track('SimulatorReveal', {
-      currency,
-      property_type: propertyType || 'Non renseigné',
-      project: 'Honest Signature 7',
-    });
 
     const leadKey = [next.email.toLowerCase(), next.budget, next.currency, next.propertyType].join('|');
+    // Fired from the submit handler, never from an effect, so renders, Strict
+    // Mode and back/forward navigation cannot replay it.
+    if (!trackedReveals.current.has(leadKey)) {
+      trackedReveals.current.add(leadKey);
+      track(
+        'SimulatorReveal',
+        {
+          currency,
+          property_type: propertyType || 'Non renseigné',
+          project: 'Honest Signature 7',
+        },
+        { metaEventId: createMetaEventId('reveal') },
+      );
+    }
     if (!sentPartialLeads.current.has(leadKey) && sentPartialLeads.current.size < MAX_PARTIAL_LEADS) {
       sentPartialLeads.current.add(leadKey);
       sendPartialLead(next, honeypot);
@@ -557,6 +569,12 @@ function LeadRequestForm({
   const [succeeded, setSucceeded] = useState(false);
   const buyerLeadSnapFired = useRef(false);
   const leadTracked = useRef(false);
+  /**
+   * One ID per lead, reused across retries: if a first attempt reached the
+   * server (which then sent the CAPI Lead) but its response was lost, the retry's
+   * browser Lead still deduplicates against it.
+   */
+  const metaLeadEventId = useRef('');
   /** Synchronous lock: `submitting` state lags a fast double click by one render. */
   const inFlight = useRef(false);
 
@@ -580,6 +598,7 @@ function LeadRequestForm({
 
     const attribution = { ...readSimulatorAttribution(), ...captureSimulatorAttribution() };
     const source = `${window.location.origin}${window.location.pathname}`;
+    metaLeadEventId.current ||= createMetaEventId('lead');
     const payload = {
       form_type: 'simulateur_request',
       nom_complet: fullName.trim(),
@@ -626,6 +645,8 @@ function LeadRequestForm({
       fbp: attribution.fbp || '',
       referrer: attribution.referrer || '',
       submissionDate: new Date().toISOString(),
+      // Shared with the browser Lead below; contact.php sends the CAPI copy.
+      meta_event_id: metaLeadEventId.current,
     };
 
     inFlight.current = true;
@@ -652,15 +673,21 @@ function LeadRequestForm({
         return;
       }
 
-      if (!leadTracked.current) {
+      // A filled honeypot is silently "accepted" by contact.php without any
+      // lead being created, so it must not count as a conversion either.
+      if (!leadTracked.current && !honeypot) {
         leadTracked.current = true;
-        track('Lead', {
-          lead_source: 'Simulateur budget',
-          project: 'Honest Signature 7',
-          currency: simulation.currency,
-          property_type: simulation.propertyType || 'Non renseigné',
-          utm_campaign: attribution.utm_campaign || '',
-        });
+        track(
+          'Lead',
+          {
+            lead_source: 'Simulateur budget',
+            project: 'Honest Signature 7',
+            currency: simulation.currency,
+            property_type: simulation.propertyType || 'Non renseigné',
+            utm_campaign: attribution.utm_campaign || '',
+          },
+          { metaEventId: metaLeadEventId.current },
+        );
       }
       fireSnapEvent(SNAP_EVENT_BUYER_LEAD, buyerLeadSnapFired);
       setSucceeded(true);

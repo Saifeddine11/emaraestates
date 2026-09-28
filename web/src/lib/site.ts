@@ -85,6 +85,12 @@ export const WHATSAPP_FLOAT_HIDDEN_ROUTES = new Set([
   '/simulateur-equipe',
 ]);
 
+/**
+ * Routes that skip the intro curtain. Paid-traffic landing pages must show
+ * the ad's promise immediately; a 1.6s logo screen there costs visitors.
+ */
+export const INTRO_CURTAIN_SKIPPED_ROUTES = new Set(['/honest-signature-7']);
+
 export const SOCIAL = {
   instagram: 'https://www.instagram.com/emara.estates',
   tiktok: 'https://www.tiktok.com/@emara.estates?_r=1&_t=ZS-95VFqI78Wjw',

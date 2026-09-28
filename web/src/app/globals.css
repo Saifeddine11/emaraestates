@@ -274,6 +274,17 @@
   }
 }
 
+/* /honest-signature-7/ hero: the building settles into frame. Transform
+   only — the image is painted at full opacity from the first frame (LCP). */
+@keyframes hs7-settle {
+  from {
+    transform: scale(1.06);
+  }
+  to {
+    transform: scale(1);
+  }
+}
+
 /* ============================================================
    Reduced motion — parity with the four legacy opt-outs
    ============================================================ */

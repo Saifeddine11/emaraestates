@@ -12,13 +12,16 @@ AddDefaultCharset UTF-8
 # Never serve stored recruitment CVs as static files.
 RedirectMatch 404 ^/recruitment-private(/|$)
 
+# Meta CAPI library — never served.
+RedirectMatch 404 ^/meta-private(/|$)
+
 RewriteEngine On
 RewriteBase /
 
 # Backend/API only — must not intercept frontend routes.
 RewriteRule ^api/recruitment/apply/?$ recruitment.php [L,QSA]
 RewriteRule ^api/recruitment/cv/?$ recruitment-cv.php [L,QSA]
-RewriteRule ^(?:api/contact|contact\.php|recruitment\.php|recruitment-cv\.php)$ - [L]
+RewriteRule ^(?:api/contact|contact\.php|recruitment\.php|recruitment-cv\.php|meta-crm-webhook\.php)$ - [L]
 
 # --- Canonical host: non-www + HTTPS (proxy-safe) ---
 RewriteCond %{HTTP_HOST} ^www\.emaraestates\.com$ [NC]
@@ -41,6 +44,12 @@ RewriteRule ^ /appartements-temoins/ [R=301,L,NE]
 
 RewriteCond %{THE_REQUEST} \s/+appartements-temoins[\s?] [NC]
 RewriteRule ^ /appartements-temoins/ [R=301,L,NE]
+
+RewriteCond %{THE_REQUEST} \s/+honest-signature-7\.html[\s?] [NC]
+RewriteRule ^ /honest-signature-7/ [R=301,L,NE]
+
+RewriteCond %{THE_REQUEST} \s/+honest-signature-7[\s?] [NC]
+RewriteRule ^ /honest-signature-7/ [R=301,L,NE]
 
 RewriteCond %{THE_REQUEST} \s/+residences-honest-678\.html[\s?] [NC]
 RewriteRule ^ /residences-honest-678/ [R=301,L,NE]

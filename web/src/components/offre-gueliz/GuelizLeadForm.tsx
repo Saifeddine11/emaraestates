@@ -167,9 +167,9 @@ export function GuelizLeadForm() {
     setFormError('');
 
     // Honeypot short-circuits to success without touching the network, so a bot
-    // gets no signal that it was caught.
+    // gets no signal that it was caught. No lead exists, so no Lead is tracked.
     if (honeypot) {
-      showSuccess(buildPayload());
+      setSucceeded(true);
       return;
     }
 

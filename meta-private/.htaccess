@@ -1,0 +1,3 @@
+# Meta CAPI library — never served over HTTP. (The idempotency ledger lives
+# outside the web root; see metaLedgerDir() in meta-capi.php.)
+Require all denied

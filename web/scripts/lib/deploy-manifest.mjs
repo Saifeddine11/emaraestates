@@ -34,13 +34,19 @@ export const SLASHED_PAGES = [
   { from: 'residences-honest-678.html', to: 'residences-honest-678/index.html' },
   { from: 'simulateur.html', to: 'simulateur/index.html' },
   { from: 'appartements-temoins.html', to: 'appartements-temoins/index.html' },
+  { from: 'honest-signature-7.html', to: 'honest-signature-7/index.html' },
 ];
 
 /**
  * Build output uploaded verbatim.
  * `videos/` is the homepage carousel media (`web/public/videos` → repo img/videos).
  */
-export const ASSET_DIRS = ['_next', 'videos'];
+export const ASSET_DIRS = [
+  '_next',
+  'videos',
+  // Responsive image variants for /honest-signature-7/ (/img is not uploaded).
+  'media',
+];
 
 /** Individual files uploaded verbatim. */
 export const ASSET_FILES = [
@@ -145,6 +151,10 @@ export const ROOT_SYNC = [
   'recruitment.php',
   'recruitment-cv.php',
   'recruitment-private',
+  // Meta Conversions API: HubSpot webhook endpoint + library (the ledger is
+  // outside public_html and never part of a deploy).
+  'meta-crm-webhook.php',
+  'meta-private',
   '.user.ini',
   'sitemap.xml',
 ];
@@ -171,6 +181,15 @@ export const EXPECTED_ROUTES = [
   },
   { url: '/appartements-temoins', status: 301, to: '/appartements-temoins/' },
   { url: '/appartements-temoins.html', status: 301, to: '/appartements-temoins/' },
+  {
+    url: '/honest-signature-7/',
+    status: 200,
+    canonical: 'https://emaraestates.com/honest-signature-7/',
+    indexed: true,
+    newRoute: true,
+  },
+  { url: '/honest-signature-7', status: 301, to: '/honest-signature-7/' },
+  { url: '/honest-signature-7.html', status: 301, to: '/honest-signature-7/' },
   { url: '/contact', status: 200, canonical: 'https://emaraestates.com/contact', indexed: true },
   { url: '/contact/', status: 301, to: '/contact' },
   { url: '/contact.html', status: 301, to: '/contact' },
@@ -250,6 +269,9 @@ export const EXPECTED_ROUTES = [
   ...VIDEO_MEDIA_ASSETS.map((url) => ({ url, status: 200, videoMedia: true })),
   { url: '/css/style.css', status: 200, legacy: true },
   { url: '/js/phone-input-country.js', status: 200, legacy: true },
+  // Meta CAPI library must never be served. Its own .htaccess (Require all
+  // denied) answers before the root RedirectMatch 404.
+  { url: '/meta-private/meta-capi.php', status: 403 },
   { url: '/does-not-exist-' + 'probe', status: 404 },
 ];
 
@@ -258,6 +280,7 @@ export const BROWSER_ROUTES = [
   '/',
   '/simulateur/',
   '/appartements-temoins/',
+  '/honest-signature-7/',
   '/contact',
   '/residences-honest-678/',
   '/immobilier-luxe-marrakech',

@@ -24,6 +24,11 @@ $blockedTerms = [
 
 $env = loadEnv(__DIR__ . '/.env');
 
+// Optional: a missing library must never break lead capture.
+if (is_file(__DIR__ . '/meta-private/meta-capi.php')) {
+    require_once __DIR__ . '/meta-private/meta-capi.php';
+}
+
 if ($_SERVER['REQUEST_METHOD'] === 'GET' && ($_GET['debug'] ?? '') === CONTACT_DEBUG_KEY) {
     sendJson(200, [
         'php' => PHP_VERSION,
@@ -33,6 +38,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && ($_GET['debug'] ?? '') === CONTACT_D
         'smtp_pass_configured' => trim($env['SMTP_PASS'] ?? '') !== '',
         'zapier_webhook_configured' => contactWebhookUrl($env) !== '',
         'allow_url_fopen' => (bool) ini_get('allow_url_fopen'),
+        // Booleans only (this key is in a public repository).
+        'meta' => function_exists('metaDiagnostics') ? metaDiagnostics($env) : ['library_loaded' => false],
     ]);
 }
 
@@ -70,18 +77,90 @@ try {
     } catch (Throwable $emailError) {
         error_log('Contact form email skipped after Zapier success: ' . $emailError->getMessage());
     }
-
-    sendJson(200, ['message' => CONTACT_SUCCESS_MESSAGE]);
 } catch (Throwable $error) {
     error_log('Contact form Zapier error: ' . $error->getMessage());
     sendJson(500, ['message' => 'La demande n’a pas été envoyée vers Zapier. Contactez-nous directement par WhatsApp.']);
 }
+
+// The lead is accepted (Zapier answered 2xx). The Meta server event —
+// deduplicated with the browser Pixel through the browser's event ID — can no
+// longer affect it: metaSendEvents() never throws and its result is ignored.
+$metaLead = contactMetaLeadEvent($payload, $input, $ip);
+if ($metaLead === null) {
+    sendJson(200, ['message' => CONTACT_SUCCESS_MESSAGE]);
+}
+if (contactCanFinishRequest()) {
+    // LiteSpeed LSAPI (Hostinger) / PHP-FPM: the response is complete and the
+    // connection closed before Meta is called; the SAPI keeps the script running.
+    sendJsonAndFinish(200, ['message' => CONTACT_SUCCESS_MESSAGE]);
+    metaSendEvents([$metaLead], $env, 5);
+    exit;
+}
+// Any other SAPI gives no guarantee that code runs after the response, so the
+// event is sent first, bounded to 3 s (connect + read), then the same success.
+metaSendEvents([$metaLead], $env, 3);
+sendJson(200, ['message' => CONTACT_SUCCESS_MESSAGE]);
 
 function sendJson(int $status, array $payload): never
 {
     http_response_code($status);
     echo json_encode($payload, JSON_UNESCAPED_UNICODE);
     exit;
+}
+
+/** True only where the SAPI documents that the script continues after the response. */
+function contactCanFinishRequest(): bool
+{
+    return function_exists('litespeed_finish_request') || function_exists('fastcgi_finish_request');
+}
+
+/** Completes the HTTP response and closes the connection; the script goes on. */
+function sendJsonAndFinish(int $status, array $payload): void
+{
+    ignore_user_abort(true);
+    http_response_code($status);
+    echo json_encode($payload, JSON_UNESCAPED_UNICODE);
+    if (function_exists('litespeed_finish_request')) {
+        litespeed_finish_request();
+    } else {
+        fastcgi_finish_request();
+    }
+}
+
+/**
+ * Meta `Lead` for forms that opted in by sending `meta_event_id` (the ID their
+ * browser Pixel event carries). Null — and no server event — otherwise, or if
+ * the Meta library is missing from the deploy.
+ */
+function contactMetaLeadEvent(array $payload, array $input, string $ip): ?array
+{
+    if (!function_exists('metaWebsiteLeadEvent')) return null;
+    $eventId = sanitizeValue($input['meta_event_id'] ?? '', 80);
+    if (!metaValidBrowserEventId($eventId, 'lead')) return null;
+
+    [$firstName, $lastName] = ($payload['first_name'] ?? '') !== ''
+        ? [$payload['first_name'], $payload['last_name'] ?? '']
+        : metaSplitName($payload['nom_complet']);
+
+    return metaWebsiteLeadEvent([
+        'eventId' => $eventId,
+        'email' => $payload['email'],
+        'phone' => $payload['phoneFull'],
+        'firstName' => $firstName,
+        'lastName' => $lastName,
+        'fbc' => $payload['fbc'],
+        'fbp' => $payload['fbp'],
+        'ip' => $ip,
+        'userAgent' => (string) ($_SERVER['HTTP_USER_AGENT'] ?? ''),
+        'sourceUrl' => metaEventSourceUrl([
+            $_SERVER['HTTP_REFERER'] ?? '',
+            $payload['landing_page'] ?? '',
+            $payload['source'],
+            $payload['landingPageUrl'],
+        ]),
+        'leadSource' => $payload['leadSource'],
+        'contentName' => $payload['projectName'] !== '' ? $payload['projectName'] : ($payload['project'] ?? ''),
+    ], time());
 }
 
 function loadEnv(string $filePath): array
@@ -364,6 +443,20 @@ function validatePayload(array $input, array $validBudgets, array $blockedTerms)
         'fbp' => sanitizeValue($input['fbp'] ?? '', 255),
         'referrer' => sanitizeValue($input['referrer'] ?? '', 500),
         'submissionDate' => sanitizeValue($input['submissionDate'] ?? '', 60),
+        // Landing-page lead keys (/honest-signature-7/). Additive: empty for
+        // every other form, and no existing key changes meaning.
+        'first_name' => sanitizeValue($input['first_name'] ?? '', 40),
+        'last_name' => sanitizeValue($input['last_name'] ?? '', 40),
+        'purchase_intent' => sanitizeValue($input['purchase_intent'] ?? '', 60),
+        'project' => sanitizeValue($input['project'] ?? '', 120),
+        'lead_origin' => sanitizeValue($input['lead_origin'] ?? '', 120),
+        'landing_name' => sanitizeValue($input['landing_name'] ?? '', 120),
+        'landing_page' => sanitizeValue($input['landing_page'] ?? '', 500),
+        'utm_source' => sanitizeValue($input['utm_source'] ?? '', 200),
+        'utm_medium' => sanitizeValue($input['utm_medium'] ?? '', 200),
+        'utm_campaign' => sanitizeValue($input['utm_campaign'] ?? '', 200),
+        'utm_content' => sanitizeValue($input['utm_content'] ?? '', 200),
+        'utm_term' => sanitizeValue($input['utm_term'] ?? '', 200),
     ];
     return [$payload, []];
 }
@@ -467,6 +560,21 @@ function sendLeadToZapier(array $payload, array $env, string $ip): void
         'fbp' => $payload['fbp'],
         'referrer' => $payload['referrer'],
         'submissionDate' => $payload['submissionDate'],
+        'first_name' => $payload['first_name'],
+        'last_name' => $payload['last_name'],
+        // The form has one "Téléphone / WhatsApp" field, so both carry it.
+        'phone' => $payload['phoneFull'],
+        'whatsapp' => $payload['phoneFull'],
+        'purchase_intent' => $payload['purchase_intent'],
+        'project' => $payload['project'],
+        'lead_origin' => $payload['lead_origin'],
+        'landing_name' => $payload['landing_name'],
+        'landing_page' => $payload['landing_page'],
+        'utm_source' => $payload['utm_source'],
+        'utm_medium' => $payload['utm_medium'],
+        'utm_campaign' => $payload['utm_campaign'],
+        'utm_content' => $payload['utm_content'],
+        'utm_term' => $payload['utm_term'],
     ];
 
     $context = stream_context_create([

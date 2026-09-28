@@ -234,6 +234,20 @@ console.log('\nSIMULATOR CHECK\n');
       () => window.__fbqEvents.filter((args) => args[0] === 'track' && args[1] === 'Lead').length === 1,
     ),
   );
+  const pixelLeadEventId = await page.evaluate(
+    () => window.__fbqEvents.find((args) => args[0] === 'track' && args[1] === 'Lead')?.[3]?.eventID,
+  );
+  record(
+    'dedup: Pixel Lead eventID === meta_event_id sent to contact.php (CAPI)',
+    /^lead_[A-Za-z0-9-]{8,64}$/.test(payload.meta_event_id ?? '') && pixelLeadEventId === payload.meta_event_id,
+    `${pixelLeadEventId} vs ${payload.meta_event_id}`,
+  );
+  record(
+    'tracking: SimulatorReveal fired once for one reveal',
+    await page.evaluate(
+      () => window.__fbqEvents.filter((args) => args[1] === 'SimulatorReveal').length === 1,
+    ),
+  );
 
   const simulatorChrome = await page.evaluate(() => ({
     nav: document.querySelector('#nav')?.textContent?.replace(/\s+/g, ' ').trim(),

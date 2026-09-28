@@ -2,8 +2,10 @@
 
 import { motion, useReducedMotion } from 'motion/react';
 import Image from 'next/image';
+import { usePathname } from 'next/navigation';
 import { createContext, useContext, useEffect, useState, type ReactNode } from 'react';
 import { cn } from '@/lib/cn';
+import { INTRO_CURTAIN_SKIPPED_ROUTES } from '@/lib/site';
 
 /**
  * Owns the intro curtain and publishes a "ready" flag so the hero can start its
@@ -83,23 +85,25 @@ function Curtain({ lifting }: { lifting: boolean }) {
 export function SiteChrome({ children }: { children: ReactNode }) {
   const prefersReducedMotion = useReducedMotion();
   const [timerElapsed, setTimerElapsed] = useState(false);
+  // Read at prerender time, so skipped routes ship without the curtain markup.
+  const skipCurtain = INTRO_CURTAIN_SKIPPED_ROUTES.has(usePathname().replace(/\/+$/, ''));
 
   useEffect(() => {
-    if (prefersReducedMotion) return;
+    if (prefersReducedMotion || skipCurtain) return;
     const timer = window.setTimeout(() => setTimerElapsed(true), CURTAIN_MS);
     return () => window.clearTimeout(timer);
-  }, [prefersReducedMotion]);
+  }, [prefersReducedMotion, skipCurtain]);
 
   // Derived rather than stored, so honouring the motion preference does not
   // cost an extra render pass before the hero is allowed to animate.
-  const ready = timerElapsed || Boolean(prefersReducedMotion);
+  const ready = skipCurtain || timerElapsed || Boolean(prefersReducedMotion);
 
   /**
    * The curtain stays in the tree for the length of its fade, then leaves for
    * good. It must start mounted so the prerendered HTML still carries the
    * wordmark the preservation diff expects.
    */
-  const [mounted, setMounted] = useState(true);
+  const [mounted, setMounted] = useState(!skipCurtain);
   useEffect(() => {
     if (!ready) return;
     // Reduced motion skips the fade, so the unmount is a zero-delay tick

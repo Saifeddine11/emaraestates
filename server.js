@@ -321,7 +321,20 @@ function validatePayload(input) {
     fbc: sanitize(input.fbc, 255),
     fbp: sanitize(input.fbp, 255),
     referrer: sanitize(input.referrer, 500),
-    submissionDate: sanitize(input.submissionDate, 60)
+    submissionDate: sanitize(input.submissionDate, 60),
+    // Landing-page lead keys (/honest-signature-7/) — mirrors contact.php.
+    first_name: sanitize(input.first_name, 40),
+    last_name: sanitize(input.last_name, 40),
+    purchase_intent: sanitize(input.purchase_intent, 60),
+    project: sanitize(input.project, 120),
+    lead_origin: sanitize(input.lead_origin, 120),
+    landing_name: sanitize(input.landing_name, 120),
+    landing_page: sanitize(input.landing_page, 500),
+    utm_source: sanitize(input.utm_source, 200),
+    utm_medium: sanitize(input.utm_medium, 200),
+    utm_campaign: sanitize(input.utm_campaign, 200),
+    utm_content: sanitize(input.utm_content, 200),
+    utm_term: sanitize(input.utm_term, 200)
   };
   return { payload, errors: {} };
 }
@@ -416,7 +429,21 @@ async function forwardLead(payload) {
       fbc: escapeHtml(payload.fbc),
       fbp: escapeHtml(payload.fbp),
       referrer: escapeHtml(payload.referrer),
-      submissionDate: escapeHtml(payload.submissionDate)
+      submissionDate: escapeHtml(payload.submissionDate),
+      first_name: escapeHtml(payload.first_name),
+      last_name: escapeHtml(payload.last_name),
+      phone: escapeHtml(payload.phoneFull),
+      whatsapp: escapeHtml(payload.phoneFull),
+      purchase_intent: escapeHtml(payload.purchase_intent),
+      project: escapeHtml(payload.project),
+      lead_origin: escapeHtml(payload.lead_origin),
+      landing_name: escapeHtml(payload.landing_name),
+      landing_page: escapeHtml(payload.landing_page),
+      utm_source: escapeHtml(payload.utm_source),
+      utm_medium: escapeHtml(payload.utm_medium),
+      utm_campaign: escapeHtml(payload.utm_campaign),
+      utm_content: escapeHtml(payload.utm_content),
+      utm_term: escapeHtml(payload.utm_term)
     })
   });
   if (!response.ok) throw new Error(`Zapier webhook failed: ${response.status}`);
@@ -987,6 +1014,8 @@ const CANONICAL_REDIRECTS = {
   '/simulateur.html': '/simulateur/',
   '/appartements-temoins': '/appartements-temoins/',
   '/appartements-temoins.html': '/appartements-temoins/',
+  '/honest-signature-7': '/honest-signature-7/',
+  '/honest-signature-7.html': '/honest-signature-7/',
   '/residences-honest-678': '/residences-honest-678/',
   '/residences-honest-678.html': '/residences-honest-678/',
   '/contact/': '/contact',

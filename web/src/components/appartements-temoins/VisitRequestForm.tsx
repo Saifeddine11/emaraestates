@@ -13,6 +13,7 @@ import {
 import { findCountry, normalizeLocalNumber, type Country } from '@/lib/countries';
 import { cn } from '@/lib/cn';
 import { track } from '@/lib/gueliz-attribution';
+import { createMetaEventId } from '@/lib/meta-event-id';
 import { fireSnapEvent, SNAP_EVENT_BUYER_LEAD } from '@/lib/snap-pixel';
 import { captureSimulatorAttribution, readSimulatorAttribution } from '@/lib/simulator-attribution';
 import { ENDPOINTS } from '@/lib/site';
@@ -59,6 +60,8 @@ export function VisitRequestForm() {
   /** Synchronous lock: `submitting` state lags a fast double click by one render. */
   const inFlight = useRef(false);
   const leadTracked = useRef(false);
+  /** One ID per lead, reused across retries — shared by the Pixel and CAPI Lead. */
+  const metaLeadEventId = useRef('');
   const buyerLeadSnapFired = useRef(false);
   const sectionRef = useRef<HTMLElement>(null);
   const prefersReducedMotion = useReducedMotion();
@@ -113,6 +116,7 @@ export function VisitRequestForm() {
 
     const { localNumber, phoneFull } = phoneParts();
     const attribution = { ...readSimulatorAttribution(), ...captureSimulatorAttribution() };
+    metaLeadEventId.current ||= createMetaEventId('lead');
     const source = `${window.location.origin}${window.location.pathname}`;
     const payload = {
       form_type: 'appartements_temoins_request',
@@ -157,6 +161,8 @@ export function VisitRequestForm() {
       fbp: attribution.fbp || '',
       referrer: attribution.referrer || '',
       submissionDate: new Date().toISOString(),
+      // Shared with the browser Lead below; contact.php sends the CAPI copy.
+      meta_event_id: metaLeadEventId.current,
     };
 
     inFlight.current = true;
@@ -188,14 +194,19 @@ export function VisitRequestForm() {
       }
 
       // Conversion only after contact.php confirms success — never on step 1.
-      if (!leadTracked.current) {
+      // A filled honeypot is silently "accepted" without creating a lead.
+      if (!leadTracked.current && !honeypot) {
         leadTracked.current = true;
-        track('Lead', {
-          lead_source: LEAD_SOURCE,
-          project: 'Appartements témoins Honest',
-          visit_type: visitType,
-          utm_campaign: attribution.utm_campaign || '',
-        });
+        track(
+          'Lead',
+          {
+            lead_source: LEAD_SOURCE,
+            project: 'Appartements témoins Honest',
+            visit_type: visitType,
+            utm_campaign: attribution.utm_campaign || '',
+          },
+          { metaEventId: metaLeadEventId.current },
+        );
       }
       fireSnapEvent(SNAP_EVENT_BUYER_LEAD, buyerLeadSnapFired);
       setSucceeded(true);
