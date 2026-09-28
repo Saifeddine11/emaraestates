@@ -3,14 +3,16 @@ import { SnapPixelPageViews } from '@/components/analytics/SnapPixelPageViews';
 
 /** Official Snap Pixel bootstrap (init + first PAGE_VIEW). */
 export function snapPixelInlineScript(pixelId: string) {
-  return `(function(e,t,n){if(e.snaptr)return;var a=e.snaptr=function()
+  return `(function(e,t,n){
+if(e.location&&(e.location.hostname==='127.0.0.1'||e.location.hostname==='localhost'))return;
+if(e.snaptr)return;var a=e.snaptr=function()
 {a.handleRequest?a.handleRequest.apply(a,arguments):a.queue.push(arguments)};
 a.queue=[];var s='script';r=t.createElement(s);r.async=!0;
 r.src=n;var u=t.getElementsByTagName(s)[0];
 u.parentNode.insertBefore(r,u);})(window,document,
 'https://sc-static.net/scevent.min.js');
-snaptr('init', ${JSON.stringify(pixelId)}, {});
-snaptr('track', 'PAGE_VIEW');`;
+if(window.snaptr){snaptr('init', ${JSON.stringify(pixelId)}, {});
+snaptr('track', 'PAGE_VIEW');}`;
 }
 
 /**
