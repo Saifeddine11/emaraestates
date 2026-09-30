@@ -334,7 +334,14 @@ function validatePayload(input) {
     utm_medium: sanitize(input.utm_medium, 200),
     utm_campaign: sanitize(input.utm_campaign, 200),
     utm_content: sanitize(input.utm_content, 200),
-    utm_term: sanitize(input.utm_term, 200)
+    utm_term: sanitize(input.utm_term, 200),
+    full_name: sanitize(input.full_name, 80),
+    property_type: sanitize(input.property_type, 60),
+    budget_range: sanitize(input.budget_range, 60),
+    landing_angle: sanitize(input.landing_angle, 20),
+    campaign_id: sanitize(input.campaign_id, 200),
+    adset_id: sanitize(input.adset_id, 200),
+    ad_id: sanitize(input.ad_id, 200)
   };
   return { payload, errors: {} };
 }
@@ -443,7 +450,14 @@ async function forwardLead(payload) {
       utm_medium: escapeHtml(payload.utm_medium),
       utm_campaign: escapeHtml(payload.utm_campaign),
       utm_content: escapeHtml(payload.utm_content),
-      utm_term: escapeHtml(payload.utm_term)
+      utm_term: escapeHtml(payload.utm_term),
+      full_name: escapeHtml(payload.full_name),
+      property_type: escapeHtml(payload.property_type),
+      budget_range: escapeHtml(payload.budget_range),
+      landing_angle: escapeHtml(payload.landing_angle),
+      campaign_id: escapeHtml(payload.campaign_id),
+      adset_id: escapeHtml(payload.adset_id),
+      ad_id: escapeHtml(payload.ad_id)
     })
   });
   if (!response.ok) throw new Error(`Zapier webhook failed: ${response.status}`);

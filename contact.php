@@ -457,6 +457,13 @@ function validatePayload(array $input, array $validBudgets, array $blockedTerms)
         'utm_campaign' => sanitizeValue($input['utm_campaign'] ?? '', 200),
         'utm_content' => sanitizeValue($input['utm_content'] ?? '', 200),
         'utm_term' => sanitizeValue($input['utm_term'] ?? '', 200),
+        'full_name' => sanitizeValue($input['full_name'] ?? '', 80),
+        'property_type' => sanitizeValue($input['property_type'] ?? '', 60),
+        'budget_range' => sanitizeValue($input['budget_range'] ?? '', 60),
+        'landing_angle' => sanitizeValue($input['landing_angle'] ?? '', 20),
+        'campaign_id' => sanitizeValue($input['campaign_id'] ?? '', 200),
+        'adset_id' => sanitizeValue($input['adset_id'] ?? '', 200),
+        'ad_id' => sanitizeValue($input['ad_id'] ?? '', 200),
     ];
     return [$payload, []];
 }
@@ -575,6 +582,13 @@ function sendLeadToZapier(array $payload, array $env, string $ip): void
         'utm_campaign' => $payload['utm_campaign'],
         'utm_content' => $payload['utm_content'],
         'utm_term' => $payload['utm_term'],
+        'full_name' => $payload['full_name'],
+        'property_type' => $payload['property_type'],
+        'budget_range' => $payload['budget_range'],
+        'landing_angle' => $payload['landing_angle'],
+        'campaign_id' => $payload['campaign_id'],
+        'adset_id' => $payload['adset_id'],
+        'ad_id' => $payload['ad_id'],
     ];
 
     $context = stream_context_create([
