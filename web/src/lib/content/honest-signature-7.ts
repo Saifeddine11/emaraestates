@@ -1,6 +1,6 @@
 /**
- * `/honest-signature-7/` content — the post-click page of the Meta static ad
- * "6 résidences livrées. La 7e prend forme à Guéliz."
+ * `/honest-signature-7/` content — the post-click page of the Meta static ads
+ * (proof, price and payment angles; see lib/landing-angle.ts).
  *
  * Every figure here comes from the campaign brief or from copy already live on
  * the site. Nothing is derived: the page never multiplies a surface by the
@@ -87,7 +87,12 @@ export type DeliveredResidence = {
   picture: Picture;
 };
 
-/** Honest 1–4: the residences the site already labels "Livré", with real photographs. */
+/**
+ * Honest 1–4: the only residences the site labels "Livré" with real
+ * photographs. The repo has no verified photo of a delivered Honest 5 or 6
+ * (Honest 5 is shown as a construction site on the homepage), so none is
+ * added here and the page says these four are the ones pictured.
+ */
 function realisation(file: string, alt: string): Picture {
   const base = '/img/optimized/realisations';
   return {
@@ -176,15 +181,33 @@ export const APARTMENT_VISUALS: Room[] = [
   },
 ];
 
+/* ── Conversion blocks ──────────────────────────────────────────────────── */
+
+export const CTA_LABEL = 'Voir les lots disponibles';
+export const CTA_MICROCOPY = 'Plans · prix · disponibilités actuelles';
+
+export const TRUST_BAR = [
+  `${DELIVERED_COUNT} résidences déjà livrées`,
+  '1 min du Plaza',
+  FACTS.surfaces,
+  '30 % à la réservation',
+] as const;
+
 /* ── Lead form ──────────────────────────────────────────────────────────── */
 
-/** Visible choice → `purchase_intent` value sent to Zapier. */
-export const PURPOSES = [
-  { label: 'Acheter pour y vivre', intent: 'Résidence principale' },
-  { label: 'Investir', intent: 'Investissement' },
-  { label: 'Résidence secondaire', intent: 'Résidence secondaire' },
-  { label: 'Découvrir le projet', intent: 'Découverte du projet' },
-] as const;
+/** Travels as-is in `property_type` (and the existing `propertyType` key). */
+export const PROPERTY_TYPES = ['Studio', 'Appartement 1 chambre', 'Appartement 2 chambres'] as const;
+export type PropertyType = (typeof PROPERTY_TYPES)[number];
+
+/**
+ * No lot counts: no inventory source exists for this project, so the rows
+ * only open the form with the type pre-selected.
+ */
+export const AVAILABILITY_ROWS: { id: string; label: string; type: PropertyType }[] = [
+  { id: 'studio', label: 'Studios', type: 'Studio' },
+  { id: '1_chambre', label: '1 chambre', type: 'Appartement 1 chambre' },
+  { id: '2_chambres', label: '2 chambres', type: 'Appartement 2 chambres' },
+];
 
 /**
  * Starts at the entry price (no range below it). Each label travels as-is in
@@ -200,7 +223,22 @@ export const BUDGETS = [
 /** Value of the `source` key for this page's leads. */
 export const LEAD_CHANNEL = 'Meta Ads';
 export const LEAD_ORIGIN = 'Meta Landing Page';
-export const LANDING_NAME = '6 residences livrees';
+
+/** `landing_name` per ad angle; the proof value is the one the CRM already receives. */
+export const LANDING_NAMES = {
+  proof: '6 residences livrees',
+  price: '2500 EUR m2 Gueliz',
+  payment: '30 pourcent reservation',
+} as const;
 
 export const LEAD_SOURCE = 'Landing Honest Signature 7';
 export const FORM_TYPE = 'honest_signature_7_request';
+
+/** One event per funnel stage, each fired once per page load (CTA_Click: per click). */
+export const FUNNEL_EVENTS = {
+  view: 'ViewContent',
+  cta: 'CTA_Click',
+  start: 'LeadFormStarted',
+  qualified: 'LeadQualificationCompleted',
+  lead: 'Lead',
+} as const;
