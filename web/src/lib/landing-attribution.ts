@@ -7,9 +7,11 @@
  * form steps and reloads within the session, and are only read at submit.
  */
 
+import { LANDING_ATTRIBUTION_KEY } from '@/lib/landing-angle';
+
 export type LandingAttribution = Record<string, string>;
 
-const STORAGE_KEY = 'emara_hs7_landing_attribution';
+const STORAGE_KEY = LANDING_ATTRIBUTION_KEY;
 
 const URL_PARAMS = [
   'utm_source',
@@ -21,6 +23,7 @@ const URL_PARAMS = [
   'adset_id',
   'ad_id',
   'fbclid',
+  'landing_angle',
 ] as const;
 
 function readCookie(name: string) {

@@ -338,6 +338,24 @@ $bot = $request('POST', '/contact.php', (string) json_encode(['company_website' 
 check('honeypot: silent 200, nothing forwarded, no Meta attempt', $bot['status'] === 200 && !is_file($zapierLog) && substr_count((string) file_get_contents($siteLog), '"eventName":"Lead"') === 1);
 $plain = $request('POST', '/contact.php', (string) json_encode(array_diff_key(json_decode($leadBody, true), ['meta_event_id' => 1])));
 check('forms without meta_event_id: no server event', $plain['status'] === 200 && substr_count((string) file_get_contents($siteLog), '"eventName":"Lead"') === 1);
+@unlink($zapierLog);
+$hs7Event = 'lead_5e70b68b-8ee2-4944-86cc-29e747a333a6';
+$hs7 = $request('POST', '/contact.php', (string) json_encode([
+    'form_type' => 'honest_signature_7_request', 'nom_complet' => 'Client Test', 'full_name' => 'Client Test', 'first_name' => 'Client', 'last_name' => 'Test',
+    'email' => 'client@example.com', 'telephone' => '+33612345678', 'phone' => '+33612345678', 'phoneFull' => '+33612345678', 'phoneCode' => '+33', 'phoneCountryCode' => 'FR', 'phoneNumber' => '612345678',
+    'budget' => '1,6 M – 2 M MAD', 'budget_range' => '1,6 M – 2 M MAD', 'property_type' => 'Appartement 1 chambre',
+    'message' => 'Demande : plans, prix & disponibilités', 'source' => 'Meta Ads', 'company_website' => '', 'elapsed_ms' => 9000,
+    'leadSource' => 'Landing Honest Signature 7', 'projectName' => 'Honest Signature 7', 'project' => 'Honest Signature 7', 'lead_origin' => 'Meta Landing Page',
+    'landing_angle' => 'payment', 'landing_page' => 'https://emaraestates.com/honest-signature-7/?utm_source=facebook&fbclid=click-4',
+    'utm_source' => 'facebook', 'utm_campaign' => 'hs7-test', 'utm_content' => 'creative-a', 'utmSource' => 'facebook', 'utmCampaign' => 'hs7-test',
+    'campaign_id' => 'cmp-1', 'adset_id' => 'set-2', 'ad_id' => 'ad-3', 'campaignId' => 'cmp-1', 'adsetId' => 'set-2', 'adId' => 'ad-3', 'fbclid' => 'click-4',
+    'fbp' => 'fb.1.1727000000000.1234567890', 'meta_event_id' => $hs7Event,
+]), ['Referer: https://emaraestates.com/honest-signature-7/']);
+$hs7Zap = json_decode((string) @file_get_contents($zapierLog), true) ?? [];
+check('HS7 lead accepted', $hs7['status'] === 200 && str_contains($hs7['body'], 'Votre demande a bien été envoyée'), $hs7['status'] . ' ' . $hs7['body']);
+check('HS7: new keys reach Zapier', ($hs7Zap['property_type'] ?? '') === 'Appartement 1 chambre' && ($hs7Zap['budget_range'] ?? '') === '1,6 M – 2 M MAD' && ($hs7Zap['full_name'] ?? '') === 'Client Test' && ($hs7Zap['landing_angle'] ?? '') === 'payment' && ($hs7Zap['campaign_id'] ?? '') === 'cmp-1' && ($hs7Zap['adset_id'] ?? '') === 'set-2' && ($hs7Zap['ad_id'] ?? '') === 'ad-3');
+check('HS7: existing Zapier keys unchanged', ($hs7Zap['email'] ?? '') === 'client@example.com' && ($hs7Zap['budget'] ?? '') === '1,6 M – 2 M MAD' && ($hs7Zap['nom_complet'] ?? '') === 'Client Test' && ($hs7Zap['phone'] ?? '') === '+33612345678' && ($hs7Zap['campaignId'] ?? '') === 'cmp-1' && ($hs7Zap['landing_page'] ?? '') !== '');
+check('HS7: server Lead reuses the browser event ID', str_contains((string) file_get_contents($siteLog), $hs7Event));
 $debugKey = preg_match("/CONTACT_DEBUG_KEY = '([^']+)'/", (string) file_get_contents($webRoot . '/contact.php'), $m) ? $m[1] : '';
 $debug = $request('GET', '/contact.php?debug=' . $debugKey);
 $diag = json_decode($debug['body'], true)['meta'] ?? [];

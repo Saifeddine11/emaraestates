@@ -285,6 +285,43 @@
   }
 }
 
+/* /honest-signature-7/ hero variants. The inline script in the hero sets
+   `data-angle` before paint; without it (no JS) the proof variant shows.
+   Unlayered, so it wins over utilities; `revert-layer` hands display back to
+   them for the variant that is shown. */
+[data-hs7-variant] {
+  display: none;
+}
+#la-7e:not([data-angle]) [data-hs7-variant~='proof'],
+#la-7e[data-angle='proof'] [data-hs7-variant~='proof'],
+#la-7e[data-angle='price'] [data-hs7-variant~='price'],
+#la-7e[data-angle='payment'] [data-hs7-variant~='payment'] {
+  display: revert-layer;
+}
+
+/* Lead drawer entrance: rises on phones, settles on desktop. */
+@keyframes hs7-sheet-in {
+  from {
+    opacity: 0;
+    transform: translateY(28px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@keyframes hs7-backdrop-in {
+  from {
+    opacity: 0;
+  }
+}
+.hs7-sheet[open] {
+  animation: hs7-sheet-in 0.42s cubic-bezier(0.23, 1, 0.32, 1) both;
+}
+.hs7-sheet[open]::backdrop {
+  animation: hs7-backdrop-in 0.3s ease-out both;
+}
+
 /* ============================================================
    Reduced motion — parity with the four legacy opt-outs
    ============================================================ */

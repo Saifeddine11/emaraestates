@@ -34,6 +34,7 @@ export function PhoneCountryInput({
   inputId = 'contact-phone',
   numberLabel = 'Téléphone',
   placeholder = 'Téléphone',
+  autoDetect = true,
 }: {
   country: Country;
   onCountryChange: (country: Country) => void;
@@ -50,11 +51,16 @@ export function PhoneCountryInput({
   inputId?: string;
   numberLabel?: string;
   placeholder?: string;
+  /**
+   * Read once, on mount. Off for a second view of the same shared state, so
+   * a hidden copy can never overwrite a country picked in the visible one.
+   */
+  autoDetect?: boolean;
 }) {
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState('');
   const [highlighted, setHighlighted] = useState(0);
-  const detectedRef = useRef(false);
+  const detectedRef = useRef(!autoDetect);
   const userPickedRef = useRef(false);
   const onCountryChangeRef = useRef(onCountryChange);
   const countryCodeRef = useRef(country.countryCode);
