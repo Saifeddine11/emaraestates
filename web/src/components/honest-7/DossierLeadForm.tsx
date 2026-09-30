@@ -460,7 +460,7 @@ export function LeadForm({
             {honeypotField}
             <ChoiceGroup
               id={`${idPrefix}-property_type`}
-              legend="Quels appartements vous intéressent ?"
+              legend="Quels appartements vous intéressent ?"
               name="property_type"
               options={PROPERTY_TYPES}
               value={form.propertyType}
@@ -472,7 +472,7 @@ export function LeadForm({
             />
             <ChoiceGroup
               id={`${idPrefix}-budget`}
-              legend="Quel budget prévoyez-vous pour votre achat ?"
+              legend="Quel budget prévoyez-vous pour votre achat ?"
               name="budget_range"
               options={BUDGETS}
               value={form.budget}
