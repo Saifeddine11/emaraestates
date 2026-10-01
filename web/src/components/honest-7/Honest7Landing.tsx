@@ -4,7 +4,6 @@ import { LandingTracking } from '@/components/honest-7/LandingTracking';
 import { PaymentTimeline } from '@/components/honest-7/PaymentTimeline';
 import { Picture } from '@/components/honest-7/Picture';
 import { AmenityStory } from '@/components/residence-boutique/AmenityStory';
-import { HeroStage } from '@/components/residence-boutique/HeroStage';
 import { ProofCarousel } from '@/components/residence-boutique/ProofCarousel';
 import { Lines, Rise } from '@/components/residence-boutique/Reveal';
 import {
@@ -12,8 +11,6 @@ import {
   DELIVERED_COUNT,
   DELIVERED_RESIDENCES,
   FACTS,
-  HERO_SIZES,
-  HERO_SLIDES,
   MAP_IMAGE,
   REVEAL_IMAGE,
   SHOW_APARTMENTS,
@@ -27,7 +24,7 @@ const H2 = 'font-sans font-medium uppercase leading-[.94] tracking-[-.035em]';
 const PRIMARY = 'flex min-h-14 cursor-pointer items-center justify-center rounded-full bg-gold px-6 text-center text-[13px] font-semibold uppercase tracking-[.06em] text-forest transition-[transform,background-color] duration-300 ease-step hover:-translate-y-0.5 hover:bg-[#dfc18b]';
 const SECONDARY = 'flex min-h-14 cursor-pointer items-center justify-center rounded-full border border-cream/35 px-6 text-center text-[13px] font-semibold uppercase tracking-[.06em] text-cream transition-[transform,border-color,background-color] duration-300 ease-step hover:-translate-y-0.5 hover:border-cream hover:bg-cream/8';
 
-const HERO_AMENITIES = ['Piscines', 'Spa', 'Jacuzzi', 'Salle de sport', 'Sauna', 'Cinéma extérieur', 'Conciergerie', 'Parking titré'] as const;
+const HERO_AMENITIES = ['Piscine', 'Piscine chauffée', 'Spa', 'Jacuzzi', 'Salle de sport', 'Sauna', 'Cinéma extérieur', 'Conciergerie'] as const;
 
 export function Honest7Landing() {
   return (
@@ -58,7 +55,7 @@ function Header() {
         <img src="/media/honest-7/logo-emara-forest-320.webp" alt="Emara Estates" width={320} height={180} className="h-9 w-auto lg:h-11" />
         <p className="hidden text-[12px] font-medium uppercase tracking-[.18em] text-forest/65 md:block">Guéliz • Marrakech</p>
         <ScrollCta target={HERO_FORM_ID} event="availability_cta_click" location="header" className="min-h-11 cursor-pointer rounded-full bg-forest px-4 text-[11px] font-semibold uppercase tracking-[.06em] text-cream sm:px-5 sm:text-[12px]">
-          Voir les disponibilités
+          Recevoir le dossier
         </ScrollCta>
       </div>
     </header>
@@ -67,51 +64,56 @@ function Header() {
 
 function Hero() {
   return (
-    <section aria-labelledby="hero-title" className="relative overflow-hidden bg-forest pb-16 pt-10 text-cream sm:pt-14 lg:pb-28 lg:pt-16">
-      <div aria-hidden="true" className="pointer-events-none absolute -left-28 top-24 size-[420px] rounded-full border border-cream/5" />
-      <div className={cn(SHELL, 'grid items-start gap-8 lg:grid-cols-[minmax(0,.92fr)_minmax(520px,1.08fr)] lg:grid-rows-[auto_1fr] lg:gap-x-[clamp(42px,5vw,86px)]')}>
-        <div className="min-w-0">
-          <p className="rb-in text-[12px] font-medium uppercase tracking-[.22em] text-gold [animation-delay:0ms]">Honest Signature 7 <span className="mx-2 text-cream/35">•</span> Guéliz hyper-centre</p>
-          <h1 id="hero-title" className="mt-6 font-sans text-[clamp(48px,12.3vw,88px)] font-medium uppercase leading-[.9] tracking-[-.055em] lg:text-[clamp(58px,6vw,92px)]">
-            <span className="block overflow-hidden"><span className="rb-line block [animation-delay:100ms]">Guéliz.</span></span>
-            <span className="mt-[.12em] block overflow-hidden"><span className="rb-line block [animation-delay:220ms]">Mais comme vous</span></span>
-            <span className="block overflow-hidden"><span className="rb-line block [animation-delay:340ms]">ne l’avez</span></span>
-            <span className="relative inline-block overflow-visible">
-              <span className="block overflow-hidden"><span className="rb-line block text-gold [animation-delay:460ms]">jamais vécu.</span></span>
-              <svg aria-hidden="true" viewBox="0 0 420 18" preserveAspectRatio="none" className="absolute -bottom-2 left-0 h-3 w-full overflow-visible text-gold"><path className="rb-draw [animation-delay:720ms]" pathLength="1" d="M3 11C110 4 290 5 417 9" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" /></svg>
-            </span>
-          </h1>
-          <p className="rb-in mt-8 max-w-[610px] text-[17px] leading-[1.5] text-cream/78 [animation-delay:600ms] sm:text-[18px]">Au cœur de Guéliz, une résidence pensée pour réunir appartement, bien-être, services et emplacement.</p>
+    <section aria-labelledby="hero-title" className="relative overflow-hidden bg-forest pb-14 pt-9 text-cream sm:pt-12 lg:pb-20 lg:pt-14">
+      {/* eslint-disable-next-line @next/next/no-img-element -- decorative bg, not LCP */}
+      <img aria-hidden="true" alt="" src="/media/honest-7/facade-nuit-1080.webp" srcSet="/media/honest-7/facade-nuit-640.webp 640w, /media/honest-7/facade-nuit-1080.webp 1080w, /media/honest-7/facade-nuit-1600.webp 1600w" sizes="100vw" loading="eager" className="pointer-events-none absolute inset-0 size-full object-cover object-[50%_38%] opacity-[.18]" />
+      <div aria-hidden="true" className="pointer-events-none absolute inset-0 bg-gradient-to-b from-forest/60 via-forest/40 to-forest/90" />
+      <div aria-hidden="true" className="pointer-events-none absolute inset-0 opacity-[.08] [background-image:linear-gradient(rgba(245,240,232,.16)_1px,transparent_1px),linear-gradient(90deg,rgba(245,240,232,.12)_1px,transparent_1px)] [background-size:64px_64px]" />
+      <div aria-hidden="true" className="pointer-events-none absolute -right-24 top-16 size-[390px] rounded-full border border-cream/10 motion-safe:animate-[rb-float-in_1.1s_var(--ease-step)_both]" />
+      <div aria-hidden="true" className="pointer-events-none absolute right-[12%] top-16 hidden h-[70%] w-px rotate-[14deg] bg-gradient-to-b from-transparent via-gold/20 to-transparent lg:block" />
+
+      <div className={cn(SHELL, 'relative')}>
+        <p className="rb-in text-[12px] font-medium uppercase tracking-[.22em] text-gold [animation-delay:0ms]">
+          Honest Signature 7 <span className="mx-2 text-cream/35">•</span> Guéliz <span className="mx-2 text-cream/35">•</span> Hyper-centre
+        </p>
+
+        <h1 id="hero-title" className="mt-5 font-sans text-[clamp(38px,9.5vw,78px)] font-medium uppercase leading-[.92] tracking-[-.05em] lg:text-[clamp(56px,5.8vw,92px)]">
+          <span className="block overflow-hidden"><span className="rb-line block [animation-delay:100ms]">Une dernière</span></span>
+          <span className="block overflow-hidden"><span className="rb-line block [animation-delay:220ms]">opportunité au</span></span>
+          <span className="relative inline-block overflow-visible">
+            <span className="block overflow-hidden"><span className="rb-line block text-gold [animation-delay:340ms]">cœur de Guéliz.</span></span>
+            <svg aria-hidden="true" viewBox="0 0 420 18" preserveAspectRatio="none" className="absolute -bottom-2 left-0 h-3 w-full overflow-visible text-gold"><path className="rb-draw [animation-delay:600ms]" pathLength="1" d="M3 11C110 4 290 5 417 9" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" /></svg>
+          </span>
+        </h1>
+        <p className="rb-in mt-5 max-w-[640px] text-[clamp(16px,2.2vw,20px)] leading-[1.45] text-cream/75 [animation-delay:460ms]">Un des derniers terrains disponibles de l’hyper-centre accueille aujourd’hui Honest Signature 7.</p>
+
+        <ul aria-label="Équipements et services" className="rb-in mt-8 grid grid-cols-2 gap-x-3 gap-y-2 border-y border-cream/14 py-4 [animation-delay:560ms] sm:grid-cols-4 lg:grid-cols-8 lg:gap-3">
+          {HERO_AMENITIES.map((item) => (
+            <li key={item} className="group relative flex min-h-11 items-center gap-2 text-[11px] font-medium uppercase leading-tight tracking-[.045em] text-cream/85">
+              <AmenityIcon name={item} />
+              <span className="relative">{item}{item === 'Conciergerie' && <span className="absolute -right-1 -top-3 text-[8px] tracking-[.13em] text-gold">Service</span>}</span>
+            </li>
+          ))}
+        </ul>
+
+        <div className="mt-6 flex flex-wrap items-center gap-x-8 gap-y-4">
+          <p className="rb-in flex items-center gap-2 text-[13px] font-medium uppercase tracking-[.1em] text-cream/80 [animation-delay:700ms]">
+            <span aria-hidden="true" className="text-gold">↗</span> À <span className="border-b border-gold pb-0.5 text-cream">1 minute</span> à pied du Plaza
+          </p>
+          <div className="rb-in rounded-full border border-gold/55 px-4 py-2 [animation-delay:780ms]">
+            <span className="block text-[9px] font-medium uppercase tracking-[.17em] text-cream/65">À partir de</span>
+            <span className="block whitespace-nowrap text-[21px] font-medium leading-tight text-gold">1,39 M MAD</span>
+          </div>
         </div>
 
-        <HeroStage slides={HERO_SLIDES} sizes={HERO_SIZES} className="h-[min(70vh,560px)] min-h-[390px] [&_button]:min-h-11 [&_button]:min-w-11 lg:row-span-2 lg:h-[min(72vh,700px)] lg:min-h-[610px]" />
-
-        <div className="min-w-0 lg:pt-8">
-          <ul aria-label="Équipements et services" className="rb-in grid grid-cols-2 gap-x-4 gap-y-2.5 border-y border-cream/14 py-5 [animation-delay:760ms] sm:grid-cols-4 lg:grid-cols-2 xl:grid-cols-4">
-            {HERO_AMENITIES.map((item) => (
-              <li key={item} className="group relative flex min-h-11 items-center gap-2.5 text-[12px] font-medium uppercase leading-tight tracking-[.05em] text-cream/85">
-                <AmenityIcon name={item} />
-                <span className="relative">{item}{item === 'Conciergerie' && <span className="absolute -right-1 -top-3 text-[8px] tracking-[.13em] text-gold">Service</span>}</span>
-              </li>
-            ))}
-          </ul>
-          <div className="rb-in mt-6 grid grid-cols-[1fr_auto] items-end gap-4 [animation-delay:880ms]">
-            <p className="flex items-center gap-2 text-[14px] font-medium uppercase tracking-[.08em] text-cream/80"><span aria-hidden="true" className="text-gold">↗</span> À <span className="border-b border-gold pb-0.5 text-cream">1 minute</span> à pied du Plaza</p>
-            <div className="rounded-full border border-gold/55 px-4 py-2 text-right">
-              <span className="block text-[9px] font-medium uppercase tracking-[.17em] text-cream/60">À partir de</span>
-              <span className="block whitespace-nowrap text-[20px] font-medium leading-tight text-gold">1,39 M MAD</span>
-            </div>
-          </div>
-          <p className="rb-in mt-4 text-[13px] uppercase tracking-[.13em] text-cream/55 [animation-delay:940ms]">51 m²+ <span className="mx-2 text-gold">•</span> Livraison juin 2028</p>
-          <div className="rb-in mt-7 grid gap-3 sm:grid-cols-2 [animation-delay:1000ms]">
-            <ScrollCta target={HERO_FORM_ID} event="hero_prices_cta_click" location="hero" className={PRIMARY}>Voir les prix & disponibilités <span aria-hidden="true" className="ml-2">→</span></ScrollCta>
-            <ScrollCta target={SHOW_APARTMENTS_ID} event="hero_show_apartment_click" location="hero" className={SECONDARY}>Visiter les appartements témoins <span aria-hidden="true" className="ml-2">↓</span></ScrollCta>
-          </div>
+        <div className="rb-in mt-7 grid gap-3 sm:grid-cols-2 lg:max-w-[690px] [animation-delay:860ms]">
+          <ScrollCta target={HERO_FORM_ID} event="hero_prices_cta_click" location="hero" className={PRIMARY}>Recevoir le dossier complet <span aria-hidden="true" className="ml-2">→</span></ScrollCta>
+          <ScrollCta target={SHOW_APARTMENTS_ID} event="hero_show_apartment_click" location="hero" className={SECONDARY}>Voir les appartements témoins <span aria-hidden="true" className="ml-2">↓</span></ScrollCta>
         </div>
-      </div>
 
-      <div className={cn(SHELL, 'relative z-10 mt-12 lg:-mb-44 lg:mt-14')}>
-        <div className="mx-auto max-w-[880px]"><DossierLeadForm placement="hero" id={HERO_FORM_ID} /></div>
+        <div className="relative z-10 mt-9 lg:mt-10">
+          <div className="mx-auto max-w-[960px]"><DossierLeadForm placement="hero" id={HERO_FORM_ID} /></div>
+        </div>
       </div>
     </section>
   );
@@ -134,7 +136,7 @@ function ShowApartments() {
     ),
   }));
   return (
-    <SectionView event="show_apartment_section_view" id={SHOW_APARTMENTS_ID} labelledBy="show-title" className="overflow-x-clip bg-cream pb-band pt-[clamp(92px,15vw,220px)]">
+    <SectionView event="show_apartment_section_view" id={SHOW_APARTMENTS_ID} labelledBy="show-title" className="overflow-x-clip bg-cream py-band">
       <div className={SHELL}>
         <p className={cn(EYEBROW, 'text-olive')}>01 — Appartements témoins réels</p>
         <h2 id="show-title" className={cn(H2, 'mt-6 text-[clamp(48px,8vw,120px)] text-forest')}><Lines lines={['Ne l’imaginez pas.', <span key="entrez" className="font-serif font-normal normal-case italic text-olive">Entrez.</span>]} /></h2>
@@ -230,8 +232,8 @@ function FinalForm() {
   return (
     <section aria-labelledby="final-copy-title" className="bg-shell py-band">
       <div className={cn(SHELL, 'grid items-start gap-10 lg:grid-cols-[1fr_minmax(440px,600px)] lg:gap-20')}>
-        <div className="lg:sticky lg:top-28"><p className={cn(EYEBROW, 'text-olive')}>07 — Votre appartement</p><h2 id="final-copy-title" className={cn(H2, 'mt-6 text-[clamp(38px,5.5vw,78px)] text-forest')}>Quel appartement est encore disponible <span className="font-serif font-normal normal-case italic text-olive">pour vous ?</span></h2><p className="mt-6 max-w-[500px] text-[18px] leading-[1.55] text-forest/70">Recevez les plans, les prix, les surfaces, les étages et les disponibilités actuelles.</p></div>
-        <DossierLeadForm placement="final" id={FINAL_FORM_ID} title="Recevez les disponibilités" />
+        <div className="lg:sticky lg:top-28"><p className={cn(EYEBROW, 'text-olive')}>07 — Votre appartement</p><h2 id="final-copy-title" className={cn(H2, 'mt-6 text-[clamp(38px,5.5vw,78px)] text-forest')}>Quel appartement est encore disponible <span className="font-serif font-normal normal-case italic text-olive">pour vous ?</span></h2><p className="mt-6 max-w-[500px] text-[18px] leading-[1.55] text-forest/70">Recevez la brochure, les plans, les prix et les disponibilités du projet.</p></div>
+        <DossierLeadForm placement="final" id={FINAL_FORM_ID} />
       </div>
     </section>
   );
@@ -254,7 +256,8 @@ function AmenityIcon({ name, dark = false }: { name: string; dark?: boolean }) {
   return (
     <span aria-hidden="true" className={cn('flex size-8 shrink-0 items-center justify-center rounded-full border transition-colors duration-300 group-hover:border-gold group-hover:text-gold', dark ? 'border-forest/20 text-olive' : 'border-cream/18 text-gold')}>
       <svg viewBox="0 0 24 24" className="size-4.5" {...common}>
-        {name === 'Piscines' && <><path d="M3 9c2 0 2 2 4 2s2-2 4-2 2 2 4 2 2-2 4-2 2 2 2 2"/><path d="M3 14c2 0 2 2 4 2s2-2 4-2 2 2 4 2 2-2 4-2 2 2 2 2"/></>}
+        {name === 'Piscine' && <><path d="M3 9c2 0 2 2 4 2s2-2 4-2 2 2 4 2 2-2 4-2 2 2 2 2"/><path d="M3 14c2 0 2 2 4 2s2-2 4-2 2 2 4 2 2-2 4-2 2 2 2 2"/></>}
+        {name === 'Piscine chauffée' && <><path d="M3 11c2 0 2 2 4 2s2-2 4-2 2 2 4 2 2-2 4-2 2 2 2 2"/><path d="M8 7c-1-1 1-2 0-3M12 7c-1-1 1-2 0-3M16 7c-1-1 1-2 0-3"/></>}
         {name === 'Spa' && <><path d="M12 20c4-2 7-5 7-9-4 0-7 2-7 6-1-4-3-6-7-6 0 4 3 7 7 9Z"/><path d="M12 17V7"/></>}
         {name === 'Jacuzzi' && <><path d="M4 12h16v3a4 4 0 0 1-4 4H8a4 4 0 0 1-4-4v-3Z"/><path d="M8 9c-1-1 1-2 0-3M13 9c-1-1 1-2 0-3M18 9c-1-1 1-2 0-3"/></>}
         {name === 'Salle de sport' && <><path d="M7 9v6M17 9v6M4 10v4M20 10v4M7 12h10"/></>}

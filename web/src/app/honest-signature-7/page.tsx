@@ -1,8 +1,6 @@
 import type { Metadata } from 'next';
 import Script from 'next/script';
-import { preload } from 'react-dom';
 import { Honest7Landing } from '@/components/honest-7/Honest7Landing';
-import { HERO_IMAGE, HERO_SIZES } from '@/lib/content/honest-signature-7';
 import { landingJsonLd } from '@/lib/structured-data';
 import { ANALYTICS_AHREFS_KEY } from '@/lib/site';
 
@@ -22,7 +20,6 @@ export const metadata: Metadata = {
 const jsonLd = landingJsonLd({ slug: 'honest-signature-7/', name: TITLE, description: DESCRIPTION, breadcrumb: 'Honest Signature 7' });
 
 export default function Honest7Page() {
-  preload(HERO_IMAGE.src, { as: 'image', imageSrcSet: HERO_IMAGE.srcSet, imageSizes: HERO_SIZES, fetchPriority: 'high' });
   return (
     <>
       <link rel="canonical" href={CANONICAL} />

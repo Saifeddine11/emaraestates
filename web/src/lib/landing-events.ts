@@ -33,7 +33,8 @@ export type LandingEvent =
   | 'show_apartment_section_view'
   | 'show_apartment_cta_click'
   | 'amenities_section_view'
-  | 'payment_section_view';
+  | 'payment_section_view'
+  | 'qualify_submit';
 
 type Sinks = {
   dataLayer?: unknown[];
