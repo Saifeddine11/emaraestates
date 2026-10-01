@@ -21,6 +21,8 @@ export const FLAT_PAGES = [
   'appartement-neuf-gueliz-marrakech.html',
   'investissement-immobilier-marrakech.html',
   'offre-gueliz.html',
+  // Meta Ads landing (HS7 "résidence boutique" creative) — noindex, not in the sitemap.
+  'residence-boutique-gueliz.html',
   'recrutement-commercial-marrakech.html',
   // Internal sales calculator — noindex, not in the sitemap.
   'simulateur-equipe.html',
@@ -234,6 +236,14 @@ export const EXPECTED_ROUTES = [
   },
   { url: '/offre-gueliz.html', status: 301, to: '/offre-gueliz' },
   {
+    url: '/residence-boutique-gueliz',
+    status: 200,
+    canonical: null,
+    robots: 'noindex, nofollow',
+    newRoute: true,
+  },
+  { url: '/residence-boutique-gueliz.html', status: 301, to: '/residence-boutique-gueliz' },
+  {
     url: '/simulateur-equipe',
     status: 200,
     canonical: null,
@@ -287,6 +297,7 @@ export const BROWSER_ROUTES = [
   '/appartement-neuf-gueliz-marrakech',
   '/investissement-immobilier-marrakech',
   '/offre-gueliz',
+  '/residence-boutique-gueliz',
   '/simulateur-equipe',
   '/recrutement-commercial-marrakech',
 ];

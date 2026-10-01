@@ -1,371 +1,268 @@
-import { FadeIn } from '@/components/appartements-temoins/FadeIn';
-import {
-  CTA_PRIMARY,
-  CTA_PRIMARY_ON_DARK,
-  DossierCta,
-  StickyDossierCta,
-  TEXT_LINK,
-} from '@/components/honest-7/DossierCta';
 import { DossierLeadForm } from '@/components/honest-7/DossierLeadForm';
+import { HERO_FORM_ID, FINAL_FORM_ID, SHOW_APARTMENTS_ID, ScrollCta, SectionView, StickyAvailabilityCta } from '@/components/honest-7/LandingActions';
 import { LandingTracking } from '@/components/honest-7/LandingTracking';
-import { MaskReveal, Parallax, PaymentBar } from '@/components/honest-7/Motion';
+import { PaymentTimeline } from '@/components/honest-7/PaymentTimeline';
 import { Picture } from '@/components/honest-7/Picture';
-import { Rail } from '@/components/honest-7/Rail';
+import { AmenityStory } from '@/components/residence-boutique/AmenityStory';
+import { HeroStage } from '@/components/residence-boutique/HeroStage';
+import { ProofCarousel } from '@/components/residence-boutique/ProofCarousel';
+import { Lines, Rise } from '@/components/residence-boutique/Reveal';
 import {
-  AMENITY_LIST,
-  AMENITY_VISUALS,
-  APARTMENT_VISUALS,
+  AMENITY_SCENES,
   DELIVERED_COUNT,
   DELIVERED_RESIDENCES,
   FACTS,
-  HERO_IMAGE,
   HERO_SIZES,
+  HERO_SLIDES,
   MAP_IMAGE,
-  PAYMENT_PLAN,
   REVEAL_IMAGE,
+  SHOW_APARTMENTS,
 } from '@/lib/content/honest-signature-7';
-import { EXTERNAL } from '@/lib/site';
+import { CONTACT, WHATSAPP } from '@/lib/site';
 import { cn } from '@/lib/cn';
 
-export const HERO_ID = 'la-7e';
+const SHELL = 'mx-auto w-full max-w-[1400px] px-gutter';
+const EYEBROW = 'text-[12px] font-medium uppercase tracking-[.2em]';
+const H2 = 'font-sans font-medium uppercase leading-[.94] tracking-[-.035em]';
+const PRIMARY = 'flex min-h-14 cursor-pointer items-center justify-center rounded-full bg-gold px-6 text-center text-[13px] font-semibold uppercase tracking-[.06em] text-forest transition-[transform,background-color] duration-300 ease-step hover:-translate-y-0.5 hover:bg-[#dfc18b]';
+const SECONDARY = 'flex min-h-14 cursor-pointer items-center justify-center rounded-full border border-cream/35 px-6 text-center text-[13px] font-semibold uppercase tracking-[.06em] text-cream transition-[transform,border-color,background-color] duration-300 ease-step hover:-translate-y-0.5 hover:border-cream hover:bg-cream/8';
 
-const EYEBROW = 'text-[13px] font-medium uppercase tracking-[0.2em] text-olive';
-const EYEBROW_DARK = 'text-[13px] font-medium uppercase tracking-[0.2em] text-sand';
-const H2 =
-  'text-balance font-sans text-[clamp(34px,5vw,64px)] font-medium leading-[1.04] tracking-[-0.035em] text-forest';
-const H2_DARK =
-  'text-balance font-sans text-[clamp(34px,5vw,64px)] font-medium leading-[1.04] tracking-[-0.035em] text-cream';
-const LEAD = 'text-[clamp(17px,1.4vw,20px)] leading-[1.6] text-forest/70';
-const NOTE = 'text-[13.5px] leading-relaxed text-forest/50';
-
-/** "7e" set as an editorial numeral: serif italic, raised "e". */
-function Seventh({ className }: { className?: string }) {
-  return (
-    <span className={cn('whitespace-nowrap font-sans font-medium', className)}>
-      7<span className="relative -top-[0.62em] ml-[0.03em] text-[0.52em]">e</span>
-    </span>
-  );
-}
+const HERO_AMENITIES = ['Piscines', 'Spa', 'Jacuzzi', 'Salle de sport', 'Sauna', 'Cinéma extérieur', 'Conciergerie', 'Parking titré'] as const;
 
 export function Honest7Landing() {
   return (
     <>
       <LandingTracking />
+      <Header />
+      <main id="main-content">
+        <Hero />
+        <ShowApartments />
+        <Amenities />
+        <Trust />
+        <Payment />
+        <Location />
+        <Fomo />
+        <FinalForm />
+      </main>
+      <Footer />
+      <StickyAvailabilityCta />
+    </>
+  );
+}
 
-      {/* 1 — Hero: the ad, continued. Mobile: building under the transparent
-          header, then the headline. Desktop: a forest band carries the header,
-          text left, building right. The image is the LCP element and is
-          preloaded by the page. */}
-      <section id={HERO_ID} aria-labelledby="hero-title" className="relative bg-shell">
-        <div aria-hidden="true" className="hidden h-[88px] bg-forest lg:block" />
-        <div className="lg:grid lg:min-h-[min(calc(100svh-88px),860px)] lg:grid-cols-[minmax(0,0.92fr)_minmax(0,1.08fr)]">
-          <div className="relative h-[clamp(220px,38svh,440px)] overflow-hidden bg-forest lg:order-last lg:h-auto">
-            <Picture
-              picture={HERO_IMAGE}
-              sizes={HERO_SIZES}
-              priority
-              className="object-[50%_42%] motion-safe:animate-[hs7-settle_1.8s_cubic-bezier(0.23,1,0.32,1)_both]"
-            />
-          </div>
+function Header() {
+  return (
+    <header className="sticky top-0 z-[70] border-b border-forest/10 bg-shell/92 backdrop-blur-md">
+      <div className={cn(SHELL, 'flex h-16 items-center justify-between gap-4 lg:h-[72px]')}>
+        {/* eslint-disable-next-line @next/next/no-img-element -- responsive static-export asset */}
+        <img src="/media/honest-7/logo-emara-forest-320.webp" alt="Emara Estates" width={320} height={180} className="h-9 w-auto lg:h-11" />
+        <p className="hidden text-[12px] font-medium uppercase tracking-[.18em] text-forest/65 md:block">Guéliz • Marrakech</p>
+        <ScrollCta target={HERO_FORM_ID} event="availability_cta_click" location="header" className="min-h-11 cursor-pointer rounded-full bg-forest px-4 text-[11px] font-semibold uppercase tracking-[.06em] text-cream sm:px-5 sm:text-[12px]">
+          Voir les disponibilités
+        </ScrollCta>
+      </div>
+    </header>
+  );
+}
 
-          <div className="flex flex-col justify-center px-gutter pb-9 pt-6 sm:pb-12 sm:pt-10 lg:py-16 lg:pl-[clamp(40px,6vw,104px)] lg:pr-[clamp(32px,4vw,64px)]">
-            <p className={cn(EYEBROW, 'hidden lg:block')}>Honest Signature 7 · Guéliz, Marrakech</p>
-            <h1
-              id="hero-title"
-              className="font-sans text-[clamp(34px,9.2vw,46px)] font-medium leading-[1.02] tracking-[-0.04em] text-forest lg:mt-6 lg:text-[clamp(52px,5.2vw,84px)]"
-            >
-              <span className="block">{DELIVERED_COUNT} résidences livrées.</span>
-              <span className="block">
-                La <Seventh className="text-olive" /> prend forme à Guéliz.
-              </span>
-            </h1>
-            <p className="mt-3 text-[14px] font-medium tracking-[0.02em] text-forest/60 sm:text-[15px] lg:mt-6">
-              Guéliz · dès {FACTS.surfaceFrom} · dès {FACTS.priceFromShort} · livraison {FACTS.delivery}
-            </p>
-            <p className="mt-4 max-w-[520px] text-[17px] leading-[1.5] text-forest/80 sm:text-[19px] lg:mt-7 lg:text-[21px]">
-              Découvrez Honest Signature 7, à 1 minute à pied du Plaza.
-            </p>
-            <div className="mt-6 flex flex-col items-stretch gap-2 sm:flex-row sm:items-center sm:gap-7 lg:mt-10">
-              <DossierCta />
-              <a href="#realisations" className={cn(TEXT_LINK, 'justify-center no-underline sm:justify-start')}>
-                Découvrir le projet <span aria-hidden="true">↓</span>
-              </a>
-            </div>
-          </div>
+function Hero() {
+  return (
+    <section aria-labelledby="hero-title" className="relative overflow-hidden bg-forest pb-16 pt-10 text-cream sm:pt-14 lg:pb-28 lg:pt-16">
+      <div aria-hidden="true" className="pointer-events-none absolute -left-28 top-24 size-[420px] rounded-full border border-cream/5" />
+      <div className={cn(SHELL, 'grid items-start gap-8 lg:grid-cols-[minmax(0,.92fr)_minmax(520px,1.08fr)] lg:grid-rows-[auto_1fr] lg:gap-x-[clamp(42px,5vw,86px)]')}>
+        <div className="min-w-0">
+          <p className="rb-in text-[12px] font-medium uppercase tracking-[.22em] text-gold [animation-delay:0ms]">Honest Signature 7 <span className="mx-2 text-cream/35">•</span> Guéliz hyper-centre</p>
+          <h1 id="hero-title" className="mt-6 font-sans text-[clamp(48px,12.3vw,88px)] font-medium uppercase leading-[.9] tracking-[-.055em] lg:text-[clamp(58px,6vw,92px)]">
+            <span className="block overflow-hidden"><span className="rb-line block [animation-delay:100ms]">Guéliz.</span></span>
+            <span className="mt-[.12em] block overflow-hidden"><span className="rb-line block [animation-delay:220ms]">Mais comme vous</span></span>
+            <span className="block overflow-hidden"><span className="rb-line block [animation-delay:340ms]">ne l’avez</span></span>
+            <span className="relative inline-block overflow-visible">
+              <span className="block overflow-hidden"><span className="rb-line block text-gold [animation-delay:460ms]">jamais vécu.</span></span>
+              <svg aria-hidden="true" viewBox="0 0 420 18" preserveAspectRatio="none" className="absolute -bottom-2 left-0 h-3 w-full overflow-visible text-gold"><path className="rb-draw [animation-delay:720ms]" pathLength="1" d="M3 11C110 4 290 5 417 9" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" /></svg>
+            </span>
+          </h1>
+          <p className="rb-in mt-8 max-w-[610px] text-[17px] leading-[1.5] text-cream/78 [animation-delay:600ms] sm:text-[18px]">Au cœur de Guéliz, une résidence pensée pour réunir appartement, bien-être, services et emplacement.</p>
         </div>
-      </section>
 
-      {/* 2 — Proof before the pitch. */}
-      <section id="realisations" aria-labelledby="proof-title" className="overflow-x-clip bg-cream px-gutter py-[clamp(72px,10vw,140px)]">
-        <div className="mx-auto w-full max-w-[1320px]">
-          <FadeIn className="grid gap-6 lg:grid-cols-[1.1fr_0.9fr] lg:items-end lg:gap-16">
-            <div>
-              <p className={EYEBROW}>Nos réalisations</p>
-              <h2 id="proof-title" className={cn(H2, 'mt-4')}>
-                Avant la <Seventh className="text-olive" />, il y en a eu {DELIVERED_COUNT}.
-              </h2>
-            </div>
-            <p className={cn(LEAD, 'max-w-[460px]')}>
-              Un historique visible.
-              <br />
-              Des résidences que l’on peut déjà voir aujourd’hui.
-            </p>
-          </FadeIn>
+        <HeroStage slides={HERO_SLIDES} sizes={HERO_SIZES} className="h-[min(70vh,560px)] min-h-[390px] [&_button]:min-h-11 [&_button]:min-w-11 lg:row-span-2 lg:h-[min(72vh,700px)] lg:min-h-[610px]" />
 
-          <div className="mt-10 lg:mt-14">
-            <Rail label="Résidences Honest déjà livrées" itemClassName="w-[84vw] sm:w-[62vw] lg:w-[46vw] lg:max-w-[720px]">
-              {DELIVERED_RESIDENCES.map((residence) => (
-                <figure key={residence.name} className="m-0">
-                  <div className="aspect-[4/3] overflow-hidden rounded-[20px] bg-sand/40 lg:aspect-[3/2]">
-                    <Picture picture={residence.picture} sizes="(min-width: 1024px) 46vw, (min-width: 641px) 62vw, 84vw" />
-                  </div>
-                  <figcaption className="mt-4 flex items-baseline justify-between gap-4">
-                    <span className="font-sans text-[19px] font-medium tracking-[-0.02em] text-forest">{residence.name}</span>
-                    <span className="text-[14px] text-forest/55">Guéliz · Livrée</span>
-                  </figcaption>
-                </figure>
-              ))}
-            </Rail>
-          </div>
-
-          <div className="mt-10 flex flex-col items-stretch gap-2 sm:flex-row sm:items-center sm:gap-8">
-            <DossierCta />
-            <DossierCta visit className={cn(TEXT_LINK, 'justify-center sm:justify-start')}>
-              Organiser une visite
-            </DossierCta>
-          </div>
-        </div>
-      </section>
-
-      {/* 3 — Honest Signature 7, revealed. */}
-      <section id="projet" aria-labelledby="project-title" className="bg-forest py-[clamp(72px,10vw,140px)] text-cream">
-        <FadeIn className="mx-auto w-full max-w-[1320px] px-gutter">
-          <p className={EYEBROW_DARK}>Honest Signature 7</p>
-          <h2 id="project-title" className={cn(H2_DARK, 'mt-4 max-w-[900px]')}>
-            La <Seventh className="text-gold" /> s’installe au cœur de Guéliz.
-          </h2>
-          <p className="mt-5 max-w-[560px] text-[clamp(17px,1.4vw,20px)] leading-[1.6] text-cream/75">
-            Une résidence neuve à quelques pas du Plaza.
-          </p>
-        </FadeIn>
-
-        <MaskReveal className="mx-auto mt-10 w-full max-w-[1480px] overflow-hidden lg:mt-16 lg:px-gutter">
-          <Parallax className="aspect-[1.08] overflow-hidden bg-[#1f291f] sm:aspect-[1.35] lg:aspect-[1.75] lg:rounded-[28px]">
-            <Picture picture={REVEAL_IMAGE} sizes="(min-width: 1480px) 1400px, 100vw" className="object-[50%_60%]" />
-          </Parallax>
-        </MaskReveal>
-
-        <div className="mx-auto w-full max-w-[1320px] px-gutter">
-          <dl className="mt-10 grid grid-cols-2 gap-x-6 gap-y-8 border-t border-cream/15 pt-8 lg:mt-14 lg:grid-cols-4 lg:gap-0 lg:pt-10">
-            {[
-              { label: 'Surfaces', value: FACTS.surfaces },
-              { label: 'Prix', value: `À partir de ${FACTS.priceFrom}` },
-              { label: 'Prix au m²', value: FACTS.pricePerSqm },
-              { label: 'Livraison', value: `Juin 2028` },
-            ].map((fact) => (
-              <div key={fact.label} className="min-w-0 lg:border-l lg:border-cream/15 lg:px-8 lg:first:border-0 lg:first:pl-0">
-                <dt className="text-[13px] font-medium uppercase tracking-[0.18em] text-sand">{fact.label}</dt>
-                <dd className="mt-2 text-balance font-sans text-[clamp(19px,1.9vw,26px)] font-medium leading-[1.2] tracking-[-0.02em] text-cream">
-                  {fact.value}
-                </dd>
-              </div>
-            ))}
-          </dl>
-          <div className="mt-10 flex flex-col items-stretch gap-2 sm:flex-row sm:items-center sm:gap-8 lg:mt-14">
-            <DossierCta className={CTA_PRIMARY_ON_DARK} />
-            <a
-              href="#appartements"
-              className="inline-flex min-h-12 items-center justify-center gap-1.5 text-[15px] font-medium text-cream underline decoration-cream/30 underline-offset-[6px] transition-colors duration-300 hover:decoration-cream sm:justify-start"
-            >
-              Voir les appartements
-            </a>
-          </div>
-        </div>
-      </section>
-
-      {/* 4 — Location: one verified number, stated large. */}
-      <section id="localisation" aria-labelledby="location-title" className="bg-shell px-gutter py-[clamp(72px,10vw,140px)]">
-        <div className="mx-auto grid w-full max-w-[1320px] items-center gap-10 lg:grid-cols-[0.9fr_1.1fr] lg:gap-20">
-          <FadeIn>
-            <p className={EYEBROW}>Localisation</p>
-            <h2 id="location-title" className={cn(H2, 'mt-4')}>
-              Au cœur de Guéliz.
-              <br />
-              Tout est à quelques pas.
-            </h2>
-            <p className="mt-10 flex items-baseline gap-4 border-t border-forest/12 pt-8">
-              <span className="font-sans text-[clamp(64px,10vw,128px)] font-light leading-[0.85] tracking-[-0.06em] text-forest">1</span>
-              <span className="text-[clamp(20px,2vw,28px)] font-medium leading-[1.15] tracking-[-0.02em] text-forest">
-                minute à pied
-                <br />
-                du Plaza
-              </span>
-            </p>
-            <ul className="mt-8 grid gap-0 border-t border-forest/12">
-              {['Carré Eden à proximité', 'Cafés & restaurants', 'Boutiques & services'].map((item) => (
-                <li key={item} className="border-b border-forest/12 py-4 text-[17px] text-forest/80">
-                  {item}
-                </li>
-              ))}
-            </ul>
-          </FadeIn>
-
-          <MaskReveal className="overflow-hidden rounded-[24px]">
-            <div className="aspect-square bg-forest sm:aspect-[4/3] lg:aspect-[1.2]">
-              <Picture picture={MAP_IMAGE} sizes="(min-width: 1024px) 54vw, 100vw" className="object-[42%_40%] sm:object-center" />
-            </div>
-          </MaskReveal>
-        </div>
-      </section>
-
-      {/* 5 — Lifestyle: real project visuals, one amenity each; the full
-          list follows as text so nothing is shown under the wrong name. */}
-      <section id="art-de-vivre" aria-labelledby="lifestyle-title" className="overflow-x-clip bg-cream px-gutter py-[clamp(72px,10vw,140px)]">
-        <div className="mx-auto w-full max-w-[1320px]">
-          <FadeIn>
-            <p className={EYEBROW}>Les espaces de la résidence</p>
-            <h2 id="lifestyle-title" className={cn(H2, 'mt-4')}>
-              Bien plus qu’une résidence.
-              <br />
-              Un art de vivre.
-            </h2>
-          </FadeIn>
-
-          <div className="mt-10 lg:mt-14">
-            <Rail label="Espaces de la résidence Honest Signature 7" itemClassName="w-[76vw] sm:w-[46vw] lg:w-[30vw] lg:max-w-[440px]">
-              {AMENITY_VISUALS.map((amenity) => (
-                <figure key={amenity.title} className="m-0">
-                  <div className="aspect-[4/5] overflow-hidden rounded-[20px] bg-sand/40">
-                    <Picture
-                      picture={amenity.picture}
-                      sizes="(min-width: 1024px) 30vw, (min-width: 641px) 46vw, 76vw"
-                      className="transition-transform duration-[1.2s] ease-premium hover:scale-[1.03]"
-                    />
-                  </div>
-                  <figcaption className="mt-4 font-sans text-[19px] font-medium tracking-[-0.02em] text-forest">
-                    {amenity.title}
-                  </figcaption>
-                </figure>
-              ))}
-            </Rail>
-          </div>
-
-          <ul className="mt-12 grid grid-cols-1 border-t border-forest/12 xs:grid-cols-2 lg:grid-cols-4">
-            {AMENITY_LIST.map((item) => (
-              <li key={item} className="flex items-center gap-3 border-b border-forest/12 py-4 pr-4 text-[16.5px] text-forest">
-                <span aria-hidden="true" className="size-1.5 shrink-0 rounded-full bg-bronze" />
-                {item}
+        <div className="min-w-0 lg:pt-8">
+          <ul aria-label="Équipements et services" className="rb-in grid grid-cols-2 gap-x-4 gap-y-2.5 border-y border-cream/14 py-5 [animation-delay:760ms] sm:grid-cols-4 lg:grid-cols-2 xl:grid-cols-4">
+            {HERO_AMENITIES.map((item) => (
+              <li key={item} className="group relative flex min-h-11 items-center gap-2.5 text-[12px] font-medium uppercase leading-tight tracking-[.05em] text-cream/85">
+                <AmenityIcon name={item} />
+                <span className="relative">{item}{item === 'Conciergerie' && <span className="absolute -right-1 -top-3 text-[8px] tracking-[.13em] text-gold">Service</span>}</span>
               </li>
             ))}
           </ul>
-          <p className={cn(NOTE, 'mt-5')}>Visuels d’ambiance du projet, non contractuels.</p>
-        </div>
-      </section>
-
-      {/* 6 — Payment plan: the proportions are the message. */}
-      <section id="paiement" aria-labelledby="payment-title" className="bg-forest px-gutter py-[clamp(72px,10vw,140px)] text-cream">
-        <div className="mx-auto w-full max-w-[1320px]">
-          <FadeIn>
-            <p className={EYEBROW_DARK}>Échéancier</p>
-            <h2 id="payment-title" className={cn(H2_DARK, 'mt-4 max-w-[900px]')}>
-              Un paiement réparti jusqu’à la remise des clés.
-            </h2>
-          </FadeIn>
-
-          <PaymentBar className="mt-12 lg:mt-16" />
-
-          <ol className="mt-10 grid gap-0 lg:mt-12 lg:grid-cols-3">
-            {PAYMENT_PLAN.map((item) => (
-              <li
-                key={item.step}
-                className="grid grid-cols-[auto_1fr] items-baseline gap-x-6 border-t border-cream/15 py-7 lg:block lg:border-l lg:border-t-0 lg:px-10 lg:py-2 lg:first:border-l-0 lg:first:pl-0"
-              >
-                <span className="text-[14px] font-medium tabular-nums tracking-[0.12em] text-sand">{item.step}</span>
-                <div className="lg:mt-6">
-                  <p className="font-sans text-[clamp(56px,7vw,104px)] font-light leading-[0.9] tracking-[-0.05em] text-cream">
-                    {item.share}
-                  </p>
-                  <p className="mt-3 text-[17px] leading-snug text-cream/75 lg:text-[19px]">{item.label}</p>
-                </div>
-              </li>
-            ))}
-          </ol>
-
-          <div className="mt-10 flex flex-col gap-8 border-t border-cream/15 pt-8 sm:flex-row sm:items-center sm:justify-between lg:mt-14">
-            <p className="text-[17px] text-cream/80">
-              Livraison prévue : <span className="font-medium text-cream">juin 2028</span>
-            </p>
-            <DossierCta className={CTA_PRIMARY_ON_DARK} />
-          </div>
-        </div>
-      </section>
-
-      {/* 7 — Price: minimal. */}
-      <section id="prix" aria-labelledby="price-title" className="bg-shell px-gutter py-[clamp(80px,12vw,160px)] text-center">
-        <FadeIn className="mx-auto max-w-[960px]">
-          <h2 id="price-title" className="font-sans text-[clamp(18px,1.8vw,24px)] font-normal text-forest/70">
-            À partir de
-          </h2>
-          <p className="mt-3 whitespace-nowrap font-sans text-[clamp(44px,11.5vw,150px)] font-light leading-[0.95] tracking-[-0.055em] text-forest">
-            1&nbsp;390&nbsp;000 <span className="text-[0.42em] font-normal tracking-[-0.01em]">MAD</span>
-          </p>
-          <p className="mt-6 text-[clamp(18px,1.8vw,24px)] font-medium tracking-[-0.01em] text-forest/80">{FACTS.pricePerSqm}</p>
-          <div className="mt-10">
-            <DossierCta className={CTA_PRIMARY}>Voir les disponibilités</DossierCta>
-          </div>
-          <p className={cn(NOTE, 'mt-6')}>Prix et disponibilités des lots confirmés par un conseiller.</p>
-        </FadeIn>
-      </section>
-
-      {/* 8 — Apartments. */}
-      <section id="appartements" aria-labelledby="apartments-title" className="overflow-x-clip bg-cream px-gutter py-[clamp(72px,10vw,140px)]">
-        <div className="mx-auto w-full max-w-[1320px]">
-          <FadeIn className="grid gap-6 lg:grid-cols-[1.2fr_0.8fr] lg:items-end lg:gap-16">
-            <div>
-              <p className={EYEBROW}>Les appartements</p>
-              <h2 id="apartments-title" className={cn(H2, 'mt-4')}>
-                Projetez-vous dans votre futur appartement.
-              </h2>
+          <div className="rb-in mt-6 grid grid-cols-[1fr_auto] items-end gap-4 [animation-delay:880ms]">
+            <p className="flex items-center gap-2 text-[14px] font-medium uppercase tracking-[.08em] text-cream/80"><span aria-hidden="true" className="text-gold">↗</span> À <span className="border-b border-gold pb-0.5 text-cream">1 minute</span> à pied du Plaza</p>
+            <div className="rounded-full border border-gold/55 px-4 py-2 text-right">
+              <span className="block text-[9px] font-medium uppercase tracking-[.17em] text-cream/60">À partir de</span>
+              <span className="block whitespace-nowrap text-[20px] font-medium leading-tight text-gold">1,39 M MAD</span>
             </div>
-            <p className={cn(LEAD, 'max-w-[440px]')}>
-              Des surfaces de {FACTS.surfaces}, pensées pour y vivre comme pour investir.
-            </p>
-          </FadeIn>
-
-          <div className="mt-10 lg:mt-14">
-            <Rail label="Intérieurs Honest Signature 7" itemClassName="w-[86vw] sm:w-[66vw] lg:w-[52vw] lg:max-w-[820px]">
-              {APARTMENT_VISUALS.map((room) => (
-                <figure key={room.title} className="m-0">
-                  <div className="aspect-[4/3] overflow-hidden rounded-[20px] bg-sand/40 lg:aspect-[16/10]">
-                    <Picture picture={room.picture} sizes="(min-width: 1024px) 52vw, (min-width: 641px) 66vw, 86vw" />
-                  </div>
-                  <figcaption className="mt-4 font-sans text-[19px] font-medium tracking-[-0.02em] text-forest">{room.title}</figcaption>
-                </figure>
-              ))}
-            </Rail>
           </div>
-
-          <div className="mt-10 flex flex-col items-stretch gap-3 sm:flex-row sm:items-center sm:gap-6">
-            <DossierCta />
-            <a
-              href={EXTERNAL.virtualTour3d}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex min-h-14 items-center justify-center gap-2 rounded-full border border-forest/25 px-8 py-4 text-[15px] font-medium text-forest transition-colors duration-300 hover:border-forest"
-            >
-              Explorer la visite 3D
-              <span aria-hidden="true">↗</span>
-              <span className="sr-only">(nouvel onglet)</span>
-            </a>
+          <p className="rb-in mt-4 text-[13px] uppercase tracking-[.13em] text-cream/55 [animation-delay:940ms]">51 m²+ <span className="mx-2 text-gold">•</span> Livraison juin 2028</p>
+          <div className="rb-in mt-7 grid gap-3 sm:grid-cols-2 [animation-delay:1000ms]">
+            <ScrollCta target={HERO_FORM_ID} event="hero_prices_cta_click" location="hero" className={PRIMARY}>Voir les prix & disponibilités <span aria-hidden="true" className="ml-2">→</span></ScrollCta>
+            <ScrollCta target={SHOW_APARTMENTS_ID} event="hero_show_apartment_click" location="hero" className={SECONDARY}>Visiter les appartements témoins <span aria-hidden="true" className="ml-2">↓</span></ScrollCta>
           </div>
-          <p className={cn(NOTE, 'mt-6')}>Visuels d’ambiance du projet, non contractuels.</p>
         </div>
-      </section>
+      </div>
 
-      {/* 9 — The form. */}
-      <DossierLeadForm />
+      <div className={cn(SHELL, 'relative z-10 mt-12 lg:-mb-44 lg:mt-14')}>
+        <div className="mx-auto max-w-[880px]"><DossierLeadForm placement="hero" id={HERO_FORM_ID} /></div>
+      </div>
+    </section>
+  );
+}
 
-      <StickyDossierCta heroId={HERO_ID} />
-    </>
+function ShowApartments() {
+  const slides = SHOW_APARTMENTS.map((room, index) => ({
+    key: room.title,
+    content: (
+      <figure className="m-0">
+        <div className="group relative aspect-[4/3] overflow-hidden rounded-[20px] bg-sand/35 lg:aspect-[16/10]">
+          <Picture picture={room.picture} sizes="(min-width: 1024px) 58vw, (min-width: 641px) 64vw, 84vw" className="pointer-events-none transition-transform duration-[1200ms] ease-step group-hover:scale-[1.025]" />
+          <div aria-hidden="true" className="absolute inset-x-0 bottom-0 h-1/3 bg-gradient-to-t from-black/55 to-transparent" />
+          <figcaption className="absolute inset-x-0 bottom-0 flex items-end justify-between gap-4 p-5 text-cream">
+            <span className="font-sans text-[clamp(24px,3vw,40px)] font-medium uppercase tracking-[-.02em]">{room.title}</span>
+            <span className="text-[13px] tabular-nums tracking-[.14em]">0{index + 1}</span>
+          </figcaption>
+        </div>
+      </figure>
+    ),
+  }));
+  return (
+    <SectionView event="show_apartment_section_view" id={SHOW_APARTMENTS_ID} labelledBy="show-title" className="overflow-x-clip bg-cream pb-band pt-[clamp(92px,15vw,220px)]">
+      <div className={SHELL}>
+        <p className={cn(EYEBROW, 'text-olive')}>01 — Appartements témoins réels</p>
+        <h2 id="show-title" className={cn(H2, 'mt-6 text-[clamp(48px,8vw,120px)] text-forest')}><Lines lines={['Ne l’imaginez pas.', <span key="entrez" className="font-serif font-normal normal-case italic text-olive">Entrez.</span>]} /></h2>
+        <Rise className="mt-6 max-w-[600px]"><p className="text-[17px] leading-[1.55] text-forest/70">Découvrez des appartements témoins photographiés dans les résidences Honest déjà livrées.</p></Rise>
+        <div className="mt-10 lg:mt-14"><ProofCarousel label="Visite des appartements témoins Honest" slides={slides} /></div>
+        <div className="mt-12 grid gap-6 border-t border-forest/12 pt-8 md:grid-cols-[1fr_auto] md:items-end">
+          <div><h3 className="font-sans text-[clamp(30px,4vw,54px)] font-medium uppercase leading-none tracking-[-.03em] text-forest">Vous vous y voyez ?</h3><p className="mt-3 text-[17px] text-forest/70">Découvrez les appartements actuellement disponibles.</p></div>
+          <ScrollCta target={HERO_FORM_ID} event="show_apartment_cta_click" location="show_apartments" className={cn(PRIMARY, 'w-full bg-forest text-cream md:w-auto')}>Voir les prix & disponibilités <span aria-hidden="true" className="ml-2">→</span></ScrollCta>
+        </div>
+      </div>
+    </SectionView>
+  );
+}
+
+function Amenities() {
+  return (
+    <SectionView event="amenities_section_view" id="equipements" labelledBy="amenities-title" className="overflow-x-clip bg-shell py-band">
+      <div className={SHELL}>
+        <p className={cn(EYEBROW, 'text-olive')}>02 — Bien-être & services</p>
+        <h2 id="amenities-title" className={cn(H2, 'mt-6 text-[clamp(42px,7vw,104px)] text-forest')}><Lines lines={['Votre résidence', 'ne s’arrête pas à', <span key="appartement" className="font-serif font-normal normal-case italic text-olive">votre appartement.</span>]} /></h2>
+        <Rise className="mt-6"><p className="max-w-[520px] text-[18px] leading-[1.55] text-forest/70">Bien-être, services et Guéliz à votre porte.</p></Rise>
+        <div className="mt-10 lg:mt-4"><AmenityStory scenes={AMENITY_SCENES} /></div>
+        <div className="mt-12 grid gap-4 sm:grid-cols-2">
+          <ServiceCard title="Conciergerie" label="Service" line="Un service pensé pour simplifier votre quotidien." />
+          <ServiceCard title="Parking titré" label="Pratique" line="Un espace de stationnement titré au sein du projet." />
+        </div>
+        <p className="mt-6 text-[13px] text-forest/70">Visuels d’ambiance du projet, non contractuels.</p>
+      </div>
+    </SectionView>
+  );
+}
+
+function ServiceCard({ title, label, line }: { title: string; label: string; line: string }) {
+  return <Rise className="border-t border-forest/18 py-7"><div className="flex items-start gap-4"><AmenityIcon name={title} dark /><div><p className="text-[10px] font-medium uppercase tracking-[.18em] text-bronze">{label}</p><h3 className="mt-2 font-sans text-[clamp(28px,3vw,40px)] font-medium uppercase leading-none tracking-[-.03em] text-forest">{title}</h3><p className="mt-3 text-[16px] text-forest/70">{line}</p></div></div></Rise>;
+}
+
+function Trust() {
+  const slides = [
+    ...DELIVERED_RESIDENCES.map((residence, index) => ({ key: residence.name, content: <figure className="m-0"><div className="group relative aspect-[4/3] overflow-hidden rounded-[20px] bg-sand/35 lg:aspect-[16/10]"><Picture picture={residence.picture} sizes="(min-width: 1024px) 58vw, (min-width: 641px) 64vw, 84vw" className="pointer-events-none transition-transform duration-[1200ms] ease-step group-hover:scale-[1.025]" /><span className="absolute left-4 top-4 rounded-full bg-shell/95 px-3 py-1.5 text-[12px] font-medium uppercase tracking-[.12em] text-forest">Livrée</span></div><figcaption className="mt-4 flex items-center gap-4 text-forest"><span className="text-[13px] tabular-nums text-olive">0{index + 1}</span><span className="font-sans text-[21px] font-medium uppercase">{residence.name}</span></figcaption></figure> })),
+    { key: 'honest-7', content: <figure className="m-0"><div className="group relative aspect-[4/3] overflow-hidden rounded-[20px] bg-forest lg:aspect-[16/10]"><Picture picture={REVEAL_IMAGE} sizes="(min-width: 1024px) 58vw, (min-width: 641px) 64vw, 84vw" className="pointer-events-none object-[50%_58%] transition-transform duration-[1200ms] ease-step group-hover:scale-[1.025]" /><span className="absolute left-4 top-4 rounded-full bg-gold px-3 py-1.5 text-[12px] font-semibold uppercase tracking-[.12em] text-forest">La 7e · Juin 2028</span></div><figcaption className="mt-4 flex items-center gap-4 text-forest"><span className="text-[13px] tabular-nums text-bronze">07</span><span className="font-sans text-[21px] font-medium uppercase">Honest Signature 7</span></figcaption></figure> },
+  ];
+  return (
+    <section id="realisations" aria-labelledby="trust-title" className="overflow-x-clip bg-cream py-band">
+      <div className={SHELL}>
+        <p className={cn(EYEBROW, 'text-olive')}>03 — Le promoteur</p>
+        <h2 id="trust-title" className={cn(H2, 'mt-6 text-[clamp(42px,7vw,104px)] text-forest')}><Lines lines={[`${DELIVERED_COUNT} résidences déjà livrées.`, <span key="7" className="font-serif font-normal normal-case italic text-olive">Voici la 7e.</span>]} /></h2>
+        <Rise className="mt-6"><p className="max-w-[580px] text-[17px] leading-[1.55] text-forest/70">Une continuité visible, portée par des réalisations Honest déjà achevées.</p></Rise>
+        <div className="mt-10 lg:mt-14"><ProofCarousel label="Réalisations Honest et Honest Signature 7" slides={slides} /></div>
+      </div>
+    </section>
+  );
+}
+
+function Payment() {
+  return (
+    <SectionView event="payment_section_view" id="paiement" labelledBy="payment-title" className="bg-shell py-band">
+      <div className={SHELL}>
+        <p className={cn(EYEBROW, 'text-olive')}>04 — Paiement progressif</p>
+        <h2 id="payment-title" className={cn(H2, 'mt-6 text-[clamp(42px,7vw,104px)] text-forest')}><Lines lines={['Votre appartement.', <span key="paid" className="font-serif font-normal normal-case italic text-olive">Payé progressivement.</span>]} /></h2>
+        <div className="mt-14 lg:mt-20"><PaymentTimeline /></div>
+        <div className="mt-12 flex flex-col gap-5 border-t border-forest/12 pt-8 sm:flex-row sm:items-center sm:justify-between"><p className="text-[16px] text-forest/70">Livraison prévue : <strong className="font-medium text-forest">juin 2028</strong></p><ScrollCta target={HERO_FORM_ID} event="availability_cta_click" location="payment" className={cn(PRIMARY, 'w-full bg-forest text-cream sm:w-auto')}>Voir les appartements disponibles <span aria-hidden="true" className="ml-2">→</span></ScrollCta></div>
+      </div>
+    </SectionView>
+  );
+}
+
+function Location() {
+  return (
+    <section id="localisation" aria-labelledby="location-title" className="overflow-hidden bg-forest py-band text-cream">
+      <div className={cn(SHELL, 'grid items-center gap-12 lg:grid-cols-[.85fr_1.15fr] lg:gap-20')}>
+        <div><p className={cn(EYEBROW, 'text-gold')}>05 — Guéliz hyper-centre</p><h2 id="location-title" className={cn(H2, 'mt-6 text-[clamp(42px,6.2vw,90px)]')}><Lines lines={['Pas « près de Guéliz ».', <span key="gueliz" className="font-serif font-normal normal-case italic text-gold">À Guéliz.</span>]} /></h2><Rise className="mt-10 border-t border-cream/15 pt-8"><p className="flex items-end gap-4"><span className="font-sans text-[clamp(130px,24vw,250px)] font-extralight leading-[.7] tracking-[-.08em]">1</span><span className="pb-1"><span className="block text-[12px] font-medium uppercase tracking-[.18em] text-gold">→ 1 minute</span><span className="mt-2 block text-[26px] font-medium uppercase leading-none">à pied du Plaza.</span></span></p></Rise></div>
+        <Rise className="relative overflow-hidden rounded-[24px]"><div className="aspect-[4/3] bg-[#1f291f]"><Picture picture={MAP_IMAGE} sizes="(min-width: 1024px) 55vw, 100vw" className="object-[34%_40%]" /></div><p className="absolute left-4 top-4 rounded-full bg-shell/95 px-4 py-2 text-[11px] font-medium uppercase tracking-[.13em] text-forest">Honest Signature 7 → Plaza : 1 min</p></Rise>
+      </div>
+    </section>
+  );
+}
+
+const CHOICES = ['Étage', 'Orientation', 'Surface', 'Configuration'];
+function Fomo() {
+  return (
+    <section id="choix" aria-labelledby="fomo-title" className="bg-cream py-band">
+      <div className={SHELL}>
+        <p className={cn(EYEBROW, 'text-olive')}>06 — Disponibilités actuelles</p>
+        <h2 id="fomo-title" className={cn(H2, 'mt-6 text-[clamp(40px,7vw,102px)] text-forest')}><Lines lines={['Vous pouvez encore choisir.', <span key="notforever" className="font-serif font-normal normal-case italic text-olive">Mais pas indéfiniment.</span>]} /></h2>
+        <ul className="mt-12 grid grid-cols-2 border-t border-forest/12 lg:grid-cols-4">{CHOICES.map((choice, index) => <li key={choice} className="border-b border-forest/12 py-6 odd:border-r lg:border-b-0 lg:border-r lg:px-6 lg:first:pl-0 lg:last:border-r-0"><Rise delay={index * .07}><span className="text-[12px] tabular-nums text-bronze">0{index + 1}</span><p className="mt-4 font-sans text-[clamp(21px,2.2vw,32px)] font-medium uppercase leading-none tracking-[-.02em] text-forest">{choice}.</p></Rise></li>)}</ul>
+        <div className="mt-12 flex flex-col gap-7 lg:flex-row lg:items-end lg:justify-between"><p className="font-serif text-[clamp(25px,3vw,40px)] italic leading-[1.15] text-forest">Chaque réservation peut réduire le choix restant.</p><ScrollCta target={FINAL_FORM_ID} event="availability_cta_click" location="fomo" className={cn(PRIMARY, 'w-full bg-forest text-cream sm:w-auto')}>Consulter les disponibilités <span aria-hidden="true" className="ml-2">→</span></ScrollCta></div>
+      </div>
+    </section>
+  );
+}
+
+function FinalForm() {
+  return (
+    <section aria-labelledby="final-copy-title" className="bg-shell py-band">
+      <div className={cn(SHELL, 'grid items-start gap-10 lg:grid-cols-[1fr_minmax(440px,600px)] lg:gap-20')}>
+        <div className="lg:sticky lg:top-28"><p className={cn(EYEBROW, 'text-olive')}>07 — Votre appartement</p><h2 id="final-copy-title" className={cn(H2, 'mt-6 text-[clamp(38px,5.5vw,78px)] text-forest')}>Quel appartement est encore disponible <span className="font-serif font-normal normal-case italic text-olive">pour vous ?</span></h2><p className="mt-6 max-w-[500px] text-[18px] leading-[1.55] text-forest/70">Recevez les plans, les prix, les surfaces, les étages et les disponibilités actuelles.</p></div>
+        <DossierLeadForm placement="final" id={FINAL_FORM_ID} title="Recevez les disponibilités" />
+      </div>
+    </section>
+  );
+}
+
+function Footer() {
+  return (
+    <footer className="bg-forest pb-28 pt-12 text-cream/75 lg:pb-12">
+      <div className={cn(SHELL, 'grid gap-8 text-[14px] md:grid-cols-[1.2fr_1fr_1.4fr]')}>
+        <div>{/* eslint-disable-next-line @next/next/no-img-element */}<img src="/img/logo.webp" alt="Emara Estates" width={1250} height={625} loading="lazy" className="h-11 w-auto" /><p className="mt-4">Commercialisation de Honest Signature 7, Guéliz, Marrakech.</p></div>
+        <address className="not-italic"><a href={`tel:${CONTACT.phoneDisplay.replace(/\s/g, '')}`} className="block min-h-11 py-2 text-cream hover:underline">{CONTACT.phoneDisplay}</a><a href={`mailto:${CONTACT.email}`} className="block min-h-11 py-2 text-cream hover:underline">{CONTACT.email}</a><a href={WHATSAPP.bare} target="_blank" rel="noopener noreferrer" className="block min-h-11 py-2 text-cream hover:underline">WhatsApp ↗</a></address>
+        <div><p>Vos coordonnées servent uniquement à vous recontacter au sujet de ce projet. Conformément à la loi 09-08, vous pouvez exercer vos droits à {CONTACT.email}.</p><p className="mt-3">Prix « à partir de », selon disponibilités. Visuels d’ambiance non contractuels.</p><p className="mt-3">© 2026 Emara Estates</p></div>
+      </div>
+    </footer>
+  );
+}
+
+function AmenityIcon({ name, dark = false }: { name: string; dark?: boolean }) {
+  const common = { fill: 'none', stroke: 'currentColor', strokeWidth: 1.35, strokeLinecap: 'round' as const, strokeLinejoin: 'round' as const };
+  return (
+    <span aria-hidden="true" className={cn('flex size-8 shrink-0 items-center justify-center rounded-full border transition-colors duration-300 group-hover:border-gold group-hover:text-gold', dark ? 'border-forest/20 text-olive' : 'border-cream/18 text-gold')}>
+      <svg viewBox="0 0 24 24" className="size-4.5" {...common}>
+        {name === 'Piscines' && <><path d="M3 9c2 0 2 2 4 2s2-2 4-2 2 2 4 2 2-2 4-2 2 2 2 2"/><path d="M3 14c2 0 2 2 4 2s2-2 4-2 2 2 4 2 2-2 4-2 2 2 2 2"/></>}
+        {name === 'Spa' && <><path d="M12 20c4-2 7-5 7-9-4 0-7 2-7 6-1-4-3-6-7-6 0 4 3 7 7 9Z"/><path d="M12 17V7"/></>}
+        {name === 'Jacuzzi' && <><path d="M4 12h16v3a4 4 0 0 1-4 4H8a4 4 0 0 1-4-4v-3Z"/><path d="M8 9c-1-1 1-2 0-3M13 9c-1-1 1-2 0-3M18 9c-1-1 1-2 0-3"/></>}
+        {name === 'Salle de sport' && <><path d="M7 9v6M17 9v6M4 10v4M20 10v4M7 12h10"/></>}
+        {name === 'Sauna' && <><path d="M5 18h14M7 18V9h10v9M9 6c-1 1 1 2 0 3M13 5c-1 1 1 2 0 3"/></>}
+        {name === 'Cinéma extérieur' && <><rect x="3" y="5" width="18" height="14" rx="1"/><path d="m10 9 5 3-5 3Z"/></>}
+        {name === 'Conciergerie' && <><path d="M5 19h14M7 16h10M9 16v-4a3 3 0 0 1 6 0v4M12 7V5"/><path d="M10 5h4"/></>}
+        {name === 'Parking titré' && <><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M10 17V7h3a3 3 0 0 1 0 6h-3"/></>}
+      </svg>
+    </span>
   );
 }

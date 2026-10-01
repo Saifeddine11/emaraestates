@@ -81,6 +81,8 @@ export const WHATSAPP_FLOAT_BY_ROUTE: Record<string, string> = {
 /** Routes that must not render the floating WhatsApp button. */
 export const WHATSAPP_FLOAT_HIDDEN_ROUTES = new Set([
   '/recrutement-commercial-marrakech',
+  // Paid lead page: keep the floating control from covering the inline form.
+  '/honest-signature-7',
   // Internal sales calculator: the client WhatsApp button would cover amounts.
   '/simulateur-equipe',
 ]);

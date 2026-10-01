@@ -64,7 +64,58 @@ export const HERO_IMAGE = hs7(
   'Façade de la résidence Honest Signature 7 à Guéliz, Marrakech, avec ses balcons végétalisés',
 );
 
-export const HERO_SIZES = '(min-width: 1024px) 56vw, 100vw';
+export const HERO_SIZES = '(min-width: 1024px) 50vw, 100vw';
+
+const media = (name: string, widths: number[], width: number, height: number, alt: string): Picture => ({
+  src: `${M}/${name}-${widths[widths.length - 1]}.webp`,
+  srcSet: widths.map((value) => `${M}/${name}-${value}.webp ${value}w`).join(', '),
+  width,
+  height,
+  alt,
+});
+
+const POOL = hs7(
+  'piscine',
+  '/img/honest-signature-7/honest-signature-7-gueliz-marrakech-interieur-03.webp',
+  1600,
+  1067,
+  'Piscine extérieure du projet Honest Signature 7 bordée de transats',
+);
+const INDOOR_POOL = media('piscine-interieure', [640, 1080, 1600], 1600, 900, 'Piscine intérieure du projet Honest Signature 7');
+const SPA = media('spa', [640, 1080, 1600], 1600, 1066, 'Espace spa du projet Honest Signature 7');
+const JACUZZI = media('jacuzzi', [640, 720], 720, 1067, 'Jacuzzi habillé de bois du projet Honest Signature 7');
+const SAUNA = media('sauna', [640, 720], 720, 1067, 'Sauna en bois du projet Honest Signature 7');
+const SPORT = hs7('salle-de-sport', '/img/honest005.webp', 1280, 720, 'Salle de sport équipée du projet Honest Signature 7');
+const CINEMA = hs7('cinema', '/img/honest003.webp', 1600, 1066, 'Cinéma extérieur du projet Honest Signature 7 avec vue sur Marrakech');
+const SALON = hs7('salon', '/img/honest007.webp', 1600, 900, 'Perspective du séjour d’un appartement Honest Signature 7');
+
+export type HeroSlide = { index: string; label: string; picture: Picture; position?: string };
+
+export const HERO_SLIDES: HeroSlide[] = [
+  { index: '01', label: 'Architecture', picture: HERO_IMAGE, position: '50% 42%' },
+  { index: '02', label: 'Piscines', picture: POOL, position: '50% 60%' },
+  { index: '03', label: 'Intérieurs', picture: SALON, position: '50% 50%' },
+  { index: '04', label: 'Spa & bien-être', picture: SPA, position: '58% 55%' },
+  { index: '05', label: 'Cinéma extérieur', picture: CINEMA, position: '50% 55%' },
+];
+
+export type AmenityScene = {
+  index: string;
+  title: string;
+  line: string;
+  picture: Picture;
+  inset?: Picture;
+  position?: string;
+};
+
+export const AMENITY_SCENES: AmenityScene[] = [
+  { index: '01', title: 'Piscines', line: 'Une piscine extérieure et une piscine intérieure.', picture: POOL, inset: INDOOR_POOL, position: '50% 62%' },
+  { index: '02', title: 'Spa', line: 'Un espace bien-être au sein de la résidence.', picture: SPA, position: '58% 55%' },
+  { index: '03', title: 'Jacuzzi', line: 'Un espace dédié à la détente.', picture: JACUZZI, position: '50% 62%' },
+  { index: '04', title: 'Salle de sport', line: 'Un espace équipé au pied de chez vous.', picture: SPORT, position: '50% 50%' },
+  { index: '05', title: 'Sauna', line: 'Le bien-être intégré à votre quotidien.', picture: SAUNA, position: '50% 50%' },
+  { index: '06', title: 'Cinéma extérieur', line: 'Une expérience en plein air face à Marrakech.', picture: CINEMA, position: '50% 55%' },
+];
 
 export const REVEAL_IMAGE: Picture = {
   src: `${M}/facade-nuit-1600.webp`,
@@ -176,6 +227,32 @@ export const APARTMENT_VISUALS: Room[] = [
   },
 ];
 
+/** Real show-apartment photography from Honest residences already delivered. */
+const SHOWROOM_DIR = '/img/appartements-temoins';
+const showroom = (file: string, width: number, height: number, alt: string): Picture => ({
+  src: `${SHOWROOM_DIR}/${file}.webp`,
+  srcSet: `${SHOWROOM_DIR}/${file}.webp ${width}w`,
+  width,
+  height,
+  alt,
+});
+
+export const SHOW_APARTMENTS: Room[] = [
+  { title: 'Séjour', picture: showroom('honest-2-appartement-temoin-02', 1600, 1062, 'Séjour ouvert sur une terrasse dans un appartement témoin Honest livré') },
+  { title: 'Cuisine', picture: showroom('honest-1-appartement-temoin-02', 1600, 899, 'Cuisine ouverte avec comptoir dans un appartement témoin Honest livré') },
+  { title: 'Chambre', picture: showroom('honest-2-appartement-temoin-01', 1600, 1099, 'Chambre avec baie vitrée dans un appartement témoin Honest livré') },
+  { title: 'Espace repas', picture: showroom('honest-3-appartement-temoin-01', 1600, 899, 'Cuisine équipée et espace repas dans un appartement témoin Honest livré') },
+  { title: 'Terrasse', picture: showroom('honest-3-appartement-temoin-02', 1600, 1070, 'Salon et cuisine ouverte dans un appartement témoin Honest livré') },
+];
+
+export const PAYMENT_STEPS = [
+  { share: '30', when: 'À la réservation', note: 'Aujourd’hui' },
+  { share: '15', when: 'Après 6 mois', note: '1re échéance' },
+  { share: '15', when: 'Après 12 mois', note: '2e échéance' },
+  { share: '15', when: 'Après 18 mois', note: '3e échéance' },
+  { share: '25', when: 'À la remise des clés', note: 'Juin 2028' },
+] as const;
+
 /* ── Lead form ──────────────────────────────────────────────────────────── */
 
 /** Visible choice → `purchase_intent` value sent to Zapier. */
@@ -183,7 +260,6 @@ export const PURPOSES = [
   { label: 'Acheter pour y vivre', intent: 'Résidence principale' },
   { label: 'Investir', intent: 'Investissement' },
   { label: 'Résidence secondaire', intent: 'Résidence secondaire' },
-  { label: 'Découvrir le projet', intent: 'Découverte du projet' },
 ] as const;
 
 /**

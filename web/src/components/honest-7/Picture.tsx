@@ -1,3 +1,4 @@
+import type { CSSProperties } from 'react';
 import type { Picture as PictureData } from '@/lib/content/honest-signature-7';
 import { cn } from '@/lib/cn';
 
@@ -15,12 +16,16 @@ export function Picture({
   priority = false,
   className,
   decorative = false,
+  style,
+  onLoad,
 }: {
   picture: PictureData;
   sizes: string;
   priority?: boolean;
   className?: string;
   decorative?: boolean;
+  style?: CSSProperties;
+  onLoad?: () => void;
 }) {
   return (
     // eslint-disable-next-line @next/next/no-img-element -- static export: next/image cannot emit srcset here
@@ -35,6 +40,8 @@ export function Picture({
       fetchPriority={priority ? 'high' : undefined}
       decoding={priority ? 'sync' : 'async'}
       className={cn('block size-full object-cover', className)}
+      style={style}
+      onLoad={onLoad}
     />
   );
 }
