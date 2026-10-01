@@ -8,11 +8,7 @@ import { ProofCarousel } from '@/components/residence-boutique/ProofCarousel';
 import { Lines, Rise } from '@/components/residence-boutique/Reveal';
 import {
   AMENITY_SCENES,
-  DELIVERED_COUNT,
-  DELIVERED_RESIDENCES,
-  FACTS,
   MAP_IMAGE,
-  REVEAL_IMAGE,
   SHOW_APARTMENTS,
 } from '@/lib/content/honest-signature-7';
 import { CONTACT, WHATSAPP } from '@/lib/site';
@@ -35,7 +31,6 @@ export function Honest7Landing() {
         <Hero />
         <ShowApartments />
         <Amenities />
-        <Trust />
         <Payment />
         <Location />
         <Fomo />
@@ -173,28 +168,11 @@ function ServiceCard({ title, label, line }: { title: string; label: string; lin
   return <Rise className="border-t border-forest/18 py-7"><div className="flex items-start gap-4"><AmenityIcon name={title} dark /><div><p className="text-[10px] font-medium uppercase tracking-[.18em] text-bronze">{label}</p><h3 className="mt-2 font-sans text-[clamp(28px,3vw,40px)] font-medium uppercase leading-none tracking-[-.03em] text-forest">{title}</h3><p className="mt-3 text-[16px] text-forest/70">{line}</p></div></div></Rise>;
 }
 
-function Trust() {
-  const slides = [
-    ...DELIVERED_RESIDENCES.map((residence, index) => ({ key: residence.name, content: <figure className="m-0"><div className="group relative aspect-[4/3] overflow-hidden rounded-[20px] bg-sand/35 lg:aspect-[16/10]"><Picture picture={residence.picture} sizes="(min-width: 1024px) 58vw, (min-width: 641px) 64vw, 84vw" className="pointer-events-none transition-transform duration-[1200ms] ease-step group-hover:scale-[1.025]" /><span className="absolute left-4 top-4 rounded-full bg-shell/95 px-3 py-1.5 text-[12px] font-medium uppercase tracking-[.12em] text-forest">Livrée</span></div><figcaption className="mt-4 flex items-center gap-4 text-forest"><span className="text-[13px] tabular-nums text-olive">0{index + 1}</span><span className="font-sans text-[21px] font-medium uppercase">{residence.name}</span></figcaption></figure> })),
-    { key: 'honest-7', content: <figure className="m-0"><div className="group relative aspect-[4/3] overflow-hidden rounded-[20px] bg-forest lg:aspect-[16/10]"><Picture picture={REVEAL_IMAGE} sizes="(min-width: 1024px) 58vw, (min-width: 641px) 64vw, 84vw" className="pointer-events-none object-[50%_58%] transition-transform duration-[1200ms] ease-step group-hover:scale-[1.025]" /><span className="absolute left-4 top-4 rounded-full bg-gold px-3 py-1.5 text-[12px] font-semibold uppercase tracking-[.12em] text-forest">La 7e · Juin 2028</span></div><figcaption className="mt-4 flex items-center gap-4 text-forest"><span className="text-[13px] tabular-nums text-bronze">07</span><span className="font-sans text-[21px] font-medium uppercase">Honest Signature 7</span></figcaption></figure> },
-  ];
-  return (
-    <section id="realisations" aria-labelledby="trust-title" className="overflow-x-clip bg-cream py-band">
-      <div className={SHELL}>
-        <p className={cn(EYEBROW, 'text-olive')}>03 — Le promoteur</p>
-        <h2 id="trust-title" className={cn(H2, 'mt-6 text-[clamp(42px,7vw,104px)] text-forest')}><Lines lines={[`${DELIVERED_COUNT} résidences déjà livrées.`, <span key="7" className="font-serif font-normal normal-case italic text-olive">Voici la 7e.</span>]} /></h2>
-        <Rise className="mt-6"><p className="max-w-[580px] text-[17px] leading-[1.55] text-forest/70">Une continuité visible, portée par des réalisations Honest déjà achevées.</p></Rise>
-        <div className="mt-10 lg:mt-14"><ProofCarousel label="Réalisations Honest et Honest Signature 7" slides={slides} /></div>
-      </div>
-    </section>
-  );
-}
-
 function Payment() {
   return (
     <SectionView event="payment_section_view" id="paiement" labelledBy="payment-title" className="bg-shell py-band">
       <div className={SHELL}>
-        <p className={cn(EYEBROW, 'text-olive')}>04 — Paiement progressif</p>
+        <p className={cn(EYEBROW, 'text-olive')}>03 — Paiement progressif</p>
         <h2 id="payment-title" className={cn(H2, 'mt-6 text-[clamp(42px,7vw,104px)] text-forest')}><Lines lines={['Votre appartement.', <span key="paid" className="font-serif font-normal normal-case italic text-olive">Payé progressivement.</span>]} /></h2>
         <div className="mt-14 lg:mt-20"><PaymentTimeline /></div>
         <div className="mt-12 flex flex-col gap-5 border-t border-forest/12 pt-8 sm:flex-row sm:items-center sm:justify-between"><p className="text-[16px] text-forest/70">Livraison prévue : <strong className="font-medium text-forest">juin 2028</strong></p><ScrollCta target={HERO_FORM_ID} event="availability_cta_click" location="payment" className={cn(PRIMARY, 'w-full bg-forest text-cream sm:w-auto')}>Voir les appartements disponibles <span aria-hidden="true" className="ml-2">→</span></ScrollCta></div>
@@ -207,7 +185,7 @@ function Location() {
   return (
     <section id="localisation" aria-labelledby="location-title" className="overflow-hidden bg-forest py-band text-cream">
       <div className={cn(SHELL, 'grid items-center gap-12 lg:grid-cols-[.85fr_1.15fr] lg:gap-20')}>
-        <div><p className={cn(EYEBROW, 'text-gold')}>05 — Guéliz hyper-centre</p><h2 id="location-title" className={cn(H2, 'mt-6 text-[clamp(42px,6.2vw,90px)]')}><Lines lines={['Pas « près de Guéliz ».', <span key="gueliz" className="font-serif font-normal normal-case italic text-gold">À Guéliz.</span>]} /></h2><Rise className="mt-10 border-t border-cream/15 pt-8"><p className="flex items-end gap-4"><span className="font-sans text-[clamp(130px,24vw,250px)] font-extralight leading-[.7] tracking-[-.08em]">1</span><span className="pb-1"><span className="block text-[12px] font-medium uppercase tracking-[.18em] text-gold">→ 1 minute</span><span className="mt-2 block text-[26px] font-medium uppercase leading-none">à pied du Plaza.</span></span></p></Rise></div>
+        <div><p className={cn(EYEBROW, 'text-gold')}>04 — Guéliz hyper-centre</p><h2 id="location-title" className={cn(H2, 'mt-6 text-[clamp(42px,6.2vw,90px)]')}><Lines lines={['Pas « près de Guéliz ».', <span key="gueliz" className="font-serif font-normal normal-case italic text-gold">À Guéliz.</span>]} /></h2><Rise className="mt-10 border-t border-cream/15 pt-8"><p className="flex items-end gap-4"><span className="font-sans text-[clamp(130px,24vw,250px)] font-extralight leading-[.7] tracking-[-.08em]">1</span><span className="pb-1"><span className="block text-[12px] font-medium uppercase tracking-[.18em] text-gold">→ 1 minute</span><span className="mt-2 block text-[26px] font-medium uppercase leading-none">à pied du Plaza.</span></span></p></Rise></div>
         <Rise className="relative overflow-hidden rounded-[24px]"><div className="aspect-[4/3] bg-[#1f291f]"><Picture picture={MAP_IMAGE} sizes="(min-width: 1024px) 55vw, 100vw" className="object-[34%_40%]" /></div><p className="absolute left-4 top-4 rounded-full bg-shell/95 px-4 py-2 text-[11px] font-medium uppercase tracking-[.13em] text-forest">Honest Signature 7 → Plaza : 1 min</p></Rise>
       </div>
     </section>
@@ -219,7 +197,7 @@ function Fomo() {
   return (
     <section id="choix" aria-labelledby="fomo-title" className="bg-cream py-band">
       <div className={SHELL}>
-        <p className={cn(EYEBROW, 'text-olive')}>06 — Disponibilités actuelles</p>
+        <p className={cn(EYEBROW, 'text-olive')}>05 — Disponibilités actuelles</p>
         <h2 id="fomo-title" className={cn(H2, 'mt-6 text-[clamp(40px,7vw,102px)] text-forest')}><Lines lines={['Vous pouvez encore choisir.', <span key="notforever" className="font-serif font-normal normal-case italic text-olive">Mais pas indéfiniment.</span>]} /></h2>
         <ul className="mt-12 grid grid-cols-2 border-t border-forest/12 lg:grid-cols-4">{CHOICES.map((choice, index) => <li key={choice} className="border-b border-forest/12 py-6 odd:border-r lg:border-b-0 lg:border-r lg:px-6 lg:first:pl-0 lg:last:border-r-0"><Rise delay={index * .07}><span className="text-[12px] tabular-nums text-bronze">0{index + 1}</span><p className="mt-4 font-sans text-[clamp(21px,2.2vw,32px)] font-medium uppercase leading-none tracking-[-.02em] text-forest">{choice}.</p></Rise></li>)}</ul>
         <div className="mt-12 flex flex-col gap-7 lg:flex-row lg:items-end lg:justify-between"><p className="font-serif text-[clamp(25px,3vw,40px)] italic leading-[1.15] text-forest">Chaque réservation peut réduire le choix restant.</p><ScrollCta target={FINAL_FORM_ID} event="availability_cta_click" location="fomo" className={cn(PRIMARY, 'w-full bg-forest text-cream sm:w-auto')}>Consulter les disponibilités <span aria-hidden="true" className="ml-2">→</span></ScrollCta></div>
@@ -232,7 +210,7 @@ function FinalForm() {
   return (
     <section aria-labelledby="final-copy-title" className="bg-shell py-band">
       <div className={cn(SHELL, 'grid items-start gap-10 lg:grid-cols-[1fr_minmax(440px,600px)] lg:gap-20')}>
-        <div className="lg:sticky lg:top-28"><p className={cn(EYEBROW, 'text-olive')}>07 — Votre appartement</p><h2 id="final-copy-title" className={cn(H2, 'mt-6 text-[clamp(38px,5.5vw,78px)] text-forest')}>Quel appartement est encore disponible <span className="font-serif font-normal normal-case italic text-olive">pour vous ?</span></h2><p className="mt-6 max-w-[500px] text-[18px] leading-[1.55] text-forest/70">Recevez la brochure, les plans, les prix et les disponibilités du projet.</p></div>
+        <div className="lg:sticky lg:top-28"><p className={cn(EYEBROW, 'text-olive')}>06 — Votre appartement</p><h2 id="final-copy-title" className={cn(H2, 'mt-6 text-[clamp(38px,5.5vw,78px)] text-forest')}>Quel appartement est encore disponible <span className="font-serif font-normal normal-case italic text-olive">pour vous ?</span></h2><p className="mt-6 max-w-[500px] text-[18px] leading-[1.55] text-forest/70">Recevez la brochure, les plans, les prix et les disponibilités du projet.</p></div>
         <DossierLeadForm placement="final" id={FINAL_FORM_ID} />
       </div>
     </section>
@@ -245,7 +223,7 @@ function Footer() {
       <div className={cn(SHELL, 'grid gap-8 text-[14px] md:grid-cols-[1.2fr_1fr_1.4fr]')}>
         <div>{/* eslint-disable-next-line @next/next/no-img-element */}<img src="/img/logo.webp" alt="Emara Estates" width={1250} height={625} loading="lazy" className="h-11 w-auto" /><p className="mt-4">Commercialisation de Honest Signature 7, Guéliz, Marrakech.</p></div>
         <address className="not-italic"><a href={`tel:${CONTACT.phoneDisplay.replace(/\s/g, '')}`} className="block min-h-11 py-2 text-cream hover:underline">{CONTACT.phoneDisplay}</a><a href={`mailto:${CONTACT.email}`} className="block min-h-11 py-2 text-cream hover:underline">{CONTACT.email}</a><a href={WHATSAPP.bare} target="_blank" rel="noopener noreferrer" className="block min-h-11 py-2 text-cream hover:underline">WhatsApp ↗</a></address>
-        <div><p>Vos coordonnées servent uniquement à vous recontacter au sujet de ce projet. Conformément à la loi 09-08, vous pouvez exercer vos droits à {CONTACT.email}.</p><p className="mt-3">Prix « à partir de », selon disponibilités. Visuels d’ambiance non contractuels.</p><p className="mt-3">© 2026 Emara Estates</p></div>
+        <div><p>Vos coordonnées servent uniquement à vous recontacter au sujet de ce projet. Conformément à la loi 09-08, vous pouvez exercer vos droits à {CONTACT.email}.</p><p className="mt-3">© 2026 Emara Estates</p></div>
       </div>
     </footer>
   );

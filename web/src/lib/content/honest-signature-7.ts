@@ -109,7 +109,7 @@ export type AmenityScene = {
 };
 
 export const AMENITY_SCENES: AmenityScene[] = [
-  { index: '01', title: 'Piscines', line: 'Une piscine extérieure et une piscine intérieure.', picture: POOL, inset: INDOOR_POOL, position: '50% 62%' },
+  { index: '01', title: 'Piscines', line: 'Une piscine extérieure et une piscine intérieure chauffée.', picture: POOL, inset: INDOOR_POOL, position: '50% 62%' },
   { index: '02', title: 'Spa', line: 'Un espace bien-être au sein de la résidence.', picture: SPA, position: '58% 55%' },
   { index: '03', title: 'Jacuzzi', line: 'Un espace dédié à la détente.', picture: JACUZZI, position: '50% 62%' },
   { index: '04', title: 'Salle de sport', line: 'Un espace équipé au pied de chez vous.', picture: SPORT, position: '50% 50%' },
@@ -242,7 +242,7 @@ export const SHOW_APARTMENTS: Room[] = [
   { title: 'Cuisine', picture: showroom('honest-1-appartement-temoin-02', 1600, 899, 'Cuisine ouverte avec comptoir dans un appartement témoin Honest livré') },
   { title: 'Chambre', picture: showroom('honest-2-appartement-temoin-01', 1600, 1099, 'Chambre avec baie vitrée dans un appartement témoin Honest livré') },
   { title: 'Espace repas', picture: showroom('honest-3-appartement-temoin-01', 1600, 899, 'Cuisine équipée et espace repas dans un appartement témoin Honest livré') },
-  { title: 'Terrasse', picture: showroom('honest-3-appartement-temoin-02', 1600, 1070, 'Salon et cuisine ouverte dans un appartement témoin Honest livré') },
+  { title: 'Salon', picture: showroom('honest-3-appartement-temoin-02', 1600, 1070, 'Salon et cuisine ouverte dans un appartement témoin Honest livré') },
 ];
 
 export const PAYMENT_STEPS = [
