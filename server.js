@@ -334,7 +334,16 @@ function validatePayload(input) {
     utm_medium: sanitize(input.utm_medium, 200),
     utm_campaign: sanitize(input.utm_campaign, 200),
     utm_content: sanitize(input.utm_content, 200),
-    utm_term: sanitize(input.utm_term, 200)
+    utm_term: sanitize(input.utm_term, 200),
+    // Project metadata and post-lead qualification — mirrors contact.php.
+    project_name: sanitize(input.project_name, 120),
+    project_location: sanitize(input.project_location, 120),
+    lead_source: sanitize(input.lead_source, 120),
+    lead_stage: sanitize(input.lead_stage, 40),
+    form_session_id: /^[A-Za-z0-9-]{16,64}$/.test(sanitize(input.form_session_id, 64)) ? sanitize(input.form_session_id, 64) : '',
+    contact_preference: sanitize(input.contact_preference, 40),
+    visit_preference: sanitize(input.visit_preference, 120),
+    sc_click_id: sanitize(input.sc_click_id, 255)
   };
   return { payload, errors: {} };
 }
@@ -443,7 +452,15 @@ async function forwardLead(payload) {
       utm_medium: escapeHtml(payload.utm_medium),
       utm_campaign: escapeHtml(payload.utm_campaign),
       utm_content: escapeHtml(payload.utm_content),
-      utm_term: escapeHtml(payload.utm_term)
+      utm_term: escapeHtml(payload.utm_term),
+      project_name: escapeHtml(payload.project_name),
+      project_location: escapeHtml(payload.project_location),
+      lead_source: escapeHtml(payload.lead_source),
+      lead_stage: escapeHtml(payload.lead_stage),
+      form_session_id: escapeHtml(payload.form_session_id),
+      contact_preference: escapeHtml(payload.contact_preference),
+      visit_preference: escapeHtml(payload.visit_preference),
+      sc_click_id: escapeHtml(payload.sc_click_id)
     })
   });
   if (!response.ok) throw new Error(`Zapier webhook failed: ${response.status}`);

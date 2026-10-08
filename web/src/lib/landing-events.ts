@@ -1,6 +1,6 @@
 /**
  * CRO funnel events for the paid landing pages (landing_view, form_started,
- * budget_selected, lead_submit_success…).
+ * lead_submit_success, payment_simulator_completed…).
  *
  * Kept apart from `track()` on purpose. `track()` carries the conversion
  * events campaigns optimise on (ViewContent, LeadFormStarted, Lead with its
@@ -18,23 +18,34 @@
 
 export type LandingEvent =
   | 'landing_view'
-  | 'hero_cta_click'
-  | 'hero_prices_cta_click'
+  | 'hero_primary_cta_click'
   | 'hero_show_apartment_click'
   | 'availability_cta_click'
   | 'form_view'
   | 'form_started'
-  | 'property_type_selected'
-  | 'budget_selected'
-  | 'form_step_2'
   | 'lead_submit_attempt'
   | 'lead_submit_success'
   | 'lead_submit_error'
-  | 'show_apartment_section_view'
+  | 'post_lead_intent_selected'
+  | 'contact_channel_selected'
+  | 'visit_booking_started'
+  | 'post_lead_qualification_saved'
+  | 'partial_lead_captured'
+  | 'form_step_back'
+  | 'show_apartment_view'
   | 'show_apartment_cta_click'
+  | 'payment_simulator_started'
+  | 'payment_simulator_completed'
+  | 'faq_opened'
+  | 'phone_click'
+  | 'whatsapp_click'
+  | 'property_type_selected'
+  | 'budget_selected'
+  // /residence-boutique-gueliz only.
+  | 'hero_cta_click'
+  | 'form_step_2'
   | 'amenities_section_view'
-  | 'payment_section_view'
-  | 'qualify_submit';
+  | 'payment_section_view';
 
 type Sinks = {
   dataLayer?: unknown[];

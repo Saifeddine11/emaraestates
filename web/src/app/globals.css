@@ -446,6 +446,255 @@
 }
 
 /* ============================================================
+   /honest-signature-7/ — scroll reveals and annotation strokes.
+   The first screen is painted as it is: nothing in the hero waits
+   for an animation. Below it, an element gains `data-inview` the
+   first time it is seen (Reveal.tsx) and CSS does the rest —
+   transform, opacity and stroke only, no animation library. The
+   hero's own strokes (`.hs7-load`) draw at once. The reduced-motion
+   block below overrides everything.
+   ============================================================ */
+@layer components {
+  .hs7-rise {
+    opacity: 0;
+    transform: translateY(20px);
+    transition:
+      opacity 0.7s var(--ease-step),
+      transform 0.7s var(--ease-step);
+  }
+  .hs7-rise[data-inview] {
+    opacity: 1;
+    transform: none;
+  }
+  /* A heading line rising out of its mask. */
+  .hs7-mask > [data-reveal] {
+    transform: translateY(105%);
+    transition: transform 0.6s var(--ease-step);
+  }
+  .hs7-mask[data-inview] > [data-reveal] {
+    transform: none;
+  }
+  .hs7-draw {
+    stroke-dasharray: 1;
+    stroke-dashoffset: 1;
+  }
+  .hs7-load .hs7-draw,
+  [data-inview] .hs7-draw {
+    animation: hs7-draw 0.9s var(--ease-step) forwards;
+  }
+  .hs7-rule {
+    transform: scaleX(0);
+    transform-origin: left center;
+  }
+  [data-inview] .hs7-rule {
+    animation: hs7-rule 0.8s var(--ease-step) both;
+  }
+}
+
+/* ============================================================
+   /honest-signature-7/ — the CTAs' border: a light that keeps
+   turning around the pill. The ring is a static mask (2px of
+   padding cut out of the box); only the gradient behind it moves,
+   as a transform, so it runs on the compositor and never repaints.
+   ============================================================ */
+@layer components {
+  .hs7-orbit {
+    position: absolute;
+    inset: 0;
+    overflow: hidden;
+    border-radius: inherit;
+    padding: 2px;
+    pointer-events: none;
+    -webkit-mask:
+      linear-gradient(#000 0 0) content-box,
+      linear-gradient(#000 0 0);
+    -webkit-mask-composite: xor;
+    mask:
+      linear-gradient(#000 0 0) content-box,
+      linear-gradient(#000 0 0);
+    mask-composite: exclude;
+  }
+  /* A square wide enough to cover the pill at any angle: two lights, opposite each other. */
+  .hs7-orbit > span {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: 140%;
+    aspect-ratio: 1;
+    background: conic-gradient(
+      from 0deg,
+      transparent 0deg 100deg,
+      var(--hs7-glint, #fff) 172deg,
+      transparent 180deg 280deg,
+      var(--hs7-glint, #fff) 352deg,
+      transparent 360deg
+    );
+    transform: translate(-50%, -50%);
+    animation: hs7-orbit 4s linear infinite;
+    will-change: transform;
+  }
+}
+@keyframes hs7-orbit {
+  to {
+    transform: translate(-50%, -50%) rotate(1turn);
+  }
+}
+
+/* ============================================================
+   /honest-signature-7/ — the lead card: a pane of frosted glass over
+   Emara's green. Border, lit edge and shadow stay utilities (they
+   compose with the « arrived » ring); the pane itself is here because
+   the blur needs its -webkit- twin and two fallbacks.
+   ============================================================ */
+@layer components {
+  .hs7-glass {
+    background-color: rgb(255 255 255 / 0.09);
+    background-image: linear-gradient(140deg, rgb(255 255 255 / 0.15), rgb(255 255 255 / 0.02) 42%, rgb(255 255 255 / 0.08));
+    -webkit-backdrop-filter: blur(26px) saturate(150%);
+    backdrop-filter: blur(26px) saturate(150%);
+  }
+  /* No blur in this browser, or the visitor asked for less transparency: a solid pane of the same green. */
+  @supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+    .hs7-glass {
+      background-color: #3b483b;
+    }
+  }
+  @media (prefers-reduced-transparency: reduce) {
+    .hs7-glass {
+      background-color: #3b483b;
+      -webkit-backdrop-filter: none;
+      backdrop-filter: none;
+    }
+  }
+}
+/* Autofill paints the browser's own pale box over a field and its dark text
+   over ours. The fill colour cannot be overridden, so its transition is made
+   endless instead. Unlayered: it has to beat the fields' transition utility. */
+.hs7-glass input:-webkit-autofill {
+  -webkit-text-fill-color: var(--color-cream);
+  caret-color: var(--color-cream);
+  transition: background-color 100000s ease-out;
+}
+
+@keyframes hs7-fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+/* The phone field's country list opening under its field. */
+@keyframes hs7-fade-down {
+  from {
+    opacity: 0;
+    transform: translateY(-6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+@keyframes hs7-draw {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+@keyframes hs7-rule {
+  from {
+    transform: scaleX(0);
+  }
+  to {
+    transform: scaleX(1);
+  }
+}
+@keyframes hs7-pop {
+  0% {
+    opacity: 0;
+    transform: scale(0.4);
+  }
+  60% {
+    opacity: 1;
+    transform: scale(1.1);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+/* The form's first question: a hop and a smaller rebound, then a rest before the next one. */
+@keyframes hs7-bounce {
+  0%,
+  30%,
+  52%,
+  100% {
+    transform: translateY(0);
+    animation-timing-function: cubic-bezier(0, 0, 0.2, 1);
+  }
+  15% {
+    transform: translateY(-9px);
+    animation-timing-function: cubic-bezier(0.8, 0, 1, 1);
+  }
+  41% {
+    transform: translateY(-4px);
+    animation-timing-function: cubic-bezier(0.8, 0, 1, 1);
+  }
+}
+@keyframes hs7-ping {
+  from {
+    opacity: 0.7;
+    transform: scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: scale(3.2);
+  }
+}
+
+/* Honest 7's red number in the residences strip: a ring that keeps leaving the dot. */
+@keyframes hs7-signal {
+  0% {
+    opacity: 0.6;
+    transform: scale(1);
+  }
+  70%,
+  100% {
+    opacity: 0;
+    transform: scale(1.85);
+  }
+}
+
+/* Activity band: a slow opacity pulse for "live", and "+1" when a request is received. */
+@keyframes hs7-live-dot {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.35;
+  }
+}
+@keyframes hs7-plus-one {
+  0% {
+    opacity: 0;
+    transform: translateY(0) scale(0.85);
+  }
+  25% {
+    opacity: 1;
+    transform: translateY(-5px) scale(1.06);
+  }
+  65% {
+    opacity: 1;
+    transform: translateY(-11px) scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-16px) scale(1);
+  }
+}
+
+/* ============================================================
    Reduced motion — parity with the four legacy opt-outs
    ============================================================ */
 @media (prefers-reduced-motion: reduce) {
@@ -460,5 +709,14 @@
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
     scroll-behavior: auto !important;
+  }
+
+  /* /honest-signature-7/: reveals arrive without their stagger, and the CTA light is off. */
+  .hs7-rise,
+  .hs7-mask > [data-reveal] {
+    transition-delay: 0s !important;
+  }
+  .hs7-orbit {
+    display: none;
   }
 }

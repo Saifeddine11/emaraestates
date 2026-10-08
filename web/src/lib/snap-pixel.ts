@@ -22,6 +22,31 @@ type SnapWindow = typeof window & {
 };
 
 /**
+ * Event types the Snap Pixel accepts. The list is closed: Snap attributes and
+ * optimises on these names only, and offers five numbered slots for anything
+ * else. A made-up name ("BuyerLead", or "CUSTOM_EVENT" without a number) may
+ * leave the browser but cannot be used as a conversion in Ads Manager.
+ */
+export type SnapEvent = 'PAGE_VIEW' | 'VIEW_CONTENT' | 'SIGN_UP' | 'CUSTOM_EVENT_1' | 'CUSTOM_EVENT_2' | 'CUSTOM_EVENT_3' | 'CUSTOM_EVENT_4' | 'CUSTOM_EVENT_5';
+
+/**
+ * Sends one event to Snapchat, and only to Snapchat. No-op when the pixel is
+ * absent (blocked, or localhost); never throws, so a Snap failure cannot
+ * reach the form, the lead request or another platform's tracking.
+ *
+ * Parameters must be Snap's own (item_category, description, sign_up_method,
+ * client_dedup_id…) — never a name, a phone number or an e-mail address.
+ */
+export function trackSnap(event: SnapEvent, params: Record<string, string | number> = {}) {
+  try {
+    const snaptr = (window as SnapWindow).snaptr;
+    if (typeof snaptr === 'function') snaptr('track', event, params);
+  } catch {
+    /* tracking must never break the funnel */
+  }
+}
+
+/**
  * Fire a Snap event at most once per ref guard.
  * No-ops if the pixel is absent; never throws into form UX.
  */

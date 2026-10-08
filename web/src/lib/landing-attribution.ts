@@ -1,5 +1,6 @@
 /**
- * First-touch attribution for the /honest-signature-7/ Meta landing page.
+ * First-touch attribution for the /honest-signature-7/ ads landing page
+ * (Meta and Snapchat traffic alike: whatever arrived in the URL is kept as is).
  *
  * Deliberately separate from the simulator's store (its sessionStorage key and
  * module stay exclusive to /simulateur/). Same first-write-wins convention:
@@ -51,11 +52,18 @@ export function captureLandingAttribution(): LandingAttribution {
   };
 
   for (const param of URL_PARAMS) set(param, search.get(param) || '');
+  // Snapchat appends its click ID as `ScCid` (sometimes lower-cased).
+  for (const [key, value] of search) {
+    if (key.toLowerCase() === 'sccid') set('sc_click_id', value);
+  }
   set('fbc', readCookie('_fbc'));
   set('fbp', readCookie('_fbp'));
   set('landing_page_url', window.location.href.split('#')[0]);
   set('referrer', document.referrer);
+  // First touch wins, like every value here: arriving later from the other
+  // platform never relabels the visit.
   if (/facebook|meta|instagram|fb|ig/i.test(stored.utm_source || '') || stored.fbclid) set('ad_platform', 'Meta');
+  else if (/snap/i.test(stored.utm_source || '') || stored.sc_click_id) set('ad_platform', 'Snapchat');
 
   if (changed) {
     try {

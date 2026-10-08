@@ -163,6 +163,13 @@ function contactMetaLeadEvent(array $payload, array $input, string $ip): ?array
     ], time());
 }
 
+/** The browser's form session ID (a UUID), or '' when it is absent or malformed. */
+function contactFormSessionId(mixed $value): string
+{
+    $id = sanitizeValue($value, 64);
+    return preg_match('/^[A-Za-z0-9-]{16,64}$/', $id) === 1 ? $id : '';
+}
+
 function loadEnv(string $filePath): array
 {
     if (!is_file($filePath)) return [];
@@ -457,6 +464,21 @@ function validatePayload(array $input, array $validBudgets, array $blockedTerms)
         'utm_campaign' => sanitizeValue($input['utm_campaign'] ?? '', 200),
         'utm_content' => sanitizeValue($input['utm_content'] ?? '', 200),
         'utm_term' => sanitizeValue($input['utm_term'] ?? '', 200),
+        // Project metadata and post-lead qualification (/honest-signature-7/).
+        // Additive: empty for every other form. `lead_stage` is "lead" for
+        // the request that creates the lead and "qualification" for the
+        // optional follow-up that completes it.
+        'project_name' => sanitizeValue($input['project_name'] ?? '', 120),
+        'project_location' => sanitizeValue($input['project_location'] ?? '', 120),
+        'lead_source' => sanitizeValue($input['lead_source'] ?? '', 120),
+        'lead_stage' => sanitizeValue($input['lead_stage'] ?? '', 40),
+        // One ID per form session, the same in the lead and in its qualification
+        // follow-up, so the CRM side can tie the second hook to the first.
+        'form_session_id' => contactFormSessionId($input['form_session_id'] ?? ''),
+        'contact_preference' => sanitizeValue($input['contact_preference'] ?? '', 40),
+        'visit_preference' => sanitizeValue($input['visit_preference'] ?? '', 120),
+        // Snapchat click ID (`ScCid` in the landing URL) — the counterpart of fbclid.
+        'sc_click_id' => sanitizeValue($input['sc_click_id'] ?? '', 255),
     ];
     return [$payload, []];
 }
@@ -575,6 +597,14 @@ function sendLeadToZapier(array $payload, array $env, string $ip): void
         'utm_campaign' => $payload['utm_campaign'],
         'utm_content' => $payload['utm_content'],
         'utm_term' => $payload['utm_term'],
+        'project_name' => $payload['project_name'],
+        'project_location' => $payload['project_location'],
+        'lead_source' => $payload['lead_source'],
+        'lead_stage' => $payload['lead_stage'],
+        'form_session_id' => $payload['form_session_id'],
+        'contact_preference' => $payload['contact_preference'],
+        'visit_preference' => $payload['visit_preference'],
+        'sc_click_id' => $payload['sc_click_id'],
     ];
 
     $context = stream_context_create([

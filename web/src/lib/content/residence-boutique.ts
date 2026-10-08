@@ -19,12 +19,22 @@
 import type { Picture } from '@/lib/content/honest-signature-7';
 
 export {
-  BUDGETS,
   FORM_TYPE,
   LEAD_CHANNEL,
   LEAD_ORIGIN,
   LEAD_SOURCE,
 } from '@/lib/content/honest-signature-7';
+
+/**
+ * This page's own ranges, starting at its `priceFrom`. No longer shared with
+ * /honest-signature-7/, whose entry price moved to 1,59 M on 2026-10-08.
+ */
+export const BUDGETS = [
+  '1,39 M – 1,6 M MAD',
+  '1,6 M – 2 M MAD',
+  '2 M – 2,5 M MAD',
+  'Plus de 2,5 M MAD',
+] as const;
 
 export const PROJECT = 'Honest Signature 7';
 
