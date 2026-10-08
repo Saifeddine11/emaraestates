@@ -1,0 +1,3 @@
+# Lead-drafts library — never served over HTTP. (The drafts themselves live
+# outside the web root; see leadDraftDir() in lead-drafts.php.)
+Require all denied

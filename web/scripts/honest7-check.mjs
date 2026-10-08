@@ -17,7 +17,7 @@ import { startServer } from './lib/serve.mjs';
 const CONTENT = readFileSync(new URL('../src/lib/content/honest-signature-7.ts', import.meta.url), 'utf8');
 const FLAGS = Object.fromEntries(['euroPrices', 'threeBedrooms', 'activityCounter', 'partialCapture'].map((name) => [name, new RegExp(`^  ${name}: true,`, 'm').test(CONTENT)]));
 const MONEY = FLAGS.euroPrices
-  ? { hero: '145\u00a0000\u00a0€', budget: '145 000 – 180 000 €', budgetButton: /145 000 – 180 000 €/, range: /€$/, currency: 'EUR', preset: /^180.000.€$/, start: ['43 500', '21 750', '36 250'], typed: '180000', typedShown: '180 000', typedRows: ['54 000', '27 000', '45 000'], below: '90000', unit: '€' }
+  ? { hero: '149\u00a0000\u00a0€', budget: '149 000 – 180 000 €', budgetButton: /149 000 – 180 000 €/, range: /€$/, currency: 'EUR', preset: /^180.000.€$/, start: ['44 700', '22 350', '37 250'], typed: '180000', typedShown: '180 000', typedRows: ['54 000', '27 000', '45 000'], below: '90000', unit: '€' }
   : { hero: '1,59', budget: '1,59 M – 2 M MAD', budgetButton: /1,59 M – 2 M/, range: /MAD$/, currency: 'MAD', preset: /^2.M$/, start: ['477 000', '238 500', '397 500'], typed: '2000000', typedShown: '2 000 000', typedRows: ['600 000', '300 000', '500 000'], below: '900000', unit: 'MAD' };
 const ROOMS = FLAGS.threeBedrooms ? /^(1 chambre|2 chambres|3 chambres)$/ : /^(Studio|1 chambre|2 chambres)$/;
 
@@ -231,7 +231,7 @@ console.log(`\nHONEST SIGNATURE 7 — PAID LANDING QA (${engine.name()})\n`);
   record('Hero: price, Plaza, delivery, proof — no dirham figure when the page is in euros', [MONEY.hero, '1 minute', 'juin 2028', 'déjà livrées', 'en commercialisation'].every((word) => heroText.includes(word)) && (!FLAGS.euroPrices || !/\bmad\b/.test(heroText)));
   record('Hero: Honest 5–6 sold, kept apart from the delivered ones', heroText.includes('déjà vendues'), heroText.replace(/\s+/g, ' ').slice(-220));
   record('Copy: remaining stock is not shown anywhere on the page', !/appartements? restants?|restants? sur|sur 140|sur 150/i.test(state.text.replace(/\u00a0/g, ' ')));
-  record('Hero: what is sold and how it is paid — typologies, minimum surface, 30 % then progressive', ['studios & appartements', 'dès 51 m²', '30 % à la réservation', 'solde progressif jusqu’à juin 2028'].every((word) => heroText.replace(/\u00a0/g, ' ').includes(word)), heroText.replace(/\s+/g, ' ').slice(0, 400));
+  record('Hero: what is sold and how it is paid — typologies, minimum surface, 30 % then progressive', ['studios & appartements', 'dès 56 m²', '30 % à la réservation', 'solde progressif jusqu’à juin 2028'].every((word) => heroText.replace(/\u00a0/g, ' ').includes(word)), heroText.replace(/\s+/g, ' ').slice(0, 400));
   record('Copy: with no data, no counter of any kind — no "+1", no "aujourd’hui" figure, no "live" claim', !/en direct|vendus? aujourd|vendus? en 7 jours|\+1\b/i.test(state.text.replace(/\u00a0/g, ' ')));
   record('Hero: all 8 amenities', (await hero.locator('ul[aria-label="Services de la résidence"] li').count()) === 8);
   const ctaLabels = await page.evaluate(() =>
@@ -403,7 +403,7 @@ for (const width of WIDTHS) {
   const faqText = (await page.locator('#questions').evaluate((node) => node.textContent)).replace(/\s+/g, ' ');
   const planText = (await page.locator('#echeancier').innerText()).replace(/\s+/g, ' ');
   if (FLAGS.euroPrices) {
-    record('Price: euros given as indicative, next to the price in dirhams (FAQ, simulator note)', /prix de 145 000 € \?/.test(faqText) && /1 590 000 MAD, soit environ 145 000 € au taux de change actuel/.test(faqText) && /Le prix de départ est de 1 590 000 MAD/.test(planText), planText.slice(-220));
+    record('Price: euros given as indicative, next to the price in dirhams (FAQ, simulator note)', /prix de 149 000 € \?/.test(faqText) && /1 590 000 MAD, soit environ 149 000 € au taux de change actuel/.test(faqText) && /Le prix de départ est de 1 590 000 MAD/.test(planText), planText.slice(-220));
   } else {
     record('Price: in dirhams everywhere — no euro figure in the FAQ or the simulator', /prix de 1,59 M MAD \?/.test(faqText) && /prix de départ du projet : 1 590 000 MAD\. Le prix de chaque/.test(faqText) && !/€/.test(faqText) && !/€/.test(planText), planText.slice(-160));
   }

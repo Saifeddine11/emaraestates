@@ -44,30 +44,32 @@ export const VALIDATION = {
    * the wording to add is the client's (and their counsel's) to decide.
    * `false` stops every draft request from this page.
    */
-  partialCapture: false,
+  partialCapture: true,
   /**
    * Prices, simulator and budget ranges in euros (the campaigns target France
-   * only). The euro figures are a conversion of the dirham ones at about 11 MAD
-   * for 1 € (October 2026), rounded to 5 000 € — the client has not confirmed
-   * them. `false` shows the dirham figures everywhere and the lead says
+   * only). The entry price, 149 000 €, is the client's figure (2026-10-08). The
+   * two other budget bounds (180 000 € and 225 000 €) are still a conversion of
+   * 2 M and 2,5 M MAD at about 11 MAD for 1 €, rounded to 5 000 €.
+   * `false` shows the dirham figures everywhere and the lead says
    * `currency: MAD`.
    */
-  euroPrices: false,
+  euroPrices: true,
   /**
    * Form, question 1: 1 / 2 / 3 chambres instead of Studio / 1 chambre /
    * 2 chambres. « Appartement 3 chambres » is a value the CRM has never
    * received, and with it the hero’s « Studios & appartements » no longer
    * matches the form. `false` keeps the three types the CRM already knows.
    */
-  threeBedrooms: false,
+  threeBedrooms: true,
   /**
    * « N demandes reçues aujourd’hui » at the top of the lead cards. Needs
    * /activity.php and its library on the server. `false` shows no band and
    * sends no request to it.
    */
-  activityCounter: false,
+  activityCounter: true,
   /**
-   * « Studios & appartements · dès 51 m² » in the hero, and the three types
+   * « Studios & appartements · dès 56 m² » in the hero (56 m² is the client's
+   * figure of 2026-10-08; the earlier copy said 51 m²), and the three types
    * offered in the form. Both come from copy already published for this
    * project (the earlier page's description said "dès 51 m²", the previous
    * ad landing asked Studio / 1 chambre / 2 chambres); neither was re-confirmed
@@ -83,20 +85,20 @@ export const FACTS = {
   plaza: 'À 1 minute à pied du Plaza',
   /**
    * The entry price is 1 590 000 MAD. With VALIDATION.euroPrices the page shows
-   * it in euros (about 11 MAD for 1 € in October 2026, rounded to 5 000 €) and
-   * says in the FAQ and under the simulator that the amount is indicative.
-   * Check the rate again before changing either figure; BUDGETS follow it.
+   * it in euros — 149 000 €, the client's figure (2026-10-08) — and says in the
+   * FAQ and under the simulator that the amount is indicative. BUDGETS and the
+   * simulator's first shortcut start at the same figure.
    */
-  priceFrom: VALIDATION.euroPrices ? '145\u00a0000\u00a0€' : '1,59\u00a0M\u00a0MAD',
+  priceFrom: VALIDATION.euroPrices ? '149\u00a0000\u00a0€' : '1,59\u00a0M\u00a0MAD',
   /** The hero figure: the amount, and its unit set smaller when it has one. */
-  priceHero: VALIDATION.euroPrices ? { amount: '145\u00a0000\u00a0€', unit: '' } : { amount: '1,59\u00a0M', unit: 'MAD' },
-  priceFromValue: VALIDATION.euroPrices ? 145_000 : 1_590_000,
+  priceHero: VALIDATION.euroPrices ? { amount: '149\u00a0000\u00a0€', unit: '' } : { amount: '1,59\u00a0M', unit: 'MAD' },
+  priceFromValue: VALIDATION.euroPrices ? 149_000 : 1_590_000,
   priceFromMad: '1\u00a0590\u00a0000\u00a0MAD',
   /** What the simulator, its event and the lead’s `currency` are expressed in. */
   currency: VALIDATION.euroPrices ? 'EUR' : 'MAD',
   delivery: 'Juin 2028',
   typologies: 'Studios & appartements',
-  surfaceFrom: 'dès 51\u00a0m²',
+  surfaceFrom: 'dès 56\u00a0m²',
 } as const;
 
 /** 30 / 15 / 15 / 15 / 25 — the brief's schedule, in order. */
@@ -111,7 +113,7 @@ export const PAYMENT_PLAN = [
 /** Example prices offered as shortcuts in the simulator — the form’s budget bounds, not lot prices. */
 export const SIMULATOR_PRESETS = VALIDATION.euroPrices
   ? ([
-      { label: '145\u00a0000\u00a0€', value: 145_000 },
+      { label: '149\u00a0000\u00a0€', value: 149_000 },
       { label: '180\u00a0000\u00a0€', value: 180_000 },
       { label: '225\u00a0000\u00a0€', value: 225_000 },
     ] as const)
@@ -468,12 +470,12 @@ export const PROPERTY_TYPES = VALIDATION.threeBedrooms
 
 /**
  * Form, question 2. Starts at the entry price (no range below it). In euros
- * with VALIDATION.euroPrices: the dirham bounds at about 11 MAD for 1 €,
- * rounded to 5 000 €. Each label travels as-is in `budget`, which contact.php
+ * with VALIDATION.euroPrices: from the 149 000 € entry price, then the dirham
+ * bounds 2 M and 2,5 M at about 11 MAD for 1 €, rounded to 5 000 €. Each label travels as-is in `budget`, which contact.php
  * caps at 30 characters.
  */
 export const BUDGETS = VALIDATION.euroPrices
-  ? (['145 000 – 180 000 €', '180 000 – 225 000 €', 'Plus de 225 000 €'] as const)
+  ? (['149 000 – 180 000 €', '180 000 – 225 000 €', 'Plus de 225 000 €'] as const)
   : (['1,59 M – 2 M MAD', '2 M – 2,5 M MAD', 'Plus de 2,5 M MAD'] as const);
 
 /*

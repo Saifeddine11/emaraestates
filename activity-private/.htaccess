@@ -1,0 +1,3 @@
+# Activity library — never served over HTTP. (The count itself lives outside
+# the web root; see activityDir() in activity.php.)
+Require all denied

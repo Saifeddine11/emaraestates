@@ -180,6 +180,10 @@ for (const entry of deployEntries) {
   if (entry.name === 'recruitment-private') continue;
   // Meta CAPI library — blocked by .htaccess, never an index route.
   if (entry.name === 'meta-private') continue;
+  // Lead-drafts library: denied by its own .htaccess, same as meta-private.
+  if (entry.name === 'lead-private') continue;
+  // Activity library: same.
+  if (entry.name === 'activity-private') continue;
   // Any other directory must carry an index.html, or DirectorySlash will 301
   // requests for the extensionless URL into a directory with nothing to serve.
   const hasIndex = await stat(join(DEPLOY, entry.name, 'index.html')).catch(() => null);

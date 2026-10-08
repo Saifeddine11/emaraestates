@@ -6,9 +6,15 @@
  * repo root. Most PHP endpoints return 404 here (no PHP runtime), except
  * recruitment which is handled by the shared Node module so local preview can
  * exercise the real multipart + PHP-mail-equivalent path (no SMTP).
+ *
+ * `/activity.php` is the one PHP endpoint that can run for real: with
+ * `activityPhp` (the base URL of a `php -S` the caller started) it is
+ * proxied there, and only it — never contact.php, which reaches Zapier.
+ * Without it the endpoint answers "disabled", as production does with
+ * ACTIVITY_DISABLED=1: the page then shows no activity band.
  */
 
-import { createServer } from 'node:http';
+import { createServer, request as httpRequest } from 'node:http';
 import { createRequire } from 'node:module';
 import { createReadStream, existsSync, statSync } from 'node:fs';
 import { dirname, extname, join, resolve } from 'node:path';
@@ -55,7 +61,7 @@ function resolveFile(urlPath) {
 }
 
 /** Starts the server on `port` (0 picks a free one) and resolves its base URL. */
-export async function startServer({ port = 0, log = false } = {}) {
+export async function startServer({ port = 0, log = false, activityPhp = null } = {}) {
   if (!existsSync(EXPORT_DIR)) {
     throw new Error('out/ is missing — run `next build` first.');
   }
@@ -77,6 +83,25 @@ export async function startServer({ port = 0, log = false } = {}) {
 
     if (req.method === 'GET' && handleRecruitmentCv(req, res, req.url || '')) {
       if (log) console.log(`  GET  ${urlPath}  (recruitment-cv)`);
+      return;
+    }
+
+    if (urlPath === '/activity.php') {
+      if (!activityPhp) {
+        res.writeHead(200, { 'content-type': 'application/json; charset=utf-8', 'cache-control': 'no-store' });
+        res.end(JSON.stringify({ ok: true, enabled: false }));
+        return;
+      }
+      const upstream = httpRequest(new URL(req.url || '/', activityPhp), { method: req.method, headers: req.headers }, (answer) => {
+        res.writeHead(answer.statusCode || 502, answer.headers);
+        answer.pipe(res);
+      });
+      upstream.on('error', () => {
+        if (!res.headersSent) res.writeHead(502, { 'content-type': 'text/plain' });
+        res.end('activity preview backend unavailable');
+      });
+      req.pipe(upstream);
+      if (log) console.log(`  ${req.method} ${req.url}  (php)`);
       return;
     }
 

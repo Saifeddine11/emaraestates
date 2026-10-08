@@ -157,6 +157,14 @@ export const ROOT_SYNC = [
   // outside public_html and never part of a deploy).
   'meta-crm-webhook.php',
   'meta-private',
+  // Abandoned-form drafts: endpoint + library (the drafts themselves are
+  // outside public_html and never part of a deploy).
+  'lead-draft.php',
+  'lead-private',
+  // Today's activity on /honest-signature-7/: endpoint + library (the count
+  // itself is outside public_html and never part of a deploy).
+  'activity.php',
+  'activity-private',
   '.user.ini',
   'sitemap.xml',
 ];
@@ -282,6 +290,11 @@ export const EXPECTED_ROUTES = [
   // Meta CAPI library must never be served. Its own .htaccess (Require all
   // denied) answers before the root RedirectMatch 404.
   { url: '/meta-private/meta-capi.php', status: 403 },
+  // Same for the lead-drafts library.
+  { url: '/lead-private/lead-drafts.php', status: 403 },
+  // And for the activity library; its endpoint answers the public count.
+  { url: '/activity-private/activity.php', status: 403 },
+  { url: '/activity.php', status: 200, legacy: true },
   { url: '/does-not-exist-' + 'probe', status: 404 },
 ];
 

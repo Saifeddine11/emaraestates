@@ -21,6 +21,8 @@
     "honest7-check": "node scripts/honest7-check.mjs",
     "boutique-check": "node scripts/boutique-check.mjs",
     "meta-check": "php scripts/meta-capi-check.php",
+    "lead-drafts-check": "php scripts/lead-drafts-check.php",
+    "activity-check": "php scripts/activity-check.php",
     "check": "next build && node scripts/verify-preservation.mjs && node scripts/smoke.mjs && node scripts/form-parity.mjs",
     "deploy:layout": "node scripts/deploy-layout.mjs",
     "deploy:check": "node scripts/deploy-check.mjs",

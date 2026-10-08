@@ -28,6 +28,12 @@ $env = loadEnv(__DIR__ . '/.env');
 if (is_file(__DIR__ . '/meta-private/meta-capi.php')) {
     require_once __DIR__ . '/meta-private/meta-capi.php';
 }
+if (is_file(__DIR__ . '/lead-private/lead-drafts.php')) {
+    require_once __DIR__ . '/lead-private/lead-drafts.php';
+}
+if (is_file(__DIR__ . '/activity-private/activity.php')) {
+    require_once __DIR__ . '/activity-private/activity.php';
+}
 
 if ($_SERVER['REQUEST_METHOD'] === 'GET' && ($_GET['debug'] ?? '') === CONTACT_DEBUG_KEY) {
     sendJson(200, [
@@ -40,6 +46,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && ($_GET['debug'] ?? '') === CONTACT_D
         'allow_url_fopen' => (bool) ini_get('allow_url_fopen'),
         // Booleans only (this key is in a public repository).
         'meta' => function_exists('metaDiagnostics') ? metaDiagnostics($env) : ['library_loaded' => false],
+        'lead_drafts' => function_exists('leadDraftDiagnostics') ? leadDraftDiagnostics($env) : ['library_loaded' => false],
     ]);
 }
 
@@ -82,6 +89,14 @@ try {
     sendJson(500, ['message' => 'La demande n’a pas été envoyée vers Zapier. Contactez-nous directement par WhatsApp.']);
 }
 
+// The lead is accepted (Zapier answered 2xx): its abandoned-form draft, if the
+// form kept one, is closed so it is never reported as abandoned.
+contactCloseLeadDraft($input, $env);
+
+// Same moment, same guarantee: the request is counted in today's activity of
+// its project (/activity.php). One small local file write; it never throws.
+if (function_exists('activityCountLead')) activityCountLead($payload, $env, time());
+
 // The lead is accepted (Zapier answered 2xx). The Meta server event —
 // deduplicated with the browser Pixel through the browser's event ID — can no
 // longer affect it: metaSendEvents() never throws and its result is ignored.
@@ -106,6 +121,23 @@ function sendJson(int $status, array $payload): never
     http_response_code($status);
     echo json_encode($payload, JSON_UNESCAPED_UNICODE);
     exit;
+}
+
+/**
+ * Marks the draft of this form session `submitted` (see /lead-draft.php). One
+ * small local file write; it never throws and never changes the response.
+ */
+function contactCloseLeadDraft(array $input, array $env): void
+{
+    if (!function_exists('leadDraftMarkSubmitted')) return;
+    try {
+        $sessionId = sanitizeValue($input['form_session_id'] ?? '', 64);
+        if ($sessionId !== '' && leadDraftEnabled($env)) {
+            leadDraftMarkSubmitted(leadDraftDir($env), $sessionId, time());
+        }
+    } catch (Throwable $error) {
+        error_log('Contact form lead draft not closed: ' . $error->getMessage());
+    }
 }
 
 /** True only where the SAPI documents that the script continues after the response. */
