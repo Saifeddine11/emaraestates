@@ -447,12 +447,13 @@
 
 /* ============================================================
    /honest-signature-7/ — scroll reveals and annotation strokes.
-   The first screen is painted as it is: nothing in the hero waits
-   for an animation. Below it, an element gains `data-inview` the
-   first time it is seen (Reveal.tsx) and CSS does the rest —
-   transform, opacity and stroke only, no animation library. The
-   hero's own strokes (`.hs7-load`) draw at once. The reduced-motion
-   block below overrides everything.
+   A screen the page can open on — the hero, and the first form,
+   where it does open — is painted as it is (`.hs7-load`): nothing
+   in it waits for JavaScript, and its strokes draw at once.
+   Elsewhere an element gains `data-inview` the first time it is
+   seen (Reveal.tsx) and CSS does the rest — transform, opacity and
+   stroke only, no animation library. The reduced-motion block
+   below overrides everything.
    ============================================================ */
 @layer components {
   .hs7-rise {
@@ -462,7 +463,8 @@
       opacity 0.7s var(--ease-step),
       transform 0.7s var(--ease-step);
   }
-  .hs7-rise[data-inview] {
+  .hs7-rise[data-inview],
+  .hs7-load .hs7-rise {
     opacity: 1;
     transform: none;
   }
@@ -471,7 +473,8 @@
     transform: translateY(105%);
     transition: transform 0.6s var(--ease-step);
   }
-  .hs7-mask[data-inview] > [data-reveal] {
+  .hs7-mask[data-inview] > [data-reveal],
+  .hs7-load .hs7-mask > [data-reveal] {
     transform: none;
   }
   .hs7-draw {

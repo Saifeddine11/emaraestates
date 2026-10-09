@@ -75,6 +75,13 @@ export const VALIDATION = {
    */
   postLeadQuestions: false,
   /**
+   * The two questions of the form (type of apartment, budget). Off at the
+   * client's request (2026-10-09, « laisse que les infos »): the form is one
+   * step — name, phone, e-mail — and the lead carries no type and no budget.
+   * `true` brings them back after the contact details, as steps 2 and 3.
+   */
+  formQuestions: false,
+  /**
    * « Studios & appartements · dès 56 m² » in the hero (56 m² is the client's
    * figure of 2026-10-08; the earlier copy said 51 m²), and the three types
    * offered in the form. Both come from copy already published for this

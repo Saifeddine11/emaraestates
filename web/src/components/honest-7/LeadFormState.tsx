@@ -124,6 +124,8 @@ type LeadFormContext = Qualification & {
   goToStep: (step: Step, from: Placement) => void;
   /** « Continuer »: the next question, once the current one is answered (after going back). */
   nextStep: (from: Placement) => void;
+  /** « Continuer » on step 1: the contact details are checked, then question 2. */
+  continueFromContact: (from: Placement) => void;
   fullName: string;
   email: string;
   country: Country;
@@ -171,11 +173,13 @@ function visitSummary({ visitOpen, visitDay, visitMoment }: Qualification) {
  * in one shows in both, and the in-flight lock is shared — a visitor can never
  * produce two leads from one page.
  *
- * Three short steps, easiest first:
- *   1. Type of apartment, 2. budget — one tap each, nothing typed, nothing
- *      sent — then 3. name + phone (+ e-mail), posted to /contact.php with the
- *      two answers. The Meta `Lead` fires once, only after the server answers
- *      200 — and contact.php answers 200 only once Zapier accepted the lead.
+ * Three short steps, the contact details first (the client's order, 2026-10-09):
+ *   1. name + phone (+ e-mail), checked when « Continuer » is pressed, then
+ *      2. type of apartment and 3. budget — one tap each. Everything is posted
+ *      to /contact.php in one request when the last step is sent. The Meta
+ *      `Lead` fires once, only after the server answers 200 — and contact.php
+ *      answers 200 only once Zapier accepted the lead. A visitor who leaves
+ *      after step 1 is not a lead; their draft follows the abandoned path.
  *
  * Then, optionally:
  *   4. The optional questions (project, channel, show-apartment visit) come
@@ -379,32 +383,27 @@ export function LeadFormProvider({ children }: { children: ReactNode }) {
     pixelFormStarted(from);
   }, []);
 
-  /** Question 1 answered: remember it and move on. One tap, nothing sent. */
+  /** Question 2 answered: remember it and move on. One tap, nothing sent. */
   const selectPropertyType = useCallback(
     (value: string, from: Placement) => {
       markStarted(from);
       setPropertyType(value);
       trackLandingEvent('property_type_selected', { project: PROJECT, placement: from, property_type: value });
-      if (!stepsReported.current.has(1)) {
-        stepsReported.current.add(1);
-        pixelStepCompleted(1, 'type_de_bien');
+      if (!stepsReported.current.has(2)) {
+        stepsReported.current.add(2);
+        pixelStepCompleted(2, 'type_de_bien');
       }
-      setStep(2);
+      setStep(3);
     },
     [markStarted],
   );
 
-  /** Question 2 answered: on to the contact details. */
+  /** Question 3 answered. It is the last step: the choice is kept, the button sends. */
   const selectBudget = useCallback(
     (value: string, from: Placement) => {
       markStarted(from);
       setBudget(value);
       trackLandingEvent('budget_selected', { project: PROJECT, placement: from, budget_range: value });
-      if (!stepsReported.current.has(2)) {
-        stepsReported.current.add(2);
-        pixelStepCompleted(2, 'budget');
-      }
-      setStep(3);
     },
     [markStarted],
   );
@@ -420,8 +419,8 @@ export function LeadFormProvider({ children }: { children: ReactNode }) {
     setActivePlacement(from);
     setStep((current) => {
       const answers = latest.current;
-      if (current === 1 && answers.propertyType) return 2;
-      if (current === 2 && answers.budget) return 3;
+      // Step 1 moves on through continueFromContact(), which checks the fields.
+      if (current === 2 && answers.propertyType) return 3;
       return current;
     });
   }, []);
@@ -519,6 +518,40 @@ export function LeadFormProvider({ children }: { children: ReactNode }) {
     };
   }, []);
 
+  /** Checks the contact details and shows what is wrong; the name of the first wrong field, or ''. */
+  const checkContact = useCallback((): 'name' | 'phone' | 'email' | '' => {
+    const state = latest.current;
+    const name = state.fullName.trim().replace(/\s+/g, ' ');
+    const localNumber = normalizeLocalNumber(state.phoneNumber, state.country.code);
+    const digits = `${state.country.code}${localNumber}`.replace(/\D/g, '');
+    const mail = state.email.trim();
+    const next: Errors = {};
+    if (name.length < 3 || /\d/.test(name)) next.fullName = 'Indiquez votre nom complet.';
+    if (!localNumber || digits.length < 8 || digits.length > 15) next.phone = 'Vérifiez votre numéro de téléphone.';
+    if (!mail && VALIDATION.emailRequired) next.email = 'Indiquez votre e-mail.';
+    else if (mail && !EMAIL_RE.test(mail)) next.email = 'Vérifiez votre adresse e-mail.';
+    setErrors(next);
+    return next.fullName ? 'name' : next.phone ? 'phone' : next.email ? 'email' : '';
+  }, []);
+
+  const continueFromContact = useCallback(
+    (from: Placement) => {
+      setActivePlacement(from);
+      markStarted(from);
+      const wrong = checkContact();
+      if (wrong) {
+        document.getElementById(`hs7-${from}-${wrong}`)?.focus();
+        return;
+      }
+      if (!stepsReported.current.has(1)) {
+        stepsReported.current.add(1);
+        pixelStepCompleted(1, 'coordonnees');
+      }
+      setStep(2);
+    },
+    [checkContact, markStarted],
+  );
+
   const submit = useCallback(
     async (from: Placement) => {
       setActivePlacement(from);
@@ -527,19 +560,11 @@ export function LeadFormProvider({ children }: { children: ReactNode }) {
       setFeedback('');
 
       const state = latest.current;
-      const name = state.fullName.trim().replace(/\s+/g, ' ');
-      const localNumber = normalizeLocalNumber(state.phoneNumber, state.country.code);
-      const digits = `${state.country.code}${localNumber}`.replace(/\D/g, '');
-      const mail = state.email.trim();
-      const next: Errors = {};
-      if (name.length < 3 || /\d/.test(name)) next.fullName = 'Indiquez votre nom complet.';
-      if (!localNumber || digits.length < 8 || digits.length > 15) next.phone = 'Vérifiez votre numéro de téléphone.';
-      if (!mail && VALIDATION.emailRequired) next.email = 'Indiquez votre e-mail.';
-      else if (mail && !EMAIL_RE.test(mail)) next.email = 'Vérifiez votre adresse e-mail.';
-      setErrors(next);
-      if (next.fullName || next.phone || next.email) {
-        const first = next.fullName ? 'name' : next.phone ? 'phone' : 'email';
-        document.getElementById(`hs7-${from}-${first}`)?.focus();
+      // Checked at step 1 already; a field edited since sends the visitor back to it.
+      const wrong = checkContact();
+      if (wrong) {
+        setStep(1);
+        document.getElementById(`hs7-${from}-${wrong}`)?.focus();
         return;
       }
 
@@ -586,7 +611,9 @@ export function LeadFormProvider({ children }: { children: ReactNode }) {
           // Meta `Lead` and Snapchat `SIGN_UP`, each to its own platform, once — and
           // not at all for a person contact.php already counted as a prospect.
           if (data.repeat_lead !== true) pixelLead({ eventId: metaLeadEventId.current, utmCampaign: captureLandingAttribution().utm_campaign || '' });
-          pixelStepCompleted(3, 'coordonnees');
+          // The last step of the form: its third with the two questions, its only one without.
+          if (VALIDATION.formQuestions) pixelStepCompleted(3, 'budget');
+          else pixelStepCompleted(1, 'coordonnees');
           trackLandingEvent('lead_submit_success', { project: PROJECT, placement: from, property_type: state.propertyType, budget_range: state.budget });
         }
         // This form session is closed (its ID stays in memory for the
@@ -607,7 +634,7 @@ export function LeadFormProvider({ children }: { children: ReactNode }) {
         setSubmitting(false);
       }
     },
-    [buildPayload, markStarted],
+    [buildPayload, checkContact, markStarted],
   );
 
   /** Answers worth sending, as a stable string — empty when nothing was answered. */
@@ -714,6 +741,7 @@ export function LeadFormProvider({ children }: { children: ReactNode }) {
       selectBudget,
       goToStep,
       nextStep,
+      continueFromContact,
       fullName,
       email,
       country,
@@ -764,6 +792,7 @@ export function LeadFormProvider({ children }: { children: ReactNode }) {
       selectBudget,
       goToStep,
       nextStep,
+      continueFromContact,
       fullName,
       email,
       country,

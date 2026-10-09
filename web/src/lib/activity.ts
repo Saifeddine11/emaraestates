@@ -21,13 +21,15 @@ export type ActivityState = {
   /** null until a valid answer arrives (or while the feature is off): nothing is shown. */
   today: Activity | null;
   gain: ActivityGain | null;
+  /** The first request is over — answered, refused or failed: there is nothing left to wait for. */
+  settled: boolean;
 };
 
 export const ACTIVITY_POLL_MS = 30_000;
 const FIRST_POLL_DELAY_MS = 600;
 const TIMEOUT_MS = 8_000;
 
-const INITIAL: ActivityState = { today: null, gain: null };
+const INITIAL: ActivityState = { today: null, gain: null, settled: false };
 let state = INITIAL;
 const listeners = new Set<() => void>();
 let started = false;
@@ -56,7 +58,15 @@ function apply(next: Activity | null) {
   state = {
     today: next,
     gain: gained > 0 ? { id: (gains += 1), count: gained, from: (previous as Activity).requests } : null,
+    settled: true,
   };
+  listeners.forEach((listener) => listener());
+}
+
+/** Whatever the first request gave, the band stops keeping its place for an answer. */
+function settle() {
+  if (state.settled) return;
+  state = { ...state, settled: true };
   listeners.forEach((listener) => listener());
 }
 
@@ -74,6 +84,7 @@ async function poll() {
   } finally {
     window.clearTimeout(timeout);
     inFlight = false;
+    settle();
   }
 }
 

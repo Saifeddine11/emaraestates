@@ -6,6 +6,7 @@ import { HeaderCta, ScrollCta, SectionView, StickyCta } from '@/components/hones
 import { LandingTracking } from '@/components/honest-7/LandingTracking';
 import { LeadForm } from '@/components/honest-7/LeadForm';
 import { LeadFormProvider } from '@/components/honest-7/LeadFormState';
+import { OpenOnForm } from '@/components/honest-7/OpenOnForm';
 import { InView, Lines, Rise } from '@/components/honest-7/Reveal';
 import { PaymentSimulator } from '@/components/honest-7/PaymentSimulator';
 import { Picture } from '@/components/honest-7/Picture';
@@ -64,11 +65,13 @@ export function Honest7Landing() {
       <div className="bg-shell pl-[env(safe-area-inset-left)] pr-[env(safe-area-inset-right)]">
         <Header />
         <main id="main-content">
-          {/* Sell before asking: is it real, how much, then the form. */}
+          {/* Ask first (the client's order, 2026-10-09): the form straight under the hero — the page even
+              opens on it, see OpenOnForm — then how it is paid, then who builds it. */}
           <Hero />
-          <TrackRecord />
-          <Payment />
           <FirstForm />
+          <OpenOnForm />
+          <Payment />
+          <TrackRecord />
           <ShowApartments />
           <Amenities />
           <Location />
@@ -347,11 +350,12 @@ function TrackStrip() {
   );
 }
 
-/* ── 2. The first form — straight after the hero. ───────────────────────── */
+/* ── 2. The first form — the screen the page opens on (see OpenOnForm), so
+   like the hero it is painted as it is (`hs7-load`): no reveal to wait for. ── */
 
 function FirstForm() {
   return (
-    <section aria-labelledby="dossier-title" className="overflow-x-clip bg-shell py-band-tight text-forest">
+    <section aria-labelledby="dossier-title" className="hs7-load overflow-x-clip bg-shell py-band-tight text-forest">
       <div className={cn(SHELL, 'grid items-start gap-x-[clamp(48px,6vw,104px)] gap-y-7 lg:grid-cols-[minmax(0,1fr)_minmax(420px,520px)] lg:gap-y-9')}>
         {/* 1 — Says "this is the form": on phones it sits right above the card, and CTAs scroll to it. */}
         <div data-lead-intro="hero" className="lg:col-start-1 lg:row-start-1 lg:pt-2">
@@ -364,7 +368,7 @@ function FirstForm() {
               lines={[
                 'Recevez le dossier',
                 <InView key="s" as="span" className="relative inline-block" amount={0.8}>
-                  <span className={cn(SERIF, 'text-[1.1em] text-olive')}>en 3&nbsp;questions.</span>
+                  <span className={cn(SERIF, 'text-[1.1em] text-olive')}>{VALIDATION.formQuestions ? <>en 3&nbsp;questions.</> : <>en une étape.</>}</span>
                   <Underline className="text-olive" />
                 </InView>,
               ]}
@@ -409,7 +413,7 @@ function FirstForm() {
             <p className={cn(EYEBROW, EYEBROW_LIGHT)}>Et ensuite ?</p>
             <ol className="mt-4 grid gap-3.5 sm:grid-cols-3 sm:gap-6">
               {[
-                'Vous répondez à deux questions et laissez vos coordonnées.',
+                VALIDATION.formQuestions ? 'Vous laissez vos coordonnées et répondez à deux questions.' : 'Vous laissez vos coordonnées.',
                 'Un conseiller vous transmet les disponibilités et les prix lot par lot.',
                 'Vous recevez les plans et la brochure. Sans engagement.',
               ].map((step, index) => (

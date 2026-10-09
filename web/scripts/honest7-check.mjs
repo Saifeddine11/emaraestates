@@ -15,12 +15,14 @@ import { startServer } from './lib/serve.mjs';
 // The page’s switches (VALIDATION in the content file). A record that depends
 // on one follows it, so the same script checks the page with a switch on or off.
 const CONTENT = readFileSync(new URL('../src/lib/content/honest-signature-7.ts', import.meta.url), 'utf8');
-const FLAGS = Object.fromEntries(['euroPrices', 'threeBedrooms', 'activityCounter', 'partialCapture', 'postLeadQuestions'].map((name) => [name, new RegExp(`^  ${name}: true,`, 'm').test(CONTENT)]));
+const FLAGS = Object.fromEntries(['euroPrices', 'threeBedrooms', 'activityCounter', 'partialCapture', 'postLeadQuestions', 'formQuestions'].map((name) => [name, new RegExp(`^  ${name}: true,`, 'm').test(CONTENT)]));
 const MONEY = FLAGS.euroPrices
   ? { hero: '149\u00a0000\u00a0€', budget: '149 000 – 180 000 €', budgetButton: /149 000 – 180 000 €/, range: /€$/, currency: 'EUR', preset: /^180.000.€$/, start: ['44 700', '22 350', '37 250'], typed: '180000', typedShown: '180 000', typedRows: ['54 000', '27 000', '45 000'], below: '90000', unit: '€' }
   : { hero: '1,59', budget: '1,59 M – 2 M MAD', budgetButton: /1,59 M – 2 M/, range: /MAD$/, currency: 'MAD', preset: /^2.M$/, start: ['477 000', '238 500', '397 500'], typed: '2000000', typedShown: '2 000 000', typedRows: ['600 000', '300 000', '500 000'], below: '900000', unit: 'MAD' };
 /** The heading of the final panel: after the optional questions when the page has them, straight after the lead otherwise. */
 const DONE_TEXT = FLAGS.postLeadQuestions ? 'C’est noté.' : 'Demande envoyée.';
+/** What the lead says about the type and the budget: the two answers, or nothing when the form does not ask. */
+const ANSWERS = FLAGS.formQuestions ? { type: 'Appartement 2 chambres', budget: MONEY.budget, said: ['Type de bien : Appartement 2 chambres', `Budget : ${MONEY.budget}`], steps: '1:coordonnees,2:type_de_bien,3:budget' } : { type: '', budget: '', said: ['Type de bien : non précisé', 'Budget : non précisé'], steps: '1:coordonnees' };
 const ROOMS = FLAGS.threeBedrooms ? /^(1 chambre|2 chambres|3 chambres)$/ : /^(Studio|1 chambre|2 chambres)$/;
 
 const engine = process.env.BROWSER === 'webkit' ? webkit : chromium;
@@ -53,14 +55,14 @@ const ALL_FUNNEL_EVENTS = [
   'whatsapp_click',
 ];
 // Without the questions shown after the lead, their three events cannot fire.
-const FUNNEL_EVENTS = ALL_FUNNEL_EVENTS.filter((name) => FLAGS.postLeadQuestions || !['post_lead_intent_selected', 'contact_channel_selected', 'visit_booking_started'].includes(name));
+const FUNNEL_EVENTS = ALL_FUNNEL_EVENTS.filter((name) => FLAGS.postLeadQuestions || !['post_lead_intent_selected', 'contact_channel_selected', 'visit_booking_started'].includes(name)).filter((name) => FLAGS.formQuestions || !['property_type_selected', 'budget_selected'].includes(name));
 
 function record(name, ok, detail = '') {
   results.push({ name, ok: Boolean(ok) });
   console.log(`  ${ok ? 'PASS' : 'FAIL'}  ${name}${detail ? ` — ${detail}` : ''}`);
 }
 
-async function open(viewport, { reducedMotion = 'no-preference', search = query, clock = false, snap = 'record', activity = null } = {}) {
+async function open(viewport, { reducedMotion = 'no-preference', search = query, clock = false, snap = 'record', activity = null, top = true } = {}) {
   const mobile = viewport.width < 800;
   const context = await browser.newContext({ viewport, reducedMotion, isMobile: engine === chromium && mobile, hasTouch: mobile, locale: 'fr-FR' });
   await context.addCookies([
@@ -125,6 +127,17 @@ async function open(viewport, { reducedMotion = 'no-preference', search = query,
   }
   if (clock) await page.clock.install();
   await page.goto(`${base}${path}${search}`, { waitUntil: 'networkidle' });
+  // The lead cards keep the activity band's place until the first answer, 600 ms after `load`: wait for it,
+  // so nothing moves under a check. Under a fake clock that timer is the check's own to run.
+  if (!clock) await page.waitForFunction(() => !document.querySelector('[data-activity-pending]'));
+  // The page opens on the first form (see « Opening ») and holds that position until its fonts are in.
+  // Everything else is checked from the top of the page, where every visit used to start — once the page
+  // has taken note of it: what watches the screen (the question's hop, the sticky CTA) hears a frame later.
+  await page.evaluate(async (toTop) => {
+    await document.fonts.ready;
+    if (toTop) window.scrollTo({ top: 0, behavior: 'instant' });
+  }, top);
+  if (top && !clock) await page.waitForTimeout(100);
   return { context, page, errors, notFound, drafts, activityRequests, phpCalls };
 }
 
@@ -172,22 +185,38 @@ const SNAP_EVENT_TYPES = ['PAGE_VIEW', 'VIEW_CONTENT', 'CUSTOM_EVENT_1', 'SIGN_U
 const count = (list, name) => list.filter((entry) => entry === name).length;
 const settle = (page, ms = 700) => page.waitForTimeout(ms);
 
-/** Answers the two one-tap questions (type, budget) so the contact step is on screen. */
+/** The contact details are the first step: brings the card and its fields on screen. */
 async function toContact(page, prefix = 'hs7-hero') {
   const card = page.locator(prefix === 'hs7-hero' ? '#dossier' : '#disponibilites');
   await card.scrollIntoViewIfNeeded();
-  if (await page.locator(`#${prefix}-name`).count()) return;
-  const type = card.getByRole('button', { name: '2 chambres', exact: true });
-  if (await type.count()) await type.click();
-  await card.getByRole('button', { name: MONEY.budgetButton }).click();
   await page.locator(`#${prefix}-name`).waitFor();
+  return card;
 }
 
-async function fill(page, prefix, { email = 'client@example.com' } = {}) {
-  await toContact(page, prefix);
+/** Step 1 only: the three fields, nothing pressed. */
+async function fillContact(page, prefix, { email = 'client@example.com' } = {}) {
+  const card = await toContact(page, prefix);
   await page.fill(`#${prefix}-name`, 'Client Test');
   await page.fill(`#${prefix}-phone`, '612345678');
   if (email) await page.fill(`#${prefix}-email`, email);
+  return card;
+}
+
+/** From valid contact details on step 1: « Continuer », the type, the budget — the last step, ready to send. */
+async function answerQuestions(card) {
+  if (!FLAGS.formQuestions) {
+    await card.locator('button[type="submit"]').waitFor();
+    return;
+  }
+  await card.getByRole('button', { name: /Continuer/ }).click();
+  await card.getByRole('button', { name: '2 chambres', exact: true }).click();
+  await card.getByRole('button', { name: MONEY.budgetButton }).click();
+  await card.locator('button[type="submit"]').waitFor();
+}
+
+/** The whole form up to the last step, ready to send. */
+async function fill(page, prefix, options = {}) {
+  await answerQuestions(await fillContact(page, prefix, options));
 }
 
 console.log(`\nHONEST SIGNATURE 7 — PAID LANDING QA (${engine.name()})\n`);
@@ -216,8 +245,8 @@ console.log(`\nHONEST SIGNATURE 7 — PAID LANDING QA (${engine.name()})\n`);
   record('A11y: exactly one H1', state.h1Count === 1);
   record('Hero: headline', state.h1.replace(/ /g, '') === 'UNEDERNIÈREOPPORTUNITÉAUCŒURDEGUÉLIZ.', state.h1);
   record(
-    'Flow: hero → proof → payment → form, then the rest',
-    state.sections.join() === 'hero-title,track-title,payment-title,dossier-title,show-title,amenities-title,location-title,scarcity-title,faq-title,final-title',
+    'Flow: hero → form → payment → proof, then the rest',
+    state.sections.join() === 'hero-title,dossier-title,payment-title,track-title,show-title,amenities-title,location-title,scarcity-title,faq-title,final-title',
     state.sections.join(),
   );
   record('Forms: the lead card twice (before the show apartments, and at the end)', state.forms === 2, String(state.forms));
@@ -236,7 +265,7 @@ console.log(`\nHONEST SIGNATURE 7 — PAID LANDING QA (${engine.name()})\n`);
   record('Hero: Honest 5–6 sold, kept apart from the delivered ones', heroText.includes('déjà vendues'), heroText.replace(/\s+/g, ' ').slice(-220));
   record('Copy: remaining stock is not shown anywhere on the page', !/appartements? restants?|restants? sur|sur 140|sur 150/i.test(state.text.replace(/\u00a0/g, ' ')));
   record('Hero: what is sold and how it is paid — typologies, minimum surface, 30 % then progressive', ['studios & appartements', 'dès 56 m²', '30 % à la réservation', 'solde progressif jusqu’à juin 2028'].every((word) => heroText.replace(/\u00a0/g, ' ').includes(word)), heroText.replace(/\s+/g, ' ').slice(0, 400));
-  record('Copy: with no data, no counter of any kind — no "+1", no "aujourd’hui" figure, no "live" claim', !/en direct|vendus? aujourd|vendus? en 7 jours|\+1\b/i.test(state.text.replace(/\u00a0/g, ' ')));
+  record('Copy: with no data, no counter of any kind — no "+1", no "aujourd’hui" figure, no "live" claim', !/en direct|vendus? aujourd|vendus? en 7 jours|\+1\b/i.test(await page.evaluate(() => { const copy = document.body.cloneNode(true); copy.querySelectorAll('[data-lead-form] select, [data-lead-form] [role="listbox"], [data-lead-form] option').forEach((node) => node.remove()); return copy.textContent.replace(/\u00a0/g, ' '); })));
   record('Hero: all 8 amenities', (await hero.locator('ul[aria-label="Services de la résidence"] li').count()) === 8);
   const ctaLabels = await page.evaluate(() =>
     Array.from(document.querySelectorAll('a[href="#dossier"], a[href="#disponibilites"]')).map((link) => link.textContent.replace(/\s+/g, ' ').trim()),
@@ -279,6 +308,177 @@ console.log(`\nHONEST SIGNATURE 7 — PAID LANDING QA (${engine.name()})\n`);
   await context.close();
 }
 
+/* ── Opening: the page opens on the first form, not on the hero ──────────── */
+
+/** Where the page is scrolled, and where the first form stands on screen. */
+const formOnScreen = (page) =>
+  page.evaluate(() => {
+    const intro = document.querySelector('[data-lead-intro="hero"]').getBoundingClientRect();
+    const card = document.querySelector('#dossier').getBoundingClientRect();
+    return {
+      y: Math.round(window.scrollY),
+      top: Math.round(Math.min(intro.top, card.top)),
+      introAbove: intro.top <= card.top,
+      cardTop: Math.round(card.top),
+      question: Math.round(document.querySelector('#dossier h2').getBoundingClientRect().top),
+      viewport: window.innerHeight,
+      focus: document.activeElement?.id || '',
+    };
+  });
+
+for (const width of [360, 390, 768, 1440]) {
+  const { context, page, errors } = await open({ width, height: width < 800 ? 780 : 900 }, { top: false });
+  const opened = await formOnScreen(page);
+  // Below lg the card stands alone under its heading; from lg they share a row.
+  const stacked = width < 1024;
+  record(
+    stacked ? `${width}px opening: the page opens on the first form — the card itself, at the top of the screen` : `${width}px opening: the page opens on the first form — its heading and the card side by side`,
+    opened.y > 0 && opened.cardTop > -10 && opened.cardTop < (stacked ? 140 : opened.viewport * 0.6) && (stacked || (opened.top > -10 && opened.top < 140)),
+    JSON.stringify(opened),
+  );
+  const events = await fbq(page);
+  record(`${width}px opening: the form is the first screen — form_view comes with the landing view, nothing counts as a form start`, events.includes('trackCustom:landing_view') && events.includes('trackCustom:form_view') && !events.includes('trackCustom:form_started'), events.join(', '));
+  record(`${width}px opening: the card has focus`, opened.focus === 'dossier', opened.focus);
+  await page.keyboard.press('Tab');
+  const tabbed = await page.evaluate(() => ({ inCard: Boolean(document.activeElement.closest('#dossier')), id: document.activeElement.id || document.activeElement.tagName }));
+  record(`${width}px opening: …so the first Tab goes into the form`, tabbed.inCard && tabbed.id !== 'dossier', tabbed.id);
+  await page.evaluate(() => window.scrollTo({ top: 0, behavior: 'instant' }));
+  await page.locator('[data-hero-cta]').click();
+  await settle(page, 1800);
+  const byCta = await formOnScreen(page);
+  record(
+    stacked ? `${width}px opening: one step further than a CTA — past the heading it stops on, onto the card` : `${width}px opening: at the very place a CTA leads to`,
+    stacked ? byCta.top > -10 && byCta.top < 140 && opened.y > byCta.y + 100 : Math.abs(byCta.y - opened.y) <= 2,
+    `${opened.y} / ${byCta.y}`,
+  );
+  record(`${width}px opening: no console error`, errors.length === 0, errors.join(' | '));
+  await context.close();
+}
+
+{
+  // Before React: the HTML, the CSS and the page's own inline scripts — no script file at all.
+  const context = await browser.newContext({ viewport: { width: 390, height: 780 }, locale: 'fr-FR' });
+  const page = await context.newPage();
+  await page.route('**/*', (route) => {
+    const url = new URL(route.request().url());
+    return url.origin !== base || /\.js$/.test(url.pathname) ? route.abort() : route.continue();
+  });
+  await page.goto(`${base}${path}${query}`, { waitUntil: 'load' });
+  const bare = await formOnScreen(page);
+  const painted = await page.evaluate(() => ({
+    heading: getComputedStyle(document.querySelector('#dossier-title [data-reveal]')).transform,
+    blocks: Array.from(document.querySelectorAll('section[aria-labelledby="dossier-title"] .hs7-rise')).map((node) => getComputedStyle(node).opacity),
+  }));
+  record('Opening: without waiting for React — the page is on the form as soon as its HTML is read', bare.y > 0 && bare.cardTop > -10 && bare.cardTop < 140, JSON.stringify(bare));
+  record('Opening: that first screen is painted as it is — its heading and its blocks wait for no script', painted.heading === 'none' && painted.blocks.length > 0 && painted.blocks.every((opacity) => opacity === '1'), JSON.stringify(painted));
+  await context.close();
+}
+
+{
+  // An iPhone in Safari with its bars shown leaves 664 px to the page. The whole step has to be there, band included.
+  const { context, page } = await open({ width: 390, height: 664 }, { top: false, activity: FLAGS.activityCounter ? { body: requestsToday(10) } : null });
+  const fit = await page.evaluate(() => {
+    const card = document.querySelector('#dossier');
+    return { card: Math.round(card.getBoundingClientRect().top), button: Math.round(card.querySelector('button[type="submit"]').getBoundingClientRect().bottom), viewport: window.innerHeight };
+  });
+  record('Opening, phone (390 × 664): the whole step is on the first screen — from the top of the card to its button', fit.card >= 0 && fit.button <= fit.viewport, JSON.stringify(fit));
+  await context.close();
+}
+
+if (FLAGS.activityCounter) {
+  // The count arrives a moment after the page: the band's place is kept, so nothing moves under the visitor's finger.
+  for (const width of [390, 1440]) {
+    const { context, page } = await open({ width, height: 800 }, { top: false, clock: true, activity: { body: requestsToday(10) } });
+    const waiting = await page.evaluate(() => ({ kept: document.querySelectorAll('[data-activity-pending]').length, text: document.querySelector('#dossier [data-activity-pending]')?.innerText.trim() ?? null }));
+    const before = await formOnScreen(page);
+    for (let step = 0; step < 100 && !(await band(page)); step += 1) await page.clock.runFor(100);
+    const after = await formOnScreen(page);
+    record(`${width}px opening: the activity band's place is kept until the count arrives — empty, no figure`, waiting.kept === 2 && waiting.text === '' && (await band(page))?.count === '10', JSON.stringify(waiting));
+    record(`${width}px opening: when the count arrives, the question does not move`, after.question === before.question && after.y === before.y, `${before.question} → ${after.question}`);
+    await context.close();
+  }
+}
+
+{
+  const { context, page } = await open({ width: 390, height: 780 }, { top: false });
+  const opened = await formOnScreen(page);
+  // A key press is an interaction: the browser's own scroll restoration is back in charge from here.
+  await page.keyboard.press('End');
+  await page.evaluate(() => window.scrollTo({ top: document.documentElement.scrollHeight, behavior: 'instant' }));
+  await settle(page, 300);
+  const left = await page.evaluate(() => ({ y: Math.round(window.scrollY), restoration: history.scrollRestoration }));
+  await page.reload({ waitUntil: 'networkidle' });
+  const reloaded = await formOnScreen(page);
+  record('Opening: a reload opens on the form again, wherever the page was scrolled', left.y > opened.y + 2000 && Math.abs(reloaded.y - opened.y) <= 2, `${left.y} → ${reloaded.y}`);
+
+  await page.keyboard.press('End');
+  await page.evaluate(() => window.scrollTo({ top: document.documentElement.scrollHeight, behavior: 'instant' }));
+  await settle(page, 300);
+  const away = await page.evaluate(() => Math.round(window.scrollY));
+  await page.goto(`${base}/mentions-legales`, { waitUntil: 'load' });
+  await page.goBack({ waitUntil: 'load' });
+  await settle(page, 800);
+  const back = await formOnScreen(page);
+  record('Opening: a return through the history is left to the browser — back where the visitor was, not on the form', left.restoration === 'auto' && Math.abs(back.y - away) < 400 && back.y > opened.y + 2000, `left at ${away}, back at ${back.y}`);
+  await context.close();
+}
+
+{
+  const { context, page } = await open({ width: 390, height: 780 }, { top: false, search: `${query}#localisation` });
+  await settle(page, 1800); // the browser goes there by itself, smoothly, from the top of the page
+  const target = await page.locator('#localisation').evaluate((node) => Math.round(node.getBoundingClientRect().top));
+  record('Opening: an address with an #anchor goes to its anchor, not to the form', target > -10 && target < 140, String(target));
+  await context.close();
+}
+
+/** A page whose `load` waits for `finish()`: the header logo is held back. */
+async function openStillLoading(viewport) {
+  const context = await browser.newContext({ viewport, locale: 'fr-FR' });
+  const page = await context.newPage();
+  let finish;
+  const held = new Promise((resolve) => (finish = resolve));
+  await page.route('**/*', async (route) => {
+    const url = new URL(route.request().url());
+    if (url.origin !== base) return route.abort();
+    if (/logo-emara/.test(url.pathname)) await held;
+    return route.continue();
+  });
+  await page.goto(`${base}${path}${query}`, { waitUntil: 'domcontentloaded' });
+  const loaded = async () => {
+    finish();
+    await page.waitForLoadState('load');
+    await page.evaluate(() => document.fonts.ready);
+    await settle(page, 300);
+  };
+  return { context, page, loaded };
+}
+
+{
+  const { context, page, loaded } = await openStillLoading({ width: 1440, height: 900 });
+  const opened = await formOnScreen(page);
+  const stillLoading = await page.evaluate(() => document.readyState !== 'complete');
+  // Something above the form grows while the page loads (a late font, a late image).
+  await page.addStyleTag({ content: 'main::before { content: ""; display: block; height: 240px; }' });
+  await loaded();
+  const held = await formOnScreen(page);
+  record('Opening: on the form before the page has finished loading', stillLoading && opened.top > -10 && opened.top < 140, JSON.stringify(opened));
+  record('Opening: held there while the page loads — the form stays in place when what is above it changes height', Math.abs(held.top - opened.top) <= 2 && held.y >= opened.y + 238, `${opened.top}px → ${held.top}px (page scrolled ${opened.y} → ${held.y})`);
+  await context.close();
+}
+
+{
+  const { context, page, loaded } = await openStillLoading({ width: 1440, height: 900 });
+  const opened = await formOnScreen(page);
+  await page.mouse.move(700, 450);
+  await page.mouse.wheel(0, 1200);
+  await settle(page, 700);
+  const moved = await page.evaluate(() => Math.round(window.scrollY));
+  await loaded();
+  const after = await page.evaluate(() => Math.round(window.scrollY));
+  record('Opening: a visitor who scrolls while the page is still loading is never pulled back to the form', moved > opened.y + 600 && Math.abs(after - moved) <= 2, `opened at ${opened.y}, scrolled to ${moved}, ${after} once loaded`);
+  await context.close();
+}
+
 /* ── Every width: overflow, headline fit, CTAs, sticky bar ──────────────── */
 for (const width of WIDTHS) {
   const mobile = width < 1024;
@@ -304,7 +504,7 @@ for (const width of WIDTHS) {
   await page.evaluate(() => window.scrollTo(0, 0));
   await settle(page, 300);
   await primary.click();
-  await settle(page, 1800); // the form now sits below the proof and the payment plan: a longer scroll
+  await settle(page, 1800);
   // The CTA lands on the heading that introduces the form, with the card in view under (or beside) it.
   const arrival = await page.evaluate(() => {
     const intro = document.querySelector('[data-lead-intro="hero"]').getBoundingClientRect();
@@ -338,7 +538,7 @@ for (const width of WIDTHS) {
     await page.locator('#services').scrollIntoViewIfNeeded();
     await page.evaluate(() => window.scrollBy(0, 200));
     await settle(page, 500);
-    record(`${width}px: sticky CTA available while reading the proof and the payment plan, before the form`, before && beforeForm);
+    record(`${width}px: sticky CTA available while reading the proof, under the form and the payment plan`, before && beforeForm);
     record(`${width}px: sticky CTA shown past the form`, (await sticky.getAttribute('aria-hidden')) === 'false');
     const metrics = await sticky.evaluate((bar) => {
       const link = bar.querySelector('a').getBoundingClientRect();
@@ -431,62 +631,106 @@ for (const width of WIDTHS) {
   await stubContact(page);
   await page.locator('#dossier').scrollIntoViewIfNeeded();
   const card = page.locator('#dossier');
-  // Step 1 — the easy question first: nothing to type.
   const cardText = async () => (await card.innerText()).replace(/ /g, ' ');
-  record('Form step 1: asks the type of apartment, three one-tap answers, no field to fill', /Quel type d’appartement recherchez-vous \?/.test(await cardText()) && (await card.getByRole('button', { name: ROOMS }).count()) === 3 && (await card.locator('input:not([name="company_website"]):visible').count()) === 0, (await cardText()).slice(0, 120));
-  // « Continuer » is at full strength from the start (cream on the green glass); pressed with no answer, it stays on the question and says why.
-  const continueButton = card.getByRole('button', { name: 'Continuer', exact: true });
-  const continueColour = await continueButton.evaluate((node) => getComputedStyle(node).backgroundColor);
-  await continueButton.click();
-  const continueStep1 = continueColour === 'rgb(245, 240, 232)' && /Étape 1 sur 3/i.test(await card.innerText()) && (await card.getByRole('alert').filter({ hasText: 'Choisissez une réponse pour continuer.' }).count()) === 1;
-  const look = await card.evaluate((node) => {
-    const style = getComputedStyle(node);
-    return {
-      // Glass: a translucent pane that blurs what is behind it — Emara's green, on a stage no larger than the card and its track line.
-      alpha: Number(style.backgroundColor.match(/[\d.]+(?=\)$)/)?.[0] ?? 1),
-      blur: /blur\(/.test(style.backdropFilter || style.webkitBackdropFilter || ''),
-      behind: getComputedStyle(node.closest('[data-glass-stage]')).backgroundColor,
-      page: getComputedStyle(node.closest('section')).backgroundColor,
-      stageOnlyCard: Boolean(node.closest('[data-glass-stage]').querySelector('[data-track-line]')) && !node.closest('[data-glass-stage]').querySelector('[data-lead-intro], #dossier-title, ol'),
-      progress: Boolean(node.querySelector('[data-progress]')),
-      radios: node.querySelectorAll('button[aria-pressed] [aria-hidden="true"].rounded-full').length,
-    };
-  });
-  record('Form step 1: looks like a form — a pane of frosted glass over Emara green, progress bar, a radio mark per answer, « Continuer » in cream, asking for an answer when pressed too early', continueStep1 && look.alpha < 0.3 && look.blur && look.behind === 'rgb(45, 58, 45)' && look.progress && look.radios === 3, JSON.stringify(look));
-  record('First form: green only behind the card and its track line — the heading and the dossier list sit on the light page', look.stageOnlyCard && look.page === 'rgb(250, 248, 244)', JSON.stringify({ page: look.page, stageOnlyCard: look.stageOnlyCard }));
-  record('Form step 1: nothing tracked as started or sent yet', !(await fbq(page)).includes('trackCustom:LeadFormStarted') && (await page.evaluate(() => window.__requests.length)) === 0);
-  await card.getByRole('button', { name: '1 chambre', exact: true }).click();
-  record('Form step 2: one tap moves on to the budget, three ranges in the page’s currency', /Quel budget prévoyez-vous \?/.test(await cardText()) && /Étape 2 sur 3/i.test(await cardText()) && (await card.getByRole('button', { name: MONEY.range }).count()) === 3 && (!FLAGS.euroPrices || !/MAD/.test(await cardText())));
-  await card.getByRole('button', { name: /Type d’appartement/ }).click();
-  record('Form: back to step 1 keeps the answer', (await card.getByRole('button', { name: '1 chambre', exact: true }).getAttribute('aria-pressed')) === 'true');
-  const eventsBeforeContinue = (await fbq(page)).length;
-  await card.getByRole('button', { name: 'Continuer', exact: true }).click();
-  record('Form: « Continuer » after going back → step 2, no new answer tracked', /Étape 2 sur 3/i.test(await cardText()) && (await fbq(page)).slice(eventsBeforeContinue).every((entry) => !/property_type_selected|LeadFormStepCompleted/.test(entry)));
-  await card.getByRole('button', { name: /Type d’appartement/ }).click();
-  await card.getByRole('button', { name: '2 chambres', exact: true }).click();
-  await card.getByRole('button', { name: MONEY.budgetButton }).click();
-  await page.locator('#hs7-hero-name').waitFor();
-  record('Form step 3: contact details last — three fields, the two answers recalled', (await card.locator('input:not([name="company_website"]):visible').count()) === 3 && /2 chambres/.test(await cardText()) && (await cardText()).includes(MONEY.budget) && /Étape 3 sur 3/i.test(await cardText()));
-  record('Form: says what is received and what happens next', /Un conseiller vous transmet les disponibilités et les prix lot par lot/.test(await cardText()) && /uniquement à vous recontacter au sujet de Honest Signature 7/.test(await cardText()));
-  record('Form: the closing card is on the same step, with the same answers', /Étape 3 sur 3/i.test((await page.locator('#disponibilites').innerText())) && /2 chambres/.test(await page.locator('#disponibilites').innerText()));
-  let stepEvents = await fbq(page);
-  record('Tracking: form started once; type and budget steps reported once each, even after going back', count(stepEvents, 'trackCustom:form_started') === 1 && count(stepEvents, 'trackCustom:LeadFormStarted') === 1 && count(stepEvents, 'trackCustom:LeadFormStepCompleted') === 2 && stepEvents.includes('trackCustom:property_type_selected') && stepEvents.includes('trackCustom:budget_selected'), stepEvents.filter((entry) => /Step|selected|started/.test(entry)).join(', '));
-  record('Tracking: answering the two questions is not a conversion', !stepEvents.includes('track:Lead') && !(await snapCalls(page)).includes('track:SIGN_UP'));
+  let stepEvents = [];
+  let snapNow = [];
+  if (FLAGS.formQuestions) {
+    // Step 1 — the contact details first (the client’s order): three fields, then « Continuer ».
+    record('Form step 1: the contact details first — three fields and « Continuer », no question yet', /Où vous envoyer les prix et les plans \?/.test(await cardText()) && /Étape 1 sur 3/i.test(await cardText()) && (await card.locator('input:not([name="company_website"]):visible').count()) === 3 && (await card.getByRole('button', { name: ROOMS }).count()) === 0, (await cardText()).slice(0, 110));
+    record('Form: says what is received and what happens next', /Un conseiller vous transmet les disponibilités et les prix lot par lot/.test(await cardText()) && /uniquement à vous recontacter au sujet de Honest Signature 7/.test(await cardText()));
+    record('Form step 1: nothing tracked as started or sent yet', !(await fbq(page)).includes('trackCustom:LeadFormStarted') && (await page.evaluate(() => window.__requests.length)) === 0);
+    const continueButton = card.getByRole('button', { name: 'Continuer', exact: true });
+    await continueButton.click();
+    record('Validation: name, phone and e-mail explained', (await card.getByText('Indiquez votre nom complet.').isVisible()) && (await card.getByText('Vérifiez votre numéro de téléphone.').isVisible()) && (await card.getByText('Indiquez votre e-mail.').isVisible()));
+    record('Validation: nothing sent, still on step 1', (await page.evaluate(() => window.__requests.length)) === 0 && /Étape 1 sur 3/i.test(await cardText()));
+    record('Validation: focus on the first invalid field', await page.evaluate(() => document.activeElement?.id === 'hs7-hero-name'));
 
-  await card.locator('button[type="submit"]').click();
-  record('Validation: name, phone and e-mail explained', (await card.getByText('Indiquez votre nom complet.').isVisible()) && (await card.getByText('Vérifiez votre numéro de téléphone.').isVisible()) && (await card.getByText('Indiquez votre e-mail.').isVisible()));
-  record('Validation: nothing sent', (await page.evaluate(() => window.__requests.length)) === 0);
-  record('Validation: focus on the first invalid field', await page.evaluate(() => document.activeElement?.id === 'hs7-hero-name'));
+    await fillContact(page, 'hs7-hero', { email: 'pas-un-email' });
+    await continueButton.click();
+    record('Validation: malformed e-mail refused', await card.getByText('Vérifiez votre adresse e-mail.').isVisible());
+    record('Shared state: the closing form holds the same details', (await page.locator('#hs7-final-name').inputValue()) === 'Client Test');
 
-  await fill(page, 'hs7-hero', { email: 'pas-un-email' });
-  await card.locator('button[type="submit"]').click();
-  record('Validation: malformed e-mail refused', await card.getByText('Vérifiez votre adresse e-mail.').isVisible());
-  record('Shared state: the closing form holds the same details', (await page.locator('#hs7-final-name').inputValue()) === 'Client Test');
+    await page.fill('#hs7-hero-email', 'client@example.com');
+    await continueButton.click();
+    // Step 2 — the type of apartment: one tap.
+    record('Form step 2: then the type of apartment — three one-tap answers, nothing to type', /Quel type d’appartement recherchez-vous \?/.test(await cardText()) && /Étape 2 sur 3/i.test(await cardText()) && (await card.getByRole('button', { name: ROOMS }).count()) === 3 && (await card.locator('input:visible').count()) === 0, (await cardText()).slice(0, 110));
+    // « Continuer » is at full strength from the start (cream on the green glass); pressed with no answer, it stays on the question and says why.
+    const continueColour = await continueButton.evaluate((node) => getComputedStyle(node).backgroundColor);
+    await continueButton.click();
+    const continueStep1 = continueColour === 'rgb(245, 240, 232)' && /Étape 2 sur 3/i.test(await card.innerText()) && (await card.getByRole('alert').filter({ hasText: 'Choisissez une réponse pour continuer.' }).count()) === 1;
+    const look = await card.evaluate((node) => {
+      const style = getComputedStyle(node);
+      return {
+        // Glass: a translucent pane that blurs what is behind it — Emara's green, on a stage no larger than the card and its track line.
+        alpha: Number(style.backgroundColor.match(/[\d.]+(?=\)$)/)?.[0] ?? 1),
+        blur: /blur\(/.test(style.backdropFilter || style.webkitBackdropFilter || ''),
+        behind: getComputedStyle(node.closest('[data-glass-stage]')).backgroundColor,
+        page: getComputedStyle(node.closest('section')).backgroundColor,
+        stageOnlyCard: Boolean(node.closest('[data-glass-stage]').querySelector('[data-track-line]')) && !node.closest('[data-glass-stage]').querySelector('[data-lead-intro], #dossier-title, ol'),
+        progress: Boolean(node.querySelector('[data-progress]')),
+        radios: node.querySelectorAll('button[aria-pressed] [aria-hidden="true"].rounded-full').length,
+      };
+    });
+    record('Form: looks like a form — a pane of frosted glass over Emara green, progress bar, a radio mark per answer, « Continuer » in cream, asking for an answer when pressed too early', continueStep1 && look.alpha < 0.3 && look.blur && look.behind === 'rgb(45, 58, 45)' && look.progress && look.radios === 3, JSON.stringify(look));
+    record('First form: green only behind the card and its track line — the heading and the dossier list sit on the light page', look.stageOnlyCard && look.page === 'rgb(250, 248, 244)', JSON.stringify({ page: look.page, stageOnlyCard: look.stageOnlyCard }));
+    await card.getByRole('button', { name: '1 chambre', exact: true }).click();
+    // Step 3 — the budget, and the button that sends everything.
+    record('Form step 3: one tap moves on to the budget — three ranges in the page’s currency, and the button that sends', /Quel budget prévoyez-vous \?/.test(await cardText()) && /Étape 3 sur 3/i.test(await cardText()) && (await card.getByRole('button', { name: MONEY.range }).count()) === 3 && (!FLAGS.euroPrices || !/MAD/.test(await cardText())) && (await card.locator('button[type="submit"]').count()) === 1 && /Recevoir les prix et plans/.test(await cardText()));
+    await card.getByRole('button', { name: /Type d’appartement/ }).click();
+    record('Form: back to step 2 keeps the answer', (await card.getByRole('button', { name: '1 chambre', exact: true }).getAttribute('aria-pressed')) === 'true');
+    const eventsBeforeContinue = (await fbq(page)).length;
+    await continueButton.click();
+    record('Form: « Continuer » after going back → step 3, no new answer tracked', /Étape 3 sur 3/i.test(await cardText()) && (await fbq(page)).slice(eventsBeforeContinue).every((entry) => !/property_type_selected|LeadFormStepCompleted/.test(entry)));
+    await card.getByRole('button', { name: /Type d’appartement/ }).click();
+    await card.getByRole('button', { name: '2 chambres', exact: true }).click();
+    await card.locator('button[type="submit"]').click();
+    record('Form step 3: sending without a budget asks for one — nothing sent', (await card.getByRole('alert').filter({ hasText: 'Choisissez un budget pour continuer.' }).count()) === 1 && (await page.evaluate(() => window.__requests.length)) === 0);
+    await card.getByRole('button', { name: MONEY.budgetButton }).click();
+    record('Form: choosing the budget sends nothing by itself', (await page.evaluate(() => window.__requests.length)) === 0 && /Étape 3 sur 3/i.test(await cardText()) && (await card.getByRole('button', { name: MONEY.budgetButton }).getAttribute('aria-pressed')) === 'true');
+    record('Form: the closing card is on the same step, with the same answer', /Étape 3 sur 3/i.test(await page.locator('#disponibilites').innerText()) && (await page.locator('#disponibilites').getByRole('button', { name: MONEY.budgetButton }).getAttribute('aria-pressed')) === 'true');
+    stepEvents = await fbq(page);
+    record('Tracking: form started once; the contact and type steps reported once each, even after going back', count(stepEvents, 'trackCustom:form_started') === 1 && count(stepEvents, 'trackCustom:LeadFormStarted') === 1 && count(stepEvents, 'trackCustom:LeadFormStepCompleted') === 2 && stepEvents.includes('trackCustom:property_type_selected') && stepEvents.includes('trackCustom:budget_selected'), stepEvents.filter((entry) => /Step|selected|started/.test(entry)).join(', '));
+    record('Tracking: filling the form is not a conversion', !stepEvents.includes('track:Lead') && !(await snapCalls(page)).includes('track:SIGN_UP'));
 
-  await page.fill('#hs7-hero-email', 'client@example.com');
-  record('Tracking: no Lead before the server answers', !(await fbq(page)).includes('track:Lead'));
-  let snapNow = await snapCalls(page);
-  record('Snap: form started → CUSTOM_EVENT_1 once, still no SIGN_UP (failed validations included)', count(snapNow, 'track:CUSTOM_EVENT_1') === 1 && !snapNow.includes('track:SIGN_UP'), snapNow.join(', '));
+    record('Tracking: no Lead before the server answers', !(await fbq(page)).includes('track:Lead'));
+    snapNow = await snapCalls(page);
+    record('Snap: form started → CUSTOM_EVENT_1 once, still no SIGN_UP (failed validations included)', count(snapNow, 'track:CUSTOM_EVENT_1') === 1 && !snapNow.includes('track:SIGN_UP'), snapNow.join(', '));
+  } else {
+    // One step: the contact details and the button that sends. No question, no step counter.
+    record('Form: one step — the three contact fields and the send button, no question, no step counter', /Où vous envoyer les prix et les plans \?/.test(await cardText()) && (await card.locator('input:not([name="company_website"]):visible').count()) === 3 && (await card.getByRole('button', { name: ROOMS }).count()) === 0 && !/Étape \d sur|Quel budget|Continuer/i.test(await cardText()) && (await card.locator('button[type="submit"]').count()) === 1 && /Recevoir les prix et plans/.test(await cardText()), (await cardText()).slice(0, 110));
+    record('Form: says what is received and what happens next', /Un conseiller vous transmet les disponibilités et les prix lot par lot/.test(await cardText()) && /uniquement à vous recontacter au sujet de Honest Signature 7/.test(await cardText()));
+    record('Form: nothing tracked as started or sent yet', !(await fbq(page)).includes('trackCustom:LeadFormStarted') && (await page.evaluate(() => window.__requests.length)) === 0);
+    const look = await card.evaluate((node) => {
+      const style = getComputedStyle(node);
+      return {
+        // Glass: a translucent pane that blurs what is behind it — Emara's green, on a stage no larger than the card and its track line.
+        alpha: Number(style.backgroundColor.match(/[\d.]+(?=\)$)/)?.[0] ?? 1),
+        blur: /blur\(/.test(style.backdropFilter || style.webkitBackdropFilter || ''),
+        behind: getComputedStyle(node.closest('[data-glass-stage]')).backgroundColor,
+        page: getComputedStyle(node.closest('section')).backgroundColor,
+        stageOnlyCard: Boolean(node.closest('[data-glass-stage]').querySelector('[data-track-line]')) && !node.closest('[data-glass-stage]').querySelector('[data-lead-intro], #dossier-title, ol'),
+        progress: Boolean(node.querySelector('[data-progress]')),
+        radios: node.querySelectorAll('button[aria-pressed] [aria-hidden="true"].rounded-full').length,
+      };
+    });
+    record('Form: looks like a form — a pane of frosted glass over Emara green', look.alpha < 0.3 && look.blur, JSON.stringify({ alpha: look.alpha, blur: look.blur, behind: look.behind }));
+    record('First form: green only behind the card and its track line — the heading and the dossier list sit on the light page', look.stageOnlyCard && look.page === 'rgb(250, 248, 244)', JSON.stringify({ page: look.page, stageOnlyCard: look.stageOnlyCard }));
+    await card.locator('button[type="submit"]').click();
+    record('Validation: name, phone and e-mail explained', (await card.getByText('Indiquez votre nom complet.').isVisible()) && (await card.getByText('Vérifiez votre numéro de téléphone.').isVisible()) && (await card.getByText('Indiquez votre e-mail.').isVisible()));
+    record('Validation: nothing sent', (await page.evaluate(() => window.__requests.length)) === 0);
+    record('Validation: focus on the first invalid field', await page.evaluate(() => document.activeElement?.id === 'hs7-hero-name'));
+    await fillContact(page, 'hs7-hero', { email: 'pas-un-email' });
+    await card.locator('button[type="submit"]').click();
+    record('Validation: malformed e-mail refused', await card.getByText('Vérifiez votre adresse e-mail.').isVisible());
+    record('Shared state: the closing form holds the same details', (await page.locator('#hs7-final-name').inputValue()) === 'Client Test');
+    await page.fill('#hs7-hero-email', 'client@example.com');
+    stepEvents = await fbq(page);
+    record('Tracking: form started once, no step reported before the lead is accepted', count(stepEvents, 'trackCustom:form_started') === 1 && count(stepEvents, 'trackCustom:LeadFormStarted') === 1 && count(stepEvents, 'trackCustom:LeadFormStepCompleted') === 0 && !stepEvents.some((entry) => /property_type_selected|budget_selected/.test(entry)));
+    record('Tracking: filling the form is not a conversion', !stepEvents.includes('track:Lead') && !(await snapCalls(page)).includes('track:SIGN_UP'));
+    record('Tracking: no Lead before the server answers', !(await fbq(page)).includes('track:Lead'));
+    snapNow = await snapCalls(page);
+    record('Snap: form started → CUSTOM_EVENT_1 once, still no SIGN_UP (failed validations included)', count(snapNow, 'track:CUSTOM_EVENT_1') === 1 && !snapNow.includes('track:SIGN_UP'), snapNow.join(', '));
+  }
   // Two clicks in the same tick: the in-flight lock must let only one through. (A real
   // double click would land its second click on whatever the next panel puts there.)
   await card.locator('button[type="submit"]').evaluate((button) => {
@@ -528,13 +772,13 @@ for (const width of WIDTHS) {
     adPlatform: 'Meta',
     purchase_intent: '',
     company_website: '',
-    propertyType: 'Appartement 2 chambres',
-    budget: MONEY.budget,
+    propertyType: ANSWERS.type,
+    budget: ANSWERS.budget,
     // The currency always matches the budget label: never a euro budget with a dirham currency.
     currency: MONEY.currency,
   };
   const wrong = Object.entries(expected).filter(([key, value]) => lead[key] !== value).map(([key]) => `${key}=${JSON.stringify(lead[key])}`);
-  record('Payload: the message names the type and the budget', /Type de bien : Appartement 2 chambres/.test(lead.message || '') && (lead.message || '').includes(`Budget : ${MONEY.budget}`), lead.message);
+  record('Payload: the message names the type and the budget', ANSWERS.said.every((part) => (lead.message || '').includes(part)), lead.message);
   record('Payload: CRM contract, project metadata, UTM + fbclid', wrong.length === 0, wrong.join(', '));
   record('Payload: phone block', lead.phoneNumber === '612345678' && lead.phoneFull === `${lead.phoneCode}612345678` && lead.telephone === lead.phoneFull && Boolean(lead.phoneCountryCode));
   record('Payload: Meta event ID for CAPI deduplication', /^lead_[A-Za-z0-9-]{8,64}$/.test(lead.meta_event_id || ''), lead.meta_event_id);
@@ -634,7 +878,7 @@ if (FLAGS.postLeadQuestions) {
   await card.locator('button[type="submit"]').click();
   await card.getByText('L’envoi n’a pas abouti.').waitFor();
   const events = await fbq(page);
-  record('Server error: message + WhatsApp fallback, details kept', (await card.getByRole('link', { name: /WhatsApp/ }).isVisible()) && (await page.locator('#hs7-hero-name').inputValue()) === 'Client Test');
+  record('Server error: message + WhatsApp fallback, details kept', (await card.getByRole('link', { name: /WhatsApp/ }).isVisible()) && (FLAGS.formQuestions ? (await card.getByRole('button', { name: MONEY.budgetButton }).getAttribute('aria-pressed')) === 'true' : (await page.locator('#hs7-hero-name').inputValue()) === 'Client Test'));
   record('Server error: lead_submit_error, no Lead', events.includes('trackCustom:lead_submit_error') && !events.includes('track:Lead'));
   record('Server error: no Snap SIGN_UP either', !(await snapCalls(page)).includes('track:SIGN_UP'));
   await stubContact(page, 200);
@@ -722,10 +966,9 @@ if (FLAGS.postLeadQuestions) {
     return { highest: Math.round(highest), headingMoved: getComputedStyle(heading).transform !== 'none' };
   });
   record('Question hop: the line lifts 6–10px, the heading itself stays put', lift.highest >= 6 && lift.highest <= 10 && !lift.headingMoved, JSON.stringify(lift));
-  await card.getByRole('button', { name: '2 chambres', exact: true }).click();
-  await card.getByRole('button', { name: /Type d’appartement/ }).click();
+  await page.fill('#hs7-hero-name', 'Client');
   await settle(page, 300);
-  record('Question hop: once answered, the question no longer moves', (await card.locator('h2').isVisible()) && (await hopping()) === 'still | still', await hopping());
+  record('Question hop: once the visitor starts typing, the question no longer moves', (await card.locator('h2').isVisible()) && (await hopping()) === 'still | still', await hopping());
   await context.close();
 }
 {
@@ -985,7 +1228,7 @@ if (FLAGS.activityCounter) {
   await stubContact(page);
   await page.locator('#dossier [data-activity]').waitFor({ timeout: 5000 });
   await fill(page, 'hs7-hero');
-  record('Activity: still above the contact fields at step 3', (await band(page))?.count === '10');
+  record('Activity: still above the question at step 3', (await band(page))?.count === '10');
   await page.locator('#dossier button[type="submit"]').click();
   await page.locator('#dossier').getByText('Demande envoyée.').waitFor();
   record('Activity: gone once the request is sent', (await page.locator('[data-activity]').count()) === 0);
@@ -1018,7 +1261,7 @@ if (FLAGS.partialCapture) {
   await settle(page, 1000);
   record('Draft A: valid phone → saved once, with no blur, Continue or Submit', saves().length === 1, String(saves().length));
   const first = saves()[0] || {};
-  record('Draft: form_session_id, project, the fields typed, the step', /^[A-Za-z0-9-]{16,64}$/.test(first.form_session_id || '') && first.project_name === 'Honest Signature 7' && first.name === 'Yasmine El Idrissi' && /^\+\d+612345678$/.test(first.phone || '') && first.email === '' && first.current_step === 'coordonnees' && first.property_type === 'Appartement 2 chambres' && first.budget === MONEY.budget, JSON.stringify(first));
+  record('Draft: form_session_id, project, the fields typed, the step', /^[A-Za-z0-9-]{16,64}$/.test(first.form_session_id || '') && first.project_name === 'Honest Signature 7' && first.name === 'Yasmine El Idrissi' && /^\+\d+612345678$/.test(first.phone || '') && first.email === '' && first.current_step === 'coordonnees' && first.property_type === '' && first.budget === '', JSON.stringify(first));
   record('Draft: campaign attribution and landing URL', first.utm_source === 'facebook' && first.utm_medium === 'paid_social' && first.utm_campaign === 'hs7-test' && first.utm_content === 'creative-a' && first.utm_term === 'gueliz' && first.fbclid === 'click-4' && first.page_url.includes('/honest-signature-7/'));
   const allowed = ['form_session_id', 'project_name', 'name', 'phone', 'email', 'property_type', 'budget', 'current_step', 'utm_source', 'utm_medium', 'utm_campaign', 'utm_content', 'utm_term', 'fbclid', 'page_url', 'company_website', 'elapsed_ms'];
   record('Draft: nothing else is collected', Object.keys(first).every((key) => allowed.includes(key)), Object.keys(first).filter((key) => !allowed.includes(key)).join());
@@ -1053,7 +1296,8 @@ if (FLAGS.partialCapture) {
   record('Draft: saved on blur, without waiting for the debounce', saves()[beforeSubmit - 1].email === 'yasmine@example.com' && saves()[beforeSubmit - 1].form_session_id === first.form_session_id);
   record('Draft: far fewer requests than keystrokes', beforeSubmit <= 4, `${beforeSubmit} requests`);
 
-  // B — submits.
+  // B — answers the two questions, then submits.
+  await answerQuestions(card);
   await card.locator('button[type="submit"]').click();
   await card.getByText('Demande envoyée.').waitFor();
   await settle(page, 1500);
@@ -1063,7 +1307,7 @@ if (FLAGS.partialCapture) {
   events = await fbq(page);
   record('Meta: Lead once, only after the confirmed submission', count(events, 'track:Lead') === 1);
   const steps = await page.evaluate(() => window.__fbq.filter((args) => args[1] === 'LeadFormStepCompleted').map((args) => `${args[2].step}:${args[2].step_key}`));
-  record('Meta: LeadFormStarted once; LeadFormStepCompleted once per step, the third only after the accepted lead', count(events, 'trackCustom:LeadFormStarted') === 1 && steps.join() === '1:type_de_bien,2:budget,3:coordonnees', steps.join());
+  record('Meta: LeadFormStarted once; LeadFormStepCompleted once per step, the third only after the accepted lead', count(events, 'trackCustom:LeadFormStarted') === 1 && steps.join() === ANSWERS.steps, steps.join());
   record('Meta: no phone number or e-mail in any Pixel call', !/612345673|612345678|yasmine@/.test(await page.evaluate(() => JSON.stringify(window.__fbq))));
   if (FLAGS.postLeadQuestions) {
     await card.getByText('Investir', { exact: true }).click();
@@ -1156,6 +1400,7 @@ if (FLAGS.partialCapture) {
   await page.route('**/lead-draft.php', (route) => route.abort());
   await page.fill('#hs7-hero-name', 'Client Test Deux');
   await settle(page, 1300);
+  await answerQuestions(card);
   await card.locator('button[type="submit"]').click();
   await card.getByText('Demande envoyée.').waitFor();
   const events = await fbq(page);
