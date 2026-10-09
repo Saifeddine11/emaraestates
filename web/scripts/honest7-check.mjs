@@ -15,10 +15,12 @@ import { startServer } from './lib/serve.mjs';
 // The page’s switches (VALIDATION in the content file). A record that depends
 // on one follows it, so the same script checks the page with a switch on or off.
 const CONTENT = readFileSync(new URL('../src/lib/content/honest-signature-7.ts', import.meta.url), 'utf8');
-const FLAGS = Object.fromEntries(['euroPrices', 'threeBedrooms', 'activityCounter', 'partialCapture'].map((name) => [name, new RegExp(`^  ${name}: true,`, 'm').test(CONTENT)]));
+const FLAGS = Object.fromEntries(['euroPrices', 'threeBedrooms', 'activityCounter', 'partialCapture', 'postLeadQuestions'].map((name) => [name, new RegExp(`^  ${name}: true,`, 'm').test(CONTENT)]));
 const MONEY = FLAGS.euroPrices
   ? { hero: '149\u00a0000\u00a0€', budget: '149 000 – 180 000 €', budgetButton: /149 000 – 180 000 €/, range: /€$/, currency: 'EUR', preset: /^180.000.€$/, start: ['44 700', '22 350', '37 250'], typed: '180000', typedShown: '180 000', typedRows: ['54 000', '27 000', '45 000'], below: '90000', unit: '€' }
   : { hero: '1,59', budget: '1,59 M – 2 M MAD', budgetButton: /1,59 M – 2 M/, range: /MAD$/, currency: 'MAD', preset: /^2.M$/, start: ['477 000', '238 500', '397 500'], typed: '2000000', typedShown: '2 000 000', typedRows: ['600 000', '300 000', '500 000'], below: '900000', unit: 'MAD' };
+/** The heading of the final panel: after the optional questions when the page has them, straight after the lead otherwise. */
+const DONE_TEXT = FLAGS.postLeadQuestions ? 'C’est noté.' : 'Demande envoyée.';
 const ROOMS = FLAGS.threeBedrooms ? /^(1 chambre|2 chambres|3 chambres)$/ : /^(Studio|1 chambre|2 chambres)$/;
 
 const engine = process.env.BROWSER === 'webkit' ? webkit : chromium;
@@ -30,7 +32,7 @@ const query =
   '?utm_source=facebook&utm_medium=paid_social&utm_campaign=hs7-test&utm_content=creative-a&utm_term=gueliz&campaign_id=cmp-1&adset_id=set-2&ad_id=ad-3&fbclid=click-4';
 
 const WIDTHS = [360, 375, 390, 430, 768, 1024, 1280, 1440];
-const FUNNEL_EVENTS = [
+const ALL_FUNNEL_EVENTS = [
   'landing_view',
   'hero_primary_cta_click',
   'hero_show_apartment_click',
@@ -50,6 +52,8 @@ const FUNNEL_EVENTS = [
   'phone_click',
   'whatsapp_click',
 ];
+// Without the questions shown after the lead, their three events cannot fire.
+const FUNNEL_EVENTS = ALL_FUNNEL_EVENTS.filter((name) => FLAGS.postLeadQuestions || !['post_lead_intent_selected', 'contact_channel_selected', 'visit_booking_started'].includes(name));
 
 function record(name, ok, detail = '') {
   results.push({ name, ok: Boolean(ok) });
@@ -146,17 +150,17 @@ function band(page) {
   });
 }
 
-async function stubContact(page, status = 200) {
-  await page.evaluate((code) => {
+async function stubContact(page, status = 200, extra = {}) {
+  await page.evaluate(([code, more]) => {
     window.__requests = [];
     const realFetch = window.fetch.bind(window);
     window.fetch = (url, init) => {
       if (!String(url).includes('/contact.php')) return realFetch(url, init);
       window.__requests.push(JSON.parse(init.body));
-      const body = code === 200 ? { message: 'ok' } : { message: 'Erreur' };
+      const body = code === 200 ? { message: 'ok', ...more } : { message: 'Erreur' };
       return Promise.resolve(new Response(JSON.stringify(body), { status: code, headers: { 'Content-Type': 'application/json' } }));
     };
-  }, status);
+  }, [status, extra]);
 }
 
 const fbq = (page) => page.evaluate(() => window.__fbq.map((args) => `${args[0]}:${args[1]}`));
@@ -546,46 +550,52 @@ for (const width of WIDTHS) {
   record('After the lead: the closing form shows the same confirmation', await page.locator('#disponibilites').getByText('Demande envoyée.').count() === 1);
   record('After the lead: sticky CTA retired', (await page.locator('[data-sticky-cta]').getAttribute('aria-hidden')) === 'true');
 
-  /* ── Qualification, after the lead exists ── */
-  await card.getByText('Investir', { exact: true }).click();
-  record('Qualification: investors are told about the rental-potential analysis', await card.getByText('Votre dossier inclura l’analyse du potentiel locatif.').isVisible());
-  await card.getByText('WhatsApp', { exact: true }).click();
-  await card.getByRole('button', { name: /Visiter un appartement témoin/ }).click();
-  await card.locator('fieldset', { hasText: 'Jour souhaité' }).locator('label').nth(1).click();
-  await card.getByText('Après-midi', { exact: true }).click();
-  record('Qualification: answering sends nothing by itself', (await page.evaluate(() => window.__requests.length)) === 1);
+  if (FLAGS.postLeadQuestions) {
+    /* ── Qualification, after the lead exists ── */
+    await card.getByText('Investir', { exact: true }).click();
+    record('Qualification: investors are told about the rental-potential analysis', await card.getByText('Votre dossier inclura l’analyse du potentiel locatif.').isVisible());
+    await card.getByText('WhatsApp', { exact: true }).click();
+    await card.getByRole('button', { name: /Visiter un appartement témoin/ }).click();
+    await card.locator('fieldset', { hasText: 'Jour souhaité' }).locator('label').nth(1).click();
+    await card.getByText('Après-midi', { exact: true }).click();
+    record('Qualification: answering sends nothing by itself', (await page.evaluate(() => window.__requests.length)) === 1);
 
-  // Leaving now: the answers go out with a beacon; the lead was already saved.
-  await page.evaluate(() => {
-    Object.defineProperty(document, 'visibilityState', { configurable: true, get: () => 'hidden' });
-    document.dispatchEvent(new Event('visibilitychange'));
-  });
-  await settle(page, 400);
-  const beacons = (await page.evaluate(() => window.__beacons)).filter((beacon) => beacon.url.includes('contact.php'));
-  record('Leaving mid-qualification: answers sent by beacon, once', beacons.length === 1 && beacons[0].body.lead_stage === 'qualification' && beacons[0].body.purchase_intent === 'Investissement', String(beacons.length));
-  await page.evaluate(() => Object.defineProperty(document, 'visibilityState', { configurable: true, get: () => 'visible' }));
+    // Leaving now: the answers go out with a beacon; the lead was already saved.
+    await page.evaluate(() => {
+      Object.defineProperty(document, 'visibilityState', { configurable: true, get: () => 'hidden' });
+      document.dispatchEvent(new Event('visibilitychange'));
+    });
+    await settle(page, 400);
+    const beacons = (await page.evaluate(() => window.__beacons)).filter((beacon) => beacon.url.includes('contact.php'));
+    record('Leaving mid-qualification: answers sent by beacon, once', beacons.length === 1 && beacons[0].body.lead_stage === 'qualification' && beacons[0].body.purchase_intent === 'Investissement', String(beacons.length));
+    await page.evaluate(() => Object.defineProperty(document, 'visibilityState', { configurable: true, get: () => 'visible' }));
 
-  await card.getByRole('button', { name: /Terminer/ }).click();
-  await card.getByText('C’est noté.').waitFor();
-  requests = await page.evaluate(() => window.__requests);
-  record('Qualification: same answers are not posted twice', requests.length === 1, String(requests.length));
-  const update = beacons[0]?.body || {};
-  record('Qualification: tied to the lead by one form session ID', /^[A-Za-z0-9-]{16,64}$/.test(lead.form_session_id || '') && update.form_session_id === lead.form_session_id, `${lead.form_session_id} / ${update.form_session_id}`);
-  record(
-    'Qualification payload: same contact, flagged, no second Meta Lead',
-    update.form_type === 'honest_signature_7_request' && update.email === 'client@example.com' && update.phoneFull === lead.phoneFull && update.contact_preference === 'WhatsApp' && /après-midi/.test(update.visit_preference || '') && !('meta_event_id' in update) && /Complément au dossier/.test(update.message || ''),
-    JSON.stringify({ stage: update.lead_stage, intent: update.purchase_intent, channel: update.contact_preference, visit: update.visit_preference, eventId: update.meta_event_id }),
-  );
-  events = await fbq(page);
-  record('Tracking: still exactly one Lead', count(events, 'track:Lead') === 1);
-  record('Snap: still exactly one SIGN_UP after the qualification step', count(await snapCalls(page), 'track:SIGN_UP') === 1);
-  record('Tracking: intent, channel, visit events', ['post_lead_intent_selected', 'contact_channel_selected', 'visit_booking_started'].every((name) => count(events, `trackCustom:${name}`) === 1));
-  record('Done: confirmation names the channel and the visit', /sur WhatsApp/.test(await card.innerText()) && /après-midi/.test(await card.innerText()));
+    await card.getByRole('button', { name: /Terminer/ }).click();
+    await card.getByText('C’est noté.').waitFor();
+    requests = await page.evaluate(() => window.__requests);
+    record('Qualification: same answers are not posted twice', requests.length === 1, String(requests.length));
+    const update = beacons[0]?.body || {};
+    record('Qualification: tied to the lead by one form session ID', /^[A-Za-z0-9-]{16,64}$/.test(lead.form_session_id || '') && update.form_session_id === lead.form_session_id, `${lead.form_session_id} / ${update.form_session_id}`);
+    record(
+      'Qualification payload: same contact, flagged, no second Meta Lead',
+      update.form_type === 'honest_signature_7_request' && update.email === 'client@example.com' && update.phoneFull === lead.phoneFull && update.contact_preference === 'WhatsApp' && /après-midi/.test(update.visit_preference || '') && !('meta_event_id' in update) && /Complément au dossier/.test(update.message || ''),
+      JSON.stringify({ stage: update.lead_stage, intent: update.purchase_intent, channel: update.contact_preference, visit: update.visit_preference, eventId: update.meta_event_id }),
+    );
+    events = await fbq(page);
+    record('Tracking: still exactly one Lead', count(events, 'track:Lead') === 1);
+    record('Snap: still exactly one SIGN_UP after the qualification step', count(await snapCalls(page), 'track:SIGN_UP') === 1);
+    record('Tracking: intent, channel, visit events', ['post_lead_intent_selected', 'contact_channel_selected', 'visit_booking_started'].every((name) => count(events, `trackCustom:${name}`) === 1));
+    record('Done: confirmation names the channel and the visit', /sur WhatsApp/.test(await card.innerText()) && /après-midi/.test(await card.innerText()));
+  } else {
+    const shown = (await card.innerText()).replace(/\s+/g, ' ');
+    record('After the lead: the confirmation and nothing to answer — no question, no second request', /Demande envoyée\./.test(shown) && !/Votre projet|Comment préférez-vous|Terminer/.test(shown) && (await card.locator('input, select, textarea').count()) === 0 && (await page.evaluate(() => window.__requests.length)) === 1, shown.slice(0, 170));
+    record('After the lead: still exactly one Meta Lead and one Snap SIGN_UP', count(await fbq(page), 'track:Lead') === 1 && count(await snapCalls(page), 'track:SIGN_UP') === 1);
+  }
   await context.close();
 }
 
 /* ── Qualification saved with the button; skipped; server failure ───────── */
-{
+if (FLAGS.postLeadQuestions) {
   const { context, page } = await open({ width: 1280, height: 900 });
   await stubContact(page);
   const card = page.locator('#disponibilites');
@@ -602,7 +612,7 @@ for (const width of WIDTHS) {
   record('Tracking: qualification saved, one Lead', (await fbq(page)).includes('trackCustom:post_lead_qualification_saved') && count(await fbq(page), 'track:Lead') === 1);
   await context.close();
 }
-{
+if (FLAGS.postLeadQuestions) {
   const { context, page } = await open({ width: 390, height: 780 });
   await stubContact(page);
   const card = page.locator('#dossier');
@@ -634,6 +644,42 @@ for (const width of WIDTHS) {
   await context.close();
 }
 
+/* ── One person, one Lead: sent is sent, even after a reload ─────────────── */
+{
+  const { context, page } = await open({ width: 390, height: 780 });
+  await stubContact(page);
+  const card = page.locator('#dossier');
+  await card.scrollIntoViewIfNeeded();
+  await fill(page, 'hs7-hero');
+  await card.locator('button[type="submit"]').click();
+  await card.getByText('Demande envoyée.').waitFor();
+  await page.reload({ waitUntil: 'networkidle' });
+  await stubContact(page);
+  await page.locator('#dossier').scrollIntoViewIfNeeded();
+  await settle(page, 700);
+  const after = await page.evaluate(() => ({
+    confirmations: ['#dossier', '#disponibilites'].map((id) => /Demande envoyée\./.test(document.querySelector(id).innerText)),
+    fields: document.querySelectorAll('[data-lead-form] input, [data-lead-form] button[type="submit"]').length,
+    sticky: document.querySelector('[data-sticky-cta]').getAttribute('aria-hidden'),
+    stored: Object.keys(window.localStorage).filter((key) => key.startsWith('emara_hs7_lead_sent')).map((key) => window.localStorage.getItem(key)).join(),
+  }));
+  record('Reload after a lead: both cards show the confirmation — no form to fill a second time', after.confirmations.every(Boolean) && after.fields === 0 && after.sticky === 'true', JSON.stringify(after));
+  record('Reload after a lead: no new Lead, no new request; the browser keeps a date and nothing about the visitor', count(await fbq(page), 'track:Lead') === 0 && !(await snapCalls(page)).includes('track:SIGN_UP') && (await page.evaluate(() => window.__requests.length)) === 0 && /^\d{13}$/.test(after.stored), after.stored);
+  await context.close();
+}
+{
+  // The server recognises the person (same phone or e-mail within 30 days) and says so.
+  const { context, page } = await open({ width: 390, height: 780 });
+  await stubContact(page, 200, { repeat_lead: true });
+  const card = page.locator('#dossier');
+  await card.scrollIntoViewIfNeeded();
+  await fill(page, 'hs7-hero');
+  await card.locator('button[type="submit"]').click();
+  await card.getByText('Demande envoyée.').waitFor();
+  record('Repeat lead: sent to the server once, confirmation shown, no Meta Lead and no Snap SIGN_UP', (await page.evaluate(() => window.__requests.length)) === 1 && !(await fbq(page)).includes('track:Lead') && !(await snapCalls(page)).includes('track:SIGN_UP'));
+  await context.close();
+}
+
 /* ── Honeypot, reduced motion, no UTM ───────────────────────────────────── */
 {
   const { context, page } = await open({ width: 390, height: 780 });
@@ -646,7 +692,7 @@ for (const width of WIDTHS) {
     input.dispatchEvent(new Event('input', { bubbles: true }));
   });
   await card.locator('button[type="submit"]').click();
-  await card.getByText('C’est noté.').waitFor();
+  await card.getByText(DONE_TEXT).waitFor();
   record('Honeypot: no conversion tracked on Meta or Snap', !(await fbq(page)).includes('track:Lead') && !(await snapCalls(page)).includes('track:SIGN_UP'));
   await context.close();
 }
@@ -1019,11 +1065,13 @@ if (FLAGS.partialCapture) {
   const steps = await page.evaluate(() => window.__fbq.filter((args) => args[1] === 'LeadFormStepCompleted').map((args) => `${args[2].step}:${args[2].step_key}`));
   record('Meta: LeadFormStarted once; LeadFormStepCompleted once per step, the third only after the accepted lead', count(events, 'trackCustom:LeadFormStarted') === 1 && steps.join() === '1:type_de_bien,2:budget,3:coordonnees', steps.join());
   record('Meta: no phone number or e-mail in any Pixel call', !/612345673|612345678|yasmine@/.test(await page.evaluate(() => JSON.stringify(window.__fbq))));
-  await card.getByText('Investir', { exact: true }).click();
-  await card.getByRole('button', { name: /Terminer/ }).click();
-  await card.getByText('C’est noté.').waitFor();
+  if (FLAGS.postLeadQuestions) {
+    await card.getByText('Investir', { exact: true }).click();
+    await card.getByRole('button', { name: /Terminer/ }).click();
+    await card.getByText('C’est noté.').waitFor();
+  }
   const requests = await page.evaluate(() => window.__requests);
-  record('Draft: the qualification request keeps the session, still no new draft', requests[1].form_session_id === first.form_session_id && saves().length === beforeSubmit);
+  if (FLAGS.postLeadQuestions) record('Draft: the qualification request keeps the session, still no new draft', requests[1].form_session_id === first.form_session_id && saves().length === beforeSubmit);
   record('Draft: no console error', errors.length === 0, errors.join(' | '));
   await context.close();
 }
@@ -1250,12 +1298,14 @@ for (const width of [390, 1280]) {
   await fill(page, 'hs7-final');
   await card.locator('button[type="submit"]').click();
   await card.getByText('Demande envoyée.').waitFor();
-  await card.getByText('Pied-à-terre', { exact: true }).click();
-  await card.getByText('Appel', { exact: true }).click();
-  await card.getByRole('button', { name: /Visiter un appartement témoin/ }).click();
+  if (FLAGS.postLeadQuestions) {
+    await card.getByText('Pied-à-terre', { exact: true }).click();
+    await card.getByText('Appel', { exact: true }).click();
+    await card.getByRole('button', { name: /Visiter un appartement témoin/ }).click();
+  }
   const events = await fbq(page);
   const missing = FUNNEL_EVENTS.filter((name) => !events.includes(`trackCustom:${name}`));
-  record('Tracking: all 18 funnel events fire in a full visit', missing.length === 0, missing.join(', '));
+  record(`Tracking: all ${FUNNEL_EVENTS.length} funnel events fire in a full visit`, missing.length === 0, missing.join(', '));
   const dataLayer = await page.evaluate(() => (window.dataLayer || []).map((entry) => entry.event));
   record('Tracking: mirrored to dataLayer', FUNNEL_EVENTS.every((name) => dataLayer.includes(name)));
   await context.close();

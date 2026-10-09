@@ -100,6 +100,13 @@ if (function_exists('activityCountLead')) activityCountLead($payload, $env, time
 // The lead is accepted (Zapier answered 2xx). The Meta server event —
 // deduplicated with the browser Pixel through the browser's event ID — can no
 // longer affect it: metaSendEvents() never throws and its result is ignored.
+// One person is one prospect. Someone who already sent a lead for this project
+// recently (page reloaded and form filled again, or another device) is passed
+// on to the CRM like anyone else, but is not a second Meta Lead: no server
+// event, and the browser is told so it does not fire its own.
+if (contactIsRepeatLead($payload, $input, $env)) {
+    sendJson(200, ['message' => CONTACT_SUCCESS_MESSAGE, 'repeat_lead' => true]);
+}
 $metaLead = contactMetaLeadEvent($payload, $input, $ip);
 if ($metaLead === null) {
     sendJson(200, ['message' => CONTACT_SUCCESS_MESSAGE]);
@@ -200,6 +207,24 @@ function contactFormSessionId(mixed $value): string
 {
     $id = sanitizeValue($value, 64);
     return preg_match('/^[A-Za-z0-9-]{16,64}$/', $id) === 1 ? $id : '';
+}
+
+/**
+ * Whether this lead comes from a person the Meta ledger already knows for this
+ * project (see metaLeadIsRepeat). Only for the landing form, and only for the
+ * request that creates the lead. Never throws; false when in doubt.
+ */
+function contactIsRepeatLead(array $payload, array $input, array $env): bool
+{
+    if (!function_exists('metaLeadIsRepeat') || $payload['form_type'] !== 'honest_signature_7_request') return false;
+    if (!metaValidBrowserEventId(sanitizeValue($input['meta_event_id'] ?? '', 80), 'lead')) return false;
+    try {
+        $project = $payload['projectName'] !== '' ? $payload['projectName'] : ($payload['project'] ?? '');
+        return metaLeadIsRepeat($env, (string) $project, (string) $payload['phoneFull'], (string) $payload['email'], time());
+    } catch (Throwable $error) {
+        error_log('Contact form repeat-lead check failed: ' . $error->getMessage());
+        return false;
+    }
 }
 
 function loadEnv(string $filePath): array

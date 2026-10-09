@@ -289,7 +289,8 @@ file_put_contents($webRoot . '/.env', implode("\n", [
     'META_LEDGER_DIR=' . $sandbox . '/http-ledger',
 ]) . "\n");
 $zapierServer = proc_open([PHP_BINARY, '-S', "127.0.0.1:{$zapierPort}", '-t', $sandbox . '/zapier-root'], [1 => ['file', '/dev/null', 'w'], 2 => ['file', '/dev/null', 'w']], $zapierPipes);
-$server = proc_open([PHP_BINARY, '-d', 'auto_prepend_file=' . $sandbox . '/no-https.php', '-d', 'sendmail_path=/usr/bin/true', '-d', 'error_log=' . $siteLog, '-S', "127.0.0.1:{$port}", '-t', $webRoot], [1 => ['file', '/dev/null', 'w'], 2 => ['file', '/dev/null', 'w']], $pipes);
+@mkdir($sandbox . '/tmp');
+$server = proc_open([PHP_BINARY, '-d', 'auto_prepend_file=' . $sandbox . '/no-https.php', '-d', 'sendmail_path=/usr/bin/true', '-d', 'error_log=' . $siteLog, '-d', 'sys_temp_dir=' . $sandbox . '/tmp', '-S', "127.0.0.1:{$port}", '-t', $webRoot], [1 => ['file', '/dev/null', 'w'], 2 => ['file', '/dev/null', 'w']], $pipes);
 usleep(700000);
 $request = static function (string $method, string $path, string $body = '', array $headers = []) use ($port) {
     $context = stream_context_create(['http' => [
@@ -338,6 +339,32 @@ $bot = $request('POST', '/contact.php', (string) json_encode(['company_website' 
 check('honeypot: silent 200, nothing forwarded, no Meta attempt', $bot['status'] === 200 && !is_file($zapierLog) && substr_count((string) file_get_contents($siteLog), '"eventName":"Lead"') === 1);
 $plain = $request('POST', '/contact.php', (string) json_encode(array_diff_key(json_decode($leadBody, true), ['meta_event_id' => 1])));
 check('forms without meta_event_id: no server event', $plain['status'] === 200 && substr_count((string) file_get_contents($siteLog), '"eventName":"Lead"') === 1);
+
+echo "HTTP: contact.php — one person, one Lead (/honest-signature-7/)\n";
+$hs7Lead = static fn (string $eventId, array $over = []) => (string) json_encode($over + [
+    'form_type' => 'honest_signature_7_request', 'nom_complet' => 'Client Deux Fois', 'email' => 'twice@example.com',
+    'telephone' => '+33698765432', 'phoneFull' => '+33698765432', 'phoneCode' => '+33', 'phoneCountryCode' => 'FR', 'phoneNumber' => '698765432',
+    'budget' => '149 000 – 180 000 €', 'message' => 'Demande', 'source' => 'Meta Ads', 'company_website' => '', 'elapsed_ms' => 9000,
+    'leadSource' => 'Landing Honest Signature 7', 'projectName' => 'Honest Signature 7', 'lead_stage' => 'lead', 'meta_event_id' => $eventId,
+]);
+$hs7Referer = ['Referer: https://emaraestates.com/honest-signature-7/'];
+$leadsLogged = static fn (): int => substr_count((string) file_get_contents($siteLog), '"eventName":"Lead"');
+$leadsBefore = $leadsLogged();
+@unlink($zapierLog);
+$first = $request('POST', '/contact.php', $hs7Lead('lead_11111111-1111-4111-8111-111111111111'), $hs7Referer);
+check('a person\'s first lead: accepted, server Lead attempted, not flagged as a repeat', $first['status'] === 200 && !str_contains($first['body'], 'repeat_lead') && $leadsLogged() === $leadsBefore + 1, $first['body']);
+@unlink($zapierLog);
+$again = $request('POST', '/contact.php', $hs7Lead('lead_22222222-2222-4222-8222-222222222222'), $hs7Referer);
+check('the same person again (page reloaded, new event ID): still sent to Zapier, flagged repeat_lead, no second server Lead', $again['status'] === 200 && (json_decode($again['body'], true)['repeat_lead'] ?? false) === true && (json_decode((string) @file_get_contents($zapierLog), true)['email'] ?? '') === 'twice@example.com' && $leadsLogged() === $leadsBefore + 1, $again['body']);
+$otherMail = $request('POST', '/contact.php', $hs7Lead('lead_33333333-3333-4333-8333-333333333333', ['email' => 'autre@example.com']), $hs7Referer);
+check('same phone with another e-mail: the same person', (json_decode($otherMail['body'], true)['repeat_lead'] ?? false) === true && $leadsLogged() === $leadsBefore + 1);
+$otherPhone = $request('POST', '/contact.php', $hs7Lead('lead_44444444-4444-4444-8444-444444444444', ['telephone' => '+33611112222', 'phoneFull' => '+33611112222', 'phoneNumber' => '611112222', 'email' => 'autre@example.com']), $hs7Referer);
+check('that second e-mail with another phone: still the same person', (json_decode($otherPhone['body'], true)['repeat_lead'] ?? false) === true && $leadsLogged() === $leadsBefore + 1);
+$someoneElse = $request('POST', '/contact.php', $hs7Lead('lead_55555555-5555-4555-8555-555555555555', ['telephone' => '+33700000001', 'phoneFull' => '+33700000001', 'phoneNumber' => '700000001', 'email' => 'nouveau@example.com']), $hs7Referer);
+check('another person: a new Lead', $someoneElse['status'] === 200 && !str_contains($someoneElse['body'], 'repeat_lead') && $leadsLogged() === $leadsBefore + 2);
+$ledgerText = implode('', array_map(static fn (string $path): string => basename($path) . (string) file_get_contents($path), glob($sandbox . '/http-ledger/weblead_*.json') ?: []));
+check('the ledger remembers them by hash only — no phone, no e-mail', $ledgerText !== '' && !preg_match('/698765432|611112222|700000001|example\.com|twice|autre|nouveau/', $ledgerText));
+check('repeat window: ' . META_LEAD_REPEAT_DAYS . ' days, then the same person counts again', metaLeadIsRepeat(['META_LEDGER_DIR' => $sandbox . '/http-ledger'], 'Honest Signature 7', '+33698765432', '', time() + (META_LEAD_REPEAT_DAYS - 1) * 86400) === true && metaLeadIsRepeat(['META_LEDGER_DIR' => $sandbox . '/http-ledger'], 'Honest Signature 7', '+33698765432', '', time() + (META_LEAD_REPEAT_DAYS + 1) * 86400) === false);
 $debugKey = preg_match("/CONTACT_DEBUG_KEY = '([^']+)'/", (string) file_get_contents($webRoot . '/contact.php'), $m) ? $m[1] : '';
 $debug = $request('GET', '/contact.php?debug=' . $debugKey);
 $diag = json_decode($debug['body'], true)['meta'] ?? [];

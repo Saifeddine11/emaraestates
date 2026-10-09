@@ -206,6 +206,15 @@ The WhatsApp prefill on this route differs from the homepage's and from
 > the browser): the lead and its `lead_stage: qualification` follow-up carry
 > the same one, with the same e-mail, phone and `project_name`, so the Zap can
 > update the contact it created instead of creating a second one.
+> Since 2026-10-09 the optional questions after the lead are switched off
+> (`VALIDATION.postLeadQuestions`): the page sends one request per lead and no
+> `lead_stage: qualification` follow-up.
+> One person is one Meta Lead: contact.php remembers each accepted lead of this
+> form by hashed phone and hashed e-mail (Meta ledger, 30 days). A second lead
+> from the same person is still forwarded to Zapier, but the answer carries
+> `repeat_lead: true`, no server Lead is sent and the browser fires none. The
+> browser also keeps a date (`emara_hs7_lead_sent`, 30 days) and shows the
+> confirmation instead of the form after a reload.
 > Meta `LeadFormStepCompleted` fires once per step (`step` 1, 2, 3; the third
 > only when the lead is accepted). What follows is unchanged.
 

@@ -31,6 +31,8 @@ const META_MAX_EVENT_AGE_SECONDS = 7 * 24 * 3600 - 3600;
 const META_LEDGER_STALE_SECONDS = 600;
 /** Ledger records older than this are pruned (see metaLedgerPrune). */
 const META_LEDGER_RETENTION_DAYS = 400;
+/** One person asking twice is one prospect: within this window a second website lead is not a new Meta Lead. */
+const META_LEAD_REPEAT_DAYS = 30;
 
 /**
  * HubSpot → Meta mapping, on the EXACT stored enumeration values (verified in
@@ -616,6 +618,56 @@ function metaLedgerWrite(string $path, array $record): bool
         return false;
     }
     return true;
+}
+
+/**
+ * Ledger keys under which a website lead is remembered: one per identifier, so
+ * the same phone with another e-mail (or the reverse) is still the same person.
+ * Hashes only — the ledger never holds a phone number or an e-mail.
+ *
+ * @return string[]
+ */
+function metaLeadPersonKeys(string $project, string $phone, string $email): array
+{
+    $scope = mb_strtolower(trim($project));
+    $keys = [];
+    $normalizedPhone = metaNormalizePhone($phone);
+    if ($normalizedPhone !== '') $keys[] = 'weblead_p_' . substr(metaHash($scope . '|' . $normalizedPhone), 0, 40);
+    $normalizedEmail = metaNormalizeEmail($email);
+    if ($normalizedEmail !== '') $keys[] = 'weblead_e_' . substr(metaHash($scope . '|' . $normalizedEmail), 0, 40);
+    return $keys;
+}
+
+/**
+ * True when this person already sent a website lead for this project within
+ * META_LEAD_REPEAT_DAYS (they reloaded the page and filled the form again, or
+ * came back on another device). Otherwise remembers them and returns false.
+ * Fails open: when the ledger cannot be read or written, the lead counts.
+ */
+function metaLeadIsRepeat(array $env, string $project, string $phone, string $email, int $nowSeconds): bool
+{
+    $keys = metaLeadPersonKeys($project, $phone, $email);
+    if (!$keys) return false;
+    $dir = metaLedgerDir($env);
+    $lock = metaLedgerLock($dir);
+    if ($lock === null) return false;
+    try {
+        $cutoff = $nowSeconds - META_LEAD_REPEAT_DAYS * 86400;
+        $repeat = false;
+        $unknown = [];
+        foreach ($keys as $key) {
+            $record = json_decode((string) @file_get_contents(metaLedgerRecordPath($dir, $key)), true);
+            if (is_array($record) && (int) ($record['at'] ?? 0) > $cutoff) $repeat = true;
+            else $unknown[] = $key;
+        }
+        // A new identifier of a known person is remembered too.
+        foreach ($unknown as $key) {
+            metaLedgerWrite(metaLedgerRecordPath($dir, $key), ['status' => 'lead', 'at' => $nowSeconds]);
+        }
+        return $repeat;
+    } finally {
+        metaLedgerUnlock($lock);
+    }
 }
 
 /**

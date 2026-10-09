@@ -536,7 +536,7 @@ function Done({ titleId, Heading, panelRef }: PanelProps) {
     <div ref={panelRef} tabIndex={-1} role="status" aria-live="polite" className="outline-none">
       <SavedMark />
       <Heading id={titleId} className="mt-5 font-sans text-[clamp(24px,2.2vw,30px)] font-medium leading-[1.15] tracking-[-0.01em] text-cream">
-        C’est noté.
+        {VALIDATION.postLeadQuestions ? 'C’est noté.' : 'Demande envoyée.'}
       </Heading>
       <p className="mt-3 text-[16px] leading-[1.6] text-cream">
         Un conseiller Emara Estates vous contacte

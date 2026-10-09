@@ -8,6 +8,7 @@ import {
   useMemo,
   useRef,
   useState,
+  useSyncExternalStore,
   type ReactNode,
 } from 'react';
 import {
@@ -34,6 +35,33 @@ const PROJECT = PROJECT_META.project_name;
 
 /** sessionStorage key of the form session: one ID per tab session, kept across reloads. */
 const FORM_SESSION_KEY = 'emara_hs7_form_session';
+/**
+ * Set once a lead from this browser has been accepted. Until it expires the
+ * cards show the confirmation instead of the form: a visitor who reloads the
+ * page cannot send the same request — and count as a second Lead — again.
+ * It holds a date, nothing about the visitor.
+ */
+const LEAD_SENT_KEY = 'emara_hs7_lead_sent';
+const LEAD_SENT_DAYS = 30;
+
+function leadAlreadySent(): boolean {
+  try {
+    const at = Number(window.localStorage.getItem(LEAD_SENT_KEY));
+    return at > 0 && Date.now() - at < LEAD_SENT_DAYS * 86_400_000;
+  } catch {
+    return false;
+  }
+}
+
+function rememberLeadSent() {
+  try {
+    window.localStorage.setItem(LEAD_SENT_KEY, String(Date.now()));
+  } catch {
+    /* storage unavailable: contact.php still recognises a repeat lead */
+  }
+}
+
+const subscribeToNothing = () => () => {};
 /** Typing pauses this long before the draft is saved (a blur saves at once). */
 const DRAFT_DEBOUNCE_MS = 1000;
 /** An unchanged draft is re-sent at most this often, only to record that the visitor is still active. */
@@ -170,6 +198,9 @@ function visitSummary({ visitOpen, visitDay, visitMoment }: Qualification) {
  */
 export function LeadFormProvider({ children }: { children: ReactNode }) {
   const [stage, setStage] = useState<Stage>('form');
+  // A lead already sent from this browser (known only after hydration): the confirmation, not the form.
+  const alreadySent = useSyncExternalStore(subscribeToNothing, leadAlreadySent, () => false);
+  const shownStage: Stage = alreadySent && stage === 'form' ? 'done' : stage;
   const [step, setStep] = useState<Step>(1);
   const [propertyType, setPropertyType] = useState('');
   const [budget, setBudget] = useState('');
@@ -531,7 +562,7 @@ export function LeadFormProvider({ children }: { children: ReactNode }) {
           body: JSON.stringify(payload),
         });
         const text = await response.text();
-        let data: { message?: string } = {};
+        let data: { message?: string; repeat_lead?: boolean } = {};
         try {
           data = text ? JSON.parse(text) : {};
         } catch {
@@ -552,8 +583,9 @@ export function LeadFormProvider({ children }: { children: ReactNode }) {
         // Conversion only after contact.php confirms — never on a click.
         if (!leadTracked.current) {
           leadTracked.current = true;
-          // Meta `Lead` and Snapchat `SIGN_UP`, each to its own platform, once.
-          pixelLead({ eventId: metaLeadEventId.current, utmCampaign: captureLandingAttribution().utm_campaign || '' });
+          // Meta `Lead` and Snapchat `SIGN_UP`, each to its own platform, once — and
+          // not at all for a person contact.php already counted as a prospect.
+          if (data.repeat_lead !== true) pixelLead({ eventId: metaLeadEventId.current, utmCampaign: captureLandingAttribution().utm_campaign || '' });
           pixelStepCompleted(3, 'coordonnees');
           trackLandingEvent('lead_submit_success', { project: PROJECT, placement: from, property_type: state.propertyType, budget_range: state.budget });
         }
@@ -566,7 +598,8 @@ export function LeadFormProvider({ children }: { children: ReactNode }) {
           /* storage unavailable */
         }
         memoryFormSession = '';
-        setStage('qualify');
+        rememberLeadSent();
+        setStage(VALIDATION.postLeadQuestions ? 'qualify' : 'done');
       } catch {
         fail('network');
       } finally {
@@ -673,7 +706,7 @@ export function LeadFormProvider({ children }: { children: ReactNode }) {
   const value = useMemo<LeadFormContext>(
     () => ({
       ...qualification,
-      stage,
+      stage: shownStage,
       step,
       propertyType,
       budget,
@@ -723,7 +756,7 @@ export function LeadFormProvider({ children }: { children: ReactNode }) {
     }),
     [
       qualification,
-      stage,
+      shownStage,
       step,
       propertyType,
       budget,

@@ -68,6 +68,13 @@ export const VALIDATION = {
    */
   activityCounter: true,
   /**
+   * The optional questions shown once the lead is sent (project, preferred
+   * contact, show-apartment visit) and their second request to the CRM. Off at
+   * the client's request (2026-10-09): when the contact details are sent, the
+   * visitor sees the confirmation and that is all.
+   */
+  postLeadQuestions: false,
+  /**
    * « Studios & appartements · dès 56 m² » in the hero (56 m² is the client's
    * figure of 2026-10-08; the earlier copy said 51 m²), and the three types
    * offered in the form. Both come from copy already published for this
