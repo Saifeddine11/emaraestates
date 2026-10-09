@@ -249,6 +249,40 @@ leadDraftSweep($dir, $T0 + 700, ['LEAD_DRAFTS_PARTIAL_EMAIL' => '0'], true, $out
 check('one submits, the other is abandoned: one e-mail, for the right session', count($sent) === 1 && $sent[0]['session'] === $S(14));
 
 /* ── Validation and sanitisation ────────────────────────────────────────── */
+echo "H. An abandoned draft goes to the CRM, once\n";
+$dir = $newStore('crm');
+$sent = [];
+$hooks = [];
+$toCrm = static function (array $draft) use (&$hooks, $T0): void { $hooks[] = leadDraftCrmPayload($draft, $T0 + 700); };
+$save($dir, $input($S(90), ['name' => 'Yasmine El Idrissi', 'phone' => '+212612345678', 'property_type' => 'Appartement 2 chambres', 'budget' => '149 000 – 180 000 €']), $T0);
+leadDraftSweep($dir, $T0 + 300, ['LEAD_DRAFTS_PARTIAL_EMAIL' => '0'], true, $outbox($sent), $toCrm);
+check('still in progress: nothing goes to the CRM', $hooks === []);
+$sweep = leadDraftSweep($dir, $T0 + 700, ['LEAD_DRAFTS_PARTIAL_EMAIL' => '0'], true, $outbox($sent), $toCrm);
+$hook = $hooks[0] ?? [];
+check('abandoned: one hook, flagged, with what the visitor typed', count($hooks) === 1 && $sweep['forwarded'] === 1 && ($hook['lead_stage'] ?? '') === 'abandoned' && $hook['form_type'] === 'honest_signature_7_request' && $hook['nom_complet'] === 'Yasmine El Idrissi' && $hook['first_name'] === 'Yasmine' && $hook['last_name'] === 'El Idrissi' && $hook['telephone'] === '+212612345678' && $hook['email'] === '' && $hook['propertyType'] === 'Appartement 2 chambres' && $hook['budget'] === '149 000 – 180 000 €' && $hook['form_session_id'] === $S(90), json_encode($hook, JSON_UNESCAPED_UNICODE));
+check('…its message says first that nobody pressed send', str_starts_with($hook['message'] ?? '', 'FORMULAIRE ABANDONNÉ (non envoyé par le visiteur)') && str_contains($hook['message'] ?? '', 'Budget : 149 000 – 180 000 €'));
+check('…attribution, landing page and project travel with it', ($hook['utm_source'] ?? '') === 'facebook' && $hook['utm_campaign'] === 'hs7-gueliz' && $hook['fbclid'] === 'click-123' && $hook['page_url'] === $PAGE && $hook['project_name'] === 'Honest Signature 7' && $hook['source'] === 'Meta Ads' && $hook['form_id'] === 'contactForm');
+check('…and nothing that could count as a conversion: no Meta event ID', $hook !== [] && !array_key_exists('meta_event_id', $hook));
+leadDraftSweep($dir, $T0 + 800, ['LEAD_DRAFTS_PARTIAL_EMAIL' => '0'], true, $outbox($sent), $toCrm);
+$save($dir, $input($S(90), ['email' => 'yasmine@example.com']), $T0 + 900);
+leadDraftSweep($dir, $T0 + 900 + 700, ['LEAD_DRAFTS_PARTIAL_EMAIL' => '0'], true, $outbox($sent), $toCrm);
+check('never twice: later sweeps, and a visitor who comes back then leaves again, add nothing', count($hooks) === 1, (string) count($hooks));
+$dir = $newStore('crm-fail');
+$crmAttempts = 0;
+$flaky = static function (array $draft) use (&$crmAttempts): void { $crmAttempts++; if ($crmAttempts === 1) throw new RuntimeException('CRM webhook: 500'); };
+$save($dir, $input($S(91), ['phone' => '+212612345679']), $T0);
+$firstTry = leadDraftSweep($dir, $T0 + 700, ['LEAD_DRAFTS_PARTIAL_EMAIL' => '0'], true, $outbox($sent), $flaky);
+$secondTry = leadDraftSweep($dir, $T0 + 800, ['LEAD_DRAFTS_PARTIAL_EMAIL' => '0'], true, $outbox($sent), $flaky);
+leadDraftSweep($dir, $T0 + 900, ['LEAD_DRAFTS_PARTIAL_EMAIL' => '0'], true, $outbox($sent), $flaky);
+check('the CRM hook fails once: retried at the next sweep, then delivered exactly once', $firstTry['failed'] === 1 && $firstTry['forwarded'] === 0 && $secondTry['forwarded'] === 1 && $crmAttempts === 2, json_encode([$firstTry, $secondTry, $crmAttempts]));
+$dir = $newStore('crm-submitted');
+$save($dir, $input($S(92), ['phone' => '+212612345670']), $T0);
+leadDraftMarkSubmitted($dir, $S(92), $T0 + 60);
+$unexpected = [];
+leadDraftSweep($dir, $T0 + 700, ['LEAD_DRAFTS_PARTIAL_EMAIL' => '0'], true, $outbox($sent), static function (array $draft) use (&$unexpected): void { $unexpected[] = $draft; });
+check('a submitted form is a lead, not an abandoned draft: nothing forwarded', $unexpected === []);
+check('LEAD_DRAFTS_CRM_DISABLED=1 turns it off; by default the lead webhook is used', leadDraftCrmForwarder(['LEAD_DRAFTS_CRM_DISABLED' => '1']) === null && is_callable(leadDraftCrmForwarder(['CONTACT_WEBHOOK_URL' => 'http://127.0.0.1:9/none'])));
+
 echo "Server-side validation\n";
 check('session ID: UUID accepted', leadDraftValidSessionId($S(1)) && leadDraftValidSessionId('abcDEF0123456789'));
 check('session ID: too short / path / spaces / empty refused', !leadDraftValidSessionId('short') && !leadDraftValidSessionId('../../../../etc/passwd') && !leadDraftValidSessionId('a b c d e f g h i j k l') && !leadDraftValidSessionId(''));
@@ -461,6 +495,23 @@ check('e-mail: subject and body as specified', str_contains($mail, $abandonedSub
 check('cron again: nothing more to send', ($again['notified'] ?? -1) === 0 && $mails() === 1);
 check('the submitted draft got no draft e-mail — only the normal lead e-mail', !str_contains($draftMails(), 'Yasmine El Idrissi') && str_contains((string) file_get_contents($mailFile), 'Yasmine El Idrissi'));
 check('cron with a wrong argument → usage, exit 64', (static function () use ($webRoot) { exec(escapeshellarg(PHP_BINARY) . ' ' . escapeshellarg($webRoot . '/lead-draft.php') . ' 2>/dev/null', $o, $c); return $c; })() === 64);
+
+echo "HTTP: an abandoned draft reaches the lead webhook\n";
+@unlink($zapierLog);
+@unlink($zapierMode);
+$request('POST', '/lead-draft.php', $body($S(95), ['name' => 'Karim Test', 'phone' => '+212661000095']), [$origin]);
+foreach (glob($httpStore . '/d_*.json') ?: [] as $file) {
+    $kept = json_decode((string) file_get_contents($file), true);
+    if (($kept['form_session_id'] ?? '') !== $S(95)) continue;
+    $kept['last_activity_ts'] -= LEAD_DRAFT_ABANDON_SECONDS + 60;
+    file_put_contents($file, json_encode($kept));
+}
+@unlink($httpStore . '/.sweep');
+$request('POST', '/lead-draft.php', (string) json_encode(['action' => 'sweep']), [$origin]);
+usleep(1200000);
+$hook = json_decode((string) @file_get_contents($zapierLog), true) ?: [];
+check('ten idle minutes later the sweep posts it to the same hook as the leads, flagged abandoned', ($hook['lead_stage'] ?? '') === 'abandoned' && ($hook['telephone'] ?? '') === '+212661000095' && ($hook['form_session_id'] ?? '') === $S(95) && !array_key_exists('meta_event_id', $hook), json_encode($hook, JSON_UNESCAPED_UNICODE));
+@unlink($zapierLog);
 
 echo "HTTP: failures never reach the visitor\n";
 proc_terminate($server);

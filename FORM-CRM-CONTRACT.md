@@ -215,6 +215,15 @@ The WhatsApp prefill on this route differs from the homepage's and from
 > `repeat_lead: true`, no server Lead is sent and the browser fires none. The
 > browser also keeps a date (`emara_hs7_lead_sent`, 30 days) and shows the
 > confirmation instead of the form after a reload.
+> Since 2026-10-09 an **abandoned** form (a phone or an e-mail typed, then ten
+> idle minutes without sending) is posted once to the same Zapier hook by the
+> draft sweep, with the keys of a lead of this form (`form_type`, `form_id:
+> contactForm`, name, phone, e-mail, `propertyType`, `budget`, UTM, `fbclid`,
+> `form_session_id`) and two marks: `lead_stage: abandoned` and a `message`
+> that starts with « FORMULAIRE ABANDONNÉ (non envoyé par le visiteur) ». It
+> carries no `meta_event_id` and is never sent to Meta. A form still being
+> filled is not sent. `LEAD_DRAFTS_CRM_DISABLED=1` turns this off;
+> `LEAD_DRAFTS_WEBHOOK_URL` sends it to another hook.
 > Meta `LeadFormStepCompleted` fires once per step (`step` 1, 2, 3; the third
 > only when the lead is accepted). What follows is unchanged.
 

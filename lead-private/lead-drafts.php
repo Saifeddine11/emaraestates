@@ -14,8 +14,10 @@ declare(strict_types=1);
        it), updated in place: editing a field never creates a second draft.
      - A draft exists only once a usable contact method has been entered. A
        visitor who opens the form and types nothing useful leaves no record.
-     - Drafts never go to Zapier, HubSpot or Meta. The submitted lead from
-       contact.php stays the only CRM lead; a draft is an internal note.
+     - A draft that is abandoned goes to the CRM once, through the Zap that
+       receives the leads, flagged `lead_stage: abandoned` (since 2026-10-09, at
+       the client's request). A draft still in progress is never sent there,
+       and no draft ever goes to Meta: it is not a conversion.
      - Each notification is sent at most once per form session: the record is
        claimed (timestamp written under the lock) before the e-mail goes out.
        "En cours" is for a draft still open after a short grace period;
@@ -60,6 +62,14 @@ const LEAD_DRAFT_EMAIL_ATTEMPTS = 3;
 const LEAD_DRAFT_MIN_ELAPSED_MS = 1500;
 
 /** Only forms that opted in may create drafts. */
+/** The Zap that receives this site's leads (the same URL as contact.php's fallback): abandoned drafts go there too. */
+const LEAD_DRAFT_WEBHOOK_FALLBACK = 'https://hooks.zapier.com/hooks/catch/27111467/ujcbawh/';
+/** What the lead of this form carries in the same keys (see honest-signature-7.ts). */
+const LEAD_DRAFT_CRM_FIXED = [
+    'form_type' => 'honest_signature_7_request', 'source' => 'Meta Ads', 'leadSource' => 'Landing Honest Signature 7',
+    'lead_origin' => 'Meta Landing Page', 'landing_name' => '6 residences livrees', 'project_location' => 'Gueliz',
+    'lead_source' => 'dedicated_ads_landing',
+];
 const LEAD_DRAFT_PROJECTS = ['Honest Signature 7'];
 const LEAD_DRAFT_STEPS = ['coordonnees' => 'Coordonnées', 'qualification' => 'Qualification'];
 const LEAD_DRAFT_FIELD_LABELS = ['property_type' => 'Type de bien', 'budget' => 'Budget', 'name' => 'Nom', 'phone' => 'Téléphone', 'email' => 'E-mail', 'intent' => 'Projet'];
@@ -475,14 +485,15 @@ function leadDraftMarkSubmitted(string $dir, string $sessionId, int $nowSeconds)
  *
  * @return array{skipped?:bool, error?:string, abandoned:int, notified:int, partial:int, failed:int, pruned:int}
  */
-function leadDraftSweep(string $dir, int $nowSeconds, array $env, bool $force = false, ?callable $send = null): array
+function leadDraftSweep(string $dir, int $nowSeconds, array $env, bool $force = false, ?callable $send = null, ?callable $forward = null): array
 {
-    $result = ['abandoned' => 0, 'notified' => 0, 'partial' => 0, 'failed' => 0, 'pruned' => 0];
+    $result = ['abandoned' => 0, 'notified' => 0, 'partial' => 0, 'failed' => 0, 'pruned' => 0, 'forwarded' => 0];
     $lock = leadDraftLock($dir);
     if ($lock === null) return ['error' => 'storage'] + $result;
 
     $partialEmail = leadDraftPartialEmailEnabled($env);
     $toNotify = [];
+    $toForward = [];
     $partials = [];
     try {
         $stamp = $dir . '/.sweep';
@@ -525,6 +536,18 @@ function leadDraftSweep(string $dir, int $nowSeconds, array $env, bool $force = 
                 $toNotify[] = $record;
                 $changed = true;
             }
+            // The same abandoned draft goes to the CRM, once, when the caller gives
+            // a `$forward`. Claimed apart from the e-mail: one failing does not
+            // hold the other back.
+            if ($forward !== null && $status === 'abandoned'
+                && ($record['crm_notification_sent_at'] ?? '') === ''
+                && (int) ($record['crm_notification_attempts'] ?? 0) < LEAD_DRAFT_EMAIL_ATTEMPTS
+                && count($toForward) < LEAD_DRAFT_SWEEP_BATCH) {
+                $record['crm_notification_sent_at'] = leadDraftIso($nowSeconds);
+                $record['crm_notification_attempts'] = (int) ($record['crm_notification_attempts'] ?? 0) + 1;
+                $toForward[] = $record;
+                $changed = true;
+            }
             // Still open and past the grace period. An abandoned draft skips
             // this one: its own e-mail says everything "en cours" would.
             if ($status === 'in_progress' && $partialEmail && leadDraftHasContact($record)
@@ -553,11 +576,90 @@ function leadDraftSweep(string $dir, int $nowSeconds, array $env, bool $force = 
             leadDraftLog(['stage' => 'abandoned', 'draft' => $record['id'] ?? '', 'success' => false, 'error' => $error->getMessage()]);
         }
     }
+    foreach ($toForward as $record) {
+        try {
+            $forward($record);
+            $result['forwarded']++;
+            leadDraftLog(['stage' => 'abandoned_crm', 'draft' => $record['id'] ?? '', 'success' => true]);
+        } catch (Throwable $error) {
+            $result['failed']++;
+            leadDraftReleaseNotification($dir, (string) $record['form_session_id'], 'crm');
+            leadDraftLog(['stage' => 'abandoned_crm', 'draft' => $record['id'] ?? '', 'success' => false, 'error' => $error->getMessage()]);
+        }
+    }
     foreach ($partials as $record) {
         if (leadDraftNotifyPartial($dir, $record, $env, $send)) $result['partial']++;
         else $result['failed']++;
     }
     return $result;
+}
+
+/**
+ * What the CRM receives for an abandoned draft: the keys of a lead of this
+ * form, filled with what the visitor typed, and flagged — `lead_stage` is
+ * `abandoned` and the message says so first — because nobody pressed « send ».
+ */
+function leadDraftCrmPayload(array $record, int $nowSeconds): array
+{
+    $name = trim((string) ($record['name'] ?? ''));
+    $nameParts = preg_split('/\s+/u', $name, 2) ?: [];
+    $phone = (string) ($record['phone'] ?? '');
+    $project = (string) ($record['project_name'] ?? '');
+    $page = (string) ($record['page_url'] ?? '');
+    $fields = array_map(static fn (string $field) => LEAD_DRAFT_FIELD_LABELS[$field] ?? $field, leadDraftFieldsCompleted($record));
+    $utm = static fn (string $key): string => (string) ($record[$key] ?? '');
+    return LEAD_DRAFT_CRM_FIXED + [
+        'lead_stage' => 'abandoned',
+        'form_session_id' => (string) ($record['form_session_id'] ?? ''),
+        'nom_complet' => $name, 'first_name' => $nameParts[0] ?? '', 'last_name' => $nameParts[1] ?? '',
+        'email' => (string) ($record['email'] ?? ''),
+        'telephone' => $phone, 'phoneFull' => $phone, 'phone' => $phone, 'whatsapp' => $phone,
+        'propertyType' => (string) ($record['property_type'] ?? ''),
+        'budget' => (string) ($record['budget'] ?? ''),
+        'message' => implode(' — ', [
+            'FORMULAIRE ABANDONNÉ (non envoyé par le visiteur)',
+            'Type de bien : ' . leadDraftOr($record['property_type'] ?? ''),
+            'Budget : ' . leadDraftOr($record['budget'] ?? ''),
+            'Champs remplis : ' . ($fields ? implode(', ', $fields) : 'aucun'),
+        ]),
+        'projectName' => $project, 'project_name' => $project, 'project' => $project,
+        'page_url' => $page, 'landing_page' => $page, 'landingPageUrl' => $page,
+        'utm_source' => $utm('utm_source'), 'utm_medium' => $utm('utm_medium'), 'utm_campaign' => $utm('utm_campaign'),
+        'utm_content' => $utm('utm_content'), 'utm_term' => $utm('utm_term'),
+        'utmSource' => $utm('utm_source'), 'utmMedium' => $utm('utm_medium'), 'utmCampaign' => $utm('utm_campaign'),
+        'utmContent' => $utm('utm_content'), 'utmTerm' => $utm('utm_term'), 'campaign' => $utm('utm_campaign'),
+        'fbclid' => $utm('fbclid'),
+        // The `form_id` contact.php gives the leads of this form: the Zap may route on it.
+        'form_id' => 'contactForm',
+        'abandoned_at' => (string) ($record['abandoned_at'] ?? ''),
+        'submitted_at' => date(DATE_ATOM, $nowSeconds),
+    ];
+}
+
+/**
+ * The `$forward` of leadDraftSweep() for real use: posts an abandoned draft to
+ * the Zap that receives the leads (LEAD_DRAFTS_WEBHOOK_URL, else
+ * CONTACT_WEBHOOK_URL, else the site's own hook). Null — nothing is forwarded —
+ * with LEAD_DRAFTS_CRM_DISABLED=1. The returned function throws on failure.
+ */
+function leadDraftCrmForwarder(array $env): ?callable
+{
+    if (leadDraftEnv($env, 'LEAD_DRAFTS_CRM_DISABLED') === '1') return null;
+    $url = leadDraftEnv($env, 'LEAD_DRAFTS_WEBHOOK_URL') ?: (leadDraftEnv($env, 'CONTACT_WEBHOOK_URL') ?: LEAD_DRAFT_WEBHOOK_FALLBACK);
+    return static function (array $record) use ($url): void {
+        $context = stream_context_create(['http' => [
+            'method' => 'POST',
+            'header' => "Content-Type: application/json\r\nAccept: application/json\r\n",
+            'content' => (string) json_encode(leadDraftCrmPayload($record, time()), JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES),
+            'timeout' => 10,
+            'ignore_errors' => true,
+        ]]);
+        $response = @file_get_contents($url, false, $context);
+        $status = preg_match('/\s(\d{3})\s?/', $http_response_header[0] ?? '', $match) ? (int) $match[1] : 0;
+        if ($response === false || $status < 200 || $status >= 300) {
+            throw new RuntimeException('CRM webhook: ' . ($status ?: 'no response'));
+        }
+    };
 }
 
 /** Sends the "en cours" e-mail claimed by leadDraftUpsert(). Never throws. */

@@ -17,8 +17,9 @@ declare(strict_types=1);
    The answer never contains stored data: {"ok":true,"captured":bool}.
 
    A separate endpoint on purpose. contact.php forwards what it receives to
-   Zapier; a draft must never reach it, including during a deploy, when a new
-   page can briefly meet an older contact.php.
+   Zapier as a lead; a draft must never be taken for one, including during a
+   deploy, when a new page can briefly meet an older contact.php. Only the
+   sweep sends a draft to the CRM, once it is abandoned, and flagged as such.
 
    Cron (recommended, every 5 minutes) — abandonment e-mails then leave on time
    even when no visitor is on the site:
@@ -61,7 +62,7 @@ if (PHP_SAPI === 'cli' || !isset($_SERVER['REQUEST_METHOD'])) {
         fwrite(STDERR, "usage: php lead-draft.php sweep\n");
         exit(64);
     }
-    $result = leadDraftEnabled($env) ? leadDraftSweep(leadDraftDir($env), time(), $env, true) : ['disabled' => true];
+    $result = leadDraftEnabled($env) ? leadDraftSweep(leadDraftDir($env), time(), $env, true, null, leadDraftCrmForwarder($env)) : ['disabled' => true];
     echo json_encode($result) . "\n";
     exit(isset($result['error']) ? 1 : 0);
 }
@@ -89,7 +90,7 @@ $dir = leadDraftDir($env);
 
 if (($input['action'] ?? '') === 'sweep') {
     leadDraftFinishResponse(204);
-    leadDraftSweep($dir, $now, $env);
+    leadDraftSweep($dir, $now, $env, false, null, leadDraftCrmForwarder($env));
     exit;
 }
 
@@ -120,4 +121,4 @@ leadDraftFinishResponse(200, ['ok' => true, 'captured' => $outcome['stored']]);
 // After the response: the notification, then a chance for the sweep. Neither
 // can affect what the visitor sees, and neither throws.
 if (isset($outcome['notify'])) leadDraftNotifyPartial($dir, $outcome['notify'], $env);
-leadDraftSweep($dir, $now, $env);
+leadDraftSweep($dir, $now, $env, false, null, leadDraftCrmForwarder($env));
