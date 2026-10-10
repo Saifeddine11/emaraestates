@@ -202,22 +202,17 @@ function Hero() {
           <div aria-hidden="true" className="pointer-events-none absolute inset-x-0 bottom-0 h-[52%] bg-gradient-to-t from-ink via-ink/85 via-40% to-transparent lg:hidden" />
         </div>
 
-        <div className="relative z-10 pt-9 lg:col-start-1 lg:row-start-2 lg:self-center lg:py-10">
-          <p className={cn(EYEBROW, 'text-cream/80')}>Honest Signature 7 · Guéliz, Marrakech</p>
+        {/* Little text, on purpose: the film and the card say the rest. */}
+        <div className="relative z-10 pt-10 lg:col-start-1 lg:row-start-2 lg:self-center lg:py-10">
           <h1
             id="hero-title"
-            className="mt-4 font-sans text-[clamp(34px,9.2vw,50px)] font-medium leading-[1.02] tracking-[-0.03em] [text-shadow:0_2px_28px_rgba(0,0,0,0.55)] lg:text-[clamp(50px,4.8vw,72px)]"
+            className="font-sans text-[clamp(36px,10vw,54px)] font-medium leading-[1.02] tracking-[-0.03em] [text-shadow:0_2px_28px_rgba(0,0,0,0.55)] lg:text-[clamp(52px,5vw,76px)]"
           >
             Un appartement neuf à Guéliz,
             <span className={cn(SERIF, 'block text-gold')}>dès {FACTS.priceFrom}.</span>
           </h1>
-          <p className="mt-4 max-w-[560px] text-[16.5px] leading-[1.5] text-cream/85 [text-shadow:0_1px_14px_rgba(0,0,0,0.55)] lg:text-[18px]">
-            Résidence avec piscines, spa et conciergerie, à 1 minute à pied du Plaza. {PAYMENT_PLAN[0].share} % à la réservation, le reste
-            étalé jusqu’à la livraison, {FACTS.delivery.toLowerCase()}.
-          </p>
-          <div className="mt-6 flex flex-col gap-2.5 sm:flex-row sm:items-center sm:gap-4">
-            <DossierCta heroCta event="hero_primary_cta_click" location="hero" className="w-full sm:w-auto sm:min-w-[280px]" />
-            <WhatsAppLink location="hero" tone="dark" className="self-start sm:self-auto" />
+          <div className="mt-7 lg:mt-9">
+            <DossierCta heroCta event="hero_primary_cta_click" location="hero" className="w-full sm:w-auto sm:min-w-[300px]" />
           </div>
         </div>
 
