@@ -513,3 +513,102 @@ export const PROJECT_META = {
 
 /** `lead_stage`: the first request creates the lead, the second only completes it. */
 export const LEAD_STAGE = { lead: 'lead', qualification: 'qualification' } as const;
+
+/* ── v2 — the page restructured after the BNG Naïa Hills landing (2026-10-10) ──
+   Same facts, same assets; only the order and the framing change. Nothing
+   below adds a figure that is not already on this page. */
+
+/** Full-screen hero: the night façade first (it reads under a dark gradient), then the project's renders. */
+export const HERO_V2_IMAGE: Picture = media('facade-nuit', [640, 1080, 1600], 1600, 1249, 'Honest Signature 7 de nuit, façade éclairée sur rue à Guéliz');
+export const HERO_V2_SLIDES: HeroSlide[] = [
+  { picture: media('piscine', [640, 1080], 1080, 720, 'Piscine extérieure du projet Honest Signature 7, bordée de transats'), position: '50% 60%' },
+  { picture: media('spa', [640, 1080, 1600], 1600, 1066, 'Espace spa du projet Honest Signature 7 : bassin intérieur, sauna et jacuzzi'), position: '58% 55%' },
+  { picture: media('cinema', [640, 1080], 1080, 720, 'Cinéma extérieur du projet Honest Signature 7, face à Marrakech'), position: '50% 65%' },
+  { picture: media('facade-jour', [640, 828, 1080], 1080, 720, 'Façade de Honest Signature 7 à Guéliz : balcons végétalisés et arcades'), position: '40% 60%' },
+];
+
+/** What is bought — the four things the price covers, each with a project visual. */
+export type OfferPoint = { title: string; line: string; picture: Picture; position?: string };
+export const OFFER: OfferPoint[] = [
+  {
+    title: 'Neuf, livré clés en main',
+    line: `Livraison prévue en ${FACTS.delivery.toLowerCase()}. Studios et appartements ${FACTS.surfaceFrom}, avec une place de parking titrée.`,
+    picture: media('salon', [640, 1080], 1080, 608, 'Séjour lumineux d’un appartement Honest Signature 7'),
+  },
+  {
+    title: 'Guéliz, hyper-centre',
+    line: 'À 1 minute à pied du Plaza. Pas « près de Guéliz » : à Guéliz, sur l’un des derniers terrains disponibles du centre.',
+    picture: media('hall', [640, 1080], 1080, 720, 'Hall d’entrée de la résidence Honest Signature 7'),
+  },
+  {
+    title: 'Les services d’un hôtel',
+    line: 'Piscine extérieure et piscine intérieure chauffée, spa, sauna, jacuzzi, salle de sport, cinéma extérieur, conciergerie.',
+    picture: media('piscine-interieure', [640, 1080, 1600], 1600, 900, 'Piscine intérieure chauffée du projet Honest Signature 7'),
+  },
+  {
+    title: 'Un promoteur qui livre',
+    line: 'Quatre résidences Honest déjà livrées à Marrakech, deux autres vendues. Honest 7 est la septième.',
+    picture: media('honest-4', [480, 900], 900, 506, 'Façade de la résidence Honest 4 à Marrakech'),
+  },
+];
+
+/** The residence, view by view — the rail that stands in for a drone orbit. */
+export const RESIDENCE_VIEWS: { caption: string; picture: Picture; position?: string }[] = [
+  { caption: 'La façade sur rue, de jour.', picture: media('facade-jour', [640, 828, 1080], 1080, 720, 'Façade de Honest Signature 7 à Guéliz, de jour') },
+  { caption: 'La même façade, le soir.', picture: media('facade-nuit', [640, 1080, 1600], 1600, 1249, 'Façade de Honest Signature 7 éclairée, le soir'), position: '50% 70%' },
+  { caption: 'Le hall d’entrée.', picture: media('hall', [640, 1080], 1080, 720, 'Hall d’entrée de la résidence Honest Signature 7') },
+  { caption: 'Un séjour en duplex.', picture: media('sejour-duplex', [640, 1080], 1080, 608, 'Séjour en duplex d’un appartement Honest Signature 7') },
+  { caption: 'Une chambre.', picture: media('chambre', [640, 1080], 1080, 721, 'Chambre d’un appartement Honest Signature 7') },
+  { caption: 'Une salle de bain.', picture: media('salle-de-bain', [640, 1080], 1080, 720, 'Salle de bain d’un appartement Honest Signature 7') },
+];
+
+/** Proof: each delivered residence, its façade and the real interiors photographed in it. */
+export type Proof = { residence: Residence; place: string; pictures: { label: string; picture: Picture; position?: string }[] };
+const DELIVERED = ALL_RESIDENCES.filter((residence) => residence.status === 'delivered');
+const interior = (name: string, original: string, width: number, height: number, label: string, alt: string) => ({
+  label,
+  picture: showroom(name, original, width, height, alt),
+});
+export const PROOFS: Proof[] = [
+  {
+    residence: DELIVERED[0],
+    place: 'Guéliz',
+    pictures: [
+      { label: 'La résidence', picture: DELIVERED[0].picture! },
+      interior('temoin-salle-d-eau', 'honest-1-appartement-temoin-01', 1600, 886, 'Entrée et salle d’eau', 'Entrée ouvrant sur le séjour, salle d’eau en bois à droite, dans un appartement livré de la résidence Honest 1'),
+    ],
+  },
+  {
+    residence: DELIVERED[1],
+    place: 'Guéliz',
+    pictures: [
+      { label: 'La résidence', picture: DELIVERED[1].picture! },
+      interior('temoin-sejour', 'honest-2-appartement-temoin-02', 1600, 1062, 'Séjour livré', 'Séjour ouvert sur une terrasse dans un appartement livré de la résidence Honest 2'),
+      interior('temoin-chambre', 'honest-2-appartement-temoin-01', 1600, 1099, 'Chambre livrée', 'Chambre avec baie vitrée et balcon dans un appartement livré de la résidence Honest 2'),
+    ],
+  },
+  {
+    residence: DELIVERED[2],
+    place: 'Guéliz',
+    pictures: [
+      { label: 'La résidence', picture: DELIVERED[2].picture!, position: '18% 40%' },
+      interior('temoin-cuisine', 'honest-3-appartement-temoin-01', 1600, 899, 'Cuisine livrée', 'Cuisine équipée et coin repas dans un appartement livré de la résidence Honest 3'),
+    ],
+  },
+  {
+    residence: DELIVERED[3],
+    place: 'Marrakech',
+    pictures: [
+      { label: 'La résidence', picture: DELIVERED[3].picture! },
+      interior('temoin-repas', 'honest-4-appartement-temoin-01', 1600, 900, 'Espace repas livré', 'Coin repas et cuisine dans un appartement livré de la résidence Honest 4'),
+    ],
+  },
+];
+
+/** From the file to the keys — what happens once the form is sent, in four steps. */
+export const JOURNEY = [
+  { title: 'On vous envoie le dossier.', line: 'Brochure, plans, prix lot par lot, disponibilités et échéancier. Par WhatsApp ou par e-mail, où que vous soyez.' },
+  { title: 'On chiffre.', line: 'L’échéancier du lot qui vous intéresse, en euros et en dirhams, noir sur blanc. Sans engagement.' },
+  { title: 'On vérifie ensemble.', line: 'Étage, orientation, surface, contrat : vous posez vos questions à un conseiller, par appel ou WhatsApp.' },
+  { title: 'On réserve.', line: `${PAYMENT_PLAN[0].share} % à la réservation, le lot est à votre nom. Le reste suit le chantier jusqu’aux clés.` },
+] as const;

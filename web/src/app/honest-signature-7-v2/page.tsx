@@ -2,7 +2,7 @@ import type { Metadata, Viewport } from 'next';
 import Script from 'next/script';
 import { preload } from 'react-dom';
 import { Honest7Landing } from '@/components/honest-7-v2/Honest7Landing';
-import { FACTS, HERO_IMAGE, HERO_IMAGE_MOBILE, HERO_MEDIA_DESKTOP, HERO_SIZES, VALIDATION } from '@/lib/content/honest-signature-7-v2';
+import { FACTS, HERO_V2_IMAGE, VALIDATION } from '@/lib/content/honest-signature-7-v2';
 import { landingJsonLd } from '@/lib/structured-data';
 import { ANALYTICS_AHREFS_KEY } from '@/lib/site';
 
@@ -40,22 +40,14 @@ export const viewport: Viewport = {
   width: 'device-width',
   initialScale: 1,
   viewportFit: 'cover',
-  themeColor: '#FAF8F4',
+  themeColor: '#1a1a1a',
 };
 
 const jsonLd = landingJsonLd({ slug: 'honest-signature-7-v2/', name: TITLE, description: DESCRIPTION, breadcrumb: 'Honest Signature 7' });
 
 export default function Honest7Page() {
-  // The façade is the LCP element on every screen: fetch the right file first —
-  // the 2:1 crop below lg, the full render from lg. The media queries are exclusive.
-  preload(HERO_IMAGE_MOBILE.src, {
-    as: 'image',
-    imageSrcSet: HERO_IMAGE_MOBILE.srcSet,
-    imageSizes: HERO_IMAGE_MOBILE.sizes,
-    media: HERO_IMAGE_MOBILE.media,
-    fetchPriority: 'high',
-  });
-  preload(HERO_IMAGE.src, { as: 'image', imageSrcSet: HERO_IMAGE.srcSet, imageSizes: HERO_SIZES, media: HERO_MEDIA_DESKTOP, fetchPriority: 'high' });
+  // The night façade fills the first screen on every device: one file, fetched first.
+  preload(HERO_V2_IMAGE.src, { as: 'image', imageSrcSet: HERO_V2_IMAGE.srcSet, imageSizes: '100vw', fetchPriority: 'high' });
 
   return (
     <>
