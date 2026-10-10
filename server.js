@@ -1033,6 +1033,8 @@ const CANONICAL_REDIRECTS = {
   '/appartements-temoins.html': '/appartements-temoins/',
   '/honest-signature-7': '/honest-signature-7/',
   '/honest-signature-7.html': '/honest-signature-7/',
+  '/honest-signature-7-v2': '/honest-signature-7-v2/',
+  '/honest-signature-7-v2.html': '/honest-signature-7-v2/',
   '/residences-honest-678': '/residences-honest-678/',
   '/residences-honest-678.html': '/residences-honest-678/',
   '/contact/': '/contact',

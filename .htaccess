@@ -51,6 +51,12 @@ RewriteRule ^ /honest-signature-7/ [R=301,L,NE]
 RewriteCond %{THE_REQUEST} \s/+honest-signature-7[\s?] [NC]
 RewriteRule ^ /honest-signature-7/ [R=301,L,NE]
 
+RewriteCond %{THE_REQUEST} \s/+honest-signature-7-v2\.html[\s?] [NC]
+RewriteRule ^ /honest-signature-7-v2/ [R=301,L,NE]
+
+RewriteCond %{THE_REQUEST} \s/+honest-signature-7-v2[\s?] [NC]
+RewriteRule ^ /honest-signature-7-v2/ [R=301,L,NE]
+
 RewriteCond %{THE_REQUEST} \s/+residences-honest-678\.html[\s?] [NC]
 RewriteRule ^ /residences-honest-678/ [R=301,L,NE]
 
