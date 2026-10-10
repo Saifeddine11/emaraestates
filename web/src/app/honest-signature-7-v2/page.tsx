@@ -2,7 +2,7 @@ import type { Metadata, Viewport } from 'next';
 import Script from 'next/script';
 import { preload } from 'react-dom';
 import { Honest7Landing } from '@/components/honest-7-v2/Honest7Landing';
-import { FACTS, HERO_V2_IMAGE, VALIDATION } from '@/lib/content/honest-signature-7-v2';
+import { FACTS, HERO_POSTER, HERO_POSTER_SIZES, VALIDATION } from '@/lib/content/honest-signature-7-v2';
 import { landingJsonLd } from '@/lib/structured-data';
 import { ANALYTICS_AHREFS_KEY } from '@/lib/site';
 
@@ -46,8 +46,9 @@ export const viewport: Viewport = {
 const jsonLd = landingJsonLd({ slug: 'honest-signature-7-v2/', name: TITLE, description: DESCRIPTION, breadcrumb: 'Honest Signature 7' });
 
 export default function Honest7Page() {
-  // The night façade fills the first screen on every device: one file, fetched first.
-  preload(HERO_V2_IMAGE.src, { as: 'image', imageSrcSet: HERO_V2_IMAGE.srcSet, imageSizes: '100vw', fetchPriority: 'high' });
+  // The film's first frame is the first screen and the LCP image: one small file, fetched first.
+  // The film itself only starts loading once the page is done (HeroVideo).
+  preload(HERO_POSTER.src, { as: 'image', imageSrcSet: HERO_POSTER.srcSet, imageSizes: HERO_POSTER_SIZES, fetchPriority: 'high' });
 
   return (
     <>

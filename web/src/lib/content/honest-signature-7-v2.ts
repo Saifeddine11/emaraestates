@@ -518,14 +518,30 @@ export const LEAD_STAGE = { lead: 'lead', qualification: 'qualification' } as co
    Same facts, same assets; only the order and the framing change. Nothing
    below adds a figure that is not already on this page. */
 
-/** Full-screen hero: the night façade first (it reads under a dark gradient), then the project's renders. */
-export const HERO_V2_IMAGE: Picture = media('facade-nuit', [640, 1080, 1600], 1600, 1249, 'Honest Signature 7 de nuit, façade éclairée sur rue à Guéliz');
-export const HERO_V2_SLIDES: HeroSlide[] = [
-  { picture: media('piscine', [640, 1080], 1080, 720, 'Piscine extérieure du projet Honest Signature 7, bordée de transats'), position: '50% 60%' },
-  { picture: media('spa', [640, 1080, 1600], 1600, 1066, 'Espace spa du projet Honest Signature 7 : bassin intérieur, sauna et jacuzzi'), position: '58% 55%' },
-  { picture: media('cinema', [640, 1080], 1080, 720, 'Cinéma extérieur du projet Honest Signature 7, face à Marrakech'), position: '50% 65%' },
-  { picture: media('facade-jour', [640, 828, 1080], 1080, 720, 'Façade de Honest Signature 7 à Guéliz : balcons végétalisés et arcades'), position: '40% 60%' },
-];
+/**
+ * The hero film: the project's 3D ad (img/VIDEO ADS 3D - A checker.MOV, 1080×1920,
+ * 17.8 s, 33 MB) re-encoded without sound for the page. Attached after the page
+ * has loaded (HeroVideo.tsx); the poster is its first frame and the LCP image.
+ * The film carries its own captions (« 40 000 € d'apports », « DUPLEX »…) and the
+ * Emara logo: the hero's text is laid out around them, not over them.
+ */
+export const HERO_VIDEO = {
+  /** 720×1280 H.264, about 1 Mbit/s: phones at 2x and the desktop panel. VP9 came out larger, so H.264 only. */
+  mp4: `${M}/hero-9x16-720.mp4`,
+  /** 540×960 H.264: 1x screens and slow connections. */
+  mp4Small: `${M}/hero-9x16-540.mp4`,
+  width: 720,
+  height: 1280,
+} as const;
+export const HERO_POSTER: Picture = {
+  src: `${M}/poster-9x16-828.webp`,
+  srcSet: `${M}/poster-9x16-540.webp 540w, ${M}/poster-9x16-828.webp 828w`,
+  width: 828,
+  height: 1472,
+  alt: 'Patio de la résidence Honest Signature 7 : piscine bordée de transats et de palmiers, façades en arcades',
+};
+/** The poster fills the screen below lg and a ~440px portrait panel from lg. */
+export const HERO_POSTER_SIZES = '(min-width: 1024px) 440px, 100vw';
 
 /** What is bought — the four things the price covers, each with a project visual. */
 export type OfferPoint = { title: string; line: string; picture: Picture; position?: string };

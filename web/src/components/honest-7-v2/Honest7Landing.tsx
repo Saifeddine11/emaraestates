@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react';
 import { Faq } from '@/components/honest-7-v2/Faq';
-import { HeroCarousel } from '@/components/honest-7-v2/HeroCarousel';
+import { HeroVideo } from '@/components/honest-7-v2/HeroVideo';
 import { AmenityIcon, ArrowRight, Check, Orbit, Phone } from '@/components/honest-7-v2/Icons';
 import { ScrollCta, StickyCta, WhatsAppMark } from '@/components/honest-7-v2/LandingActions';
 import { LandingTracking } from '@/components/honest-7-v2/LandingTracking';
@@ -16,8 +16,8 @@ import {
   AMENITY_GROUPS,
   DOSSIER_CONTENTS,
   FACTS,
-  HERO_V2_IMAGE,
-  HERO_V2_SLIDES,
+  HERO_POSTER,
+  HERO_POSTER_SIZES,
   JOURNEY,
   MAP_IMAGE,
   OFFER,
@@ -151,51 +151,67 @@ function Eyebrow({ children, className }: { children: ReactNode; className?: str
   return <p className={cn(EYEBROW, EYEBROW_LIGHT, className)}>{children}</p>;
 }
 
-/* ── 1. Hero: the whole first screen, the facts in a card. ───────────────── */
+/* ── 1. Hero: the 3D film, the facts in a card. ───────────────────────────
+   Below lg the film fills the screen, cropped a little at the top so its own
+   logo stays under ours, the headline at the top and the card at the bottom
+   where the film's captions are not. From lg the film is a portrait panel on
+   the right of a dark stage. One <video> in both cases (HeroVideo), with no
+   source until the page has loaded: the first screen costs its poster. */
 
 const HERO_STATS = [
   { value: FACTS.priceFrom, label: 'à partir de' },
-  { value: `${PAYMENT_PLAN[0].share} %`, label: 'à la réservation' },
+  { value: `${PAYMENT_PLAN[0].share}\u00a0%`, label: 'à la réservation' },
   { value: FACTS.delivery, label: 'livraison prévue' },
   { value: String(delivered.length), label: 'résidences déjà livrées' },
 ] as const;
 
+const HERO_MEDIA = 'absolute inset-x-0 -top-[17%] h-[117%] w-full object-cover lg:inset-0 lg:h-full';
+
 function Hero() {
   return (
-    <section aria-labelledby="hero-title" className="hs7-load relative isolate flex min-h-[100svh] flex-col justify-between overflow-hidden bg-ink text-cream">
-      <div className="absolute inset-0 -z-10">
-        <HeroCarousel slides={HERO_V2_SLIDES} sizes="100vw" interval={3800}>
-          <Picture picture={HERO_V2_IMAGE} sizes="100vw" priority className="object-[50%_62%] motion-safe:animate-[hs7-settle_3s_var(--ease-step)_both]" />
-        </HeroCarousel>
-        <div aria-hidden="true" className="pointer-events-none absolute inset-0 bg-gradient-to-b from-ink/80 via-ink/10 via-40% to-ink/90" />
-      </div>
+    <section aria-labelledby="hero-title" className="hs7-load relative isolate overflow-hidden bg-ink text-cream">
+      <div aria-hidden="true" className="pointer-events-none absolute inset-0 -z-20 hidden bg-[radial-gradient(70%_70%_at_78%_45%,rgba(61,78,61,0.9),transparent_72%)] lg:block" />
 
-      <div className={cn(SHELL, 'flex items-center justify-between pt-5 lg:pt-7')}>
-        {/* eslint-disable-next-line @next/next/no-img-element -- static export, live /img asset (the white logo) */}
-        <img src="/img/logo.webp" alt="Emara Estates" width={1250} height={625} className="h-9 w-auto lg:h-11" />
-        {/* The slideshow's pause button sits in the top-right corner: the number keeps clear of it. */}
-        <a
-          href={PHONE_HREF}
-          data-track-location="hero"
-          aria-label={`Appeler Emara Estates au ${CONTACT.phoneDisplay}`}
-          className="mr-12 hidden min-h-11 items-center gap-2 rounded-full border border-white/30 px-4 text-[14px] font-semibold tabular-nums text-cream backdrop-blur-sm transition-colors duration-300 hover:bg-white/10 lg:inline-flex lg:mr-14"
+      <div className={cn(SHELL, 'flex min-h-[100svh] flex-col lg:grid lg:min-h-0 lg:grid-cols-[minmax(0,7fr)_minmax(0,5fr)] lg:grid-rows-[auto_1fr_auto] lg:gap-x-16 lg:py-9')}>
+        <div className="relative z-10 flex items-center justify-between pt-5 lg:col-start-1 lg:row-start-1 lg:pt-0">
+          {/* eslint-disable-next-line @next/next/no-img-element -- static export, live /img asset (the white logo) */}
+          <img src="/img/logo.webp" alt="Emara Estates" width={1250} height={625} className="h-9 w-auto lg:h-11" />
+          <a
+            href={PHONE_HREF}
+            data-track-location="hero"
+            aria-label={`Appeler Emara Estates au ${CONTACT.phoneDisplay}`}
+            className="hidden min-h-11 items-center gap-2 rounded-full border border-white/30 px-4 text-[14px] font-semibold tabular-nums text-cream transition-colors duration-300 hover:bg-white/10 lg:inline-flex"
+          >
+            <Phone />
+            {CONTACT.phoneDisplay}
+          </a>
+        </div>
+
+        {/* The film: the screen's background below lg, a portrait panel from lg. */}
+        <div
+          className={cn(
+            'absolute inset-0 -z-10 overflow-hidden bg-ink',
+            'lg:relative lg:inset-auto lg:z-0 lg:col-start-2 lg:row-span-3 lg:row-start-1 lg:h-[min(calc(100svh-72px),780px)] lg:w-auto lg:justify-self-end lg:self-center lg:aspect-[9/16] lg:rounded-[28px] lg:shadow-card-dark lg:ring-1 lg:ring-white/10',
+          )}
         >
-          <Phone />
-          {CONTACT.phoneDisplay}
-        </a>
-      </div>
+          <Picture picture={HERO_POSTER} sizes={HERO_POSTER_SIZES} priority className={cn(HERO_MEDIA, 'motion-safe:animate-[hs7-settle_3s_var(--ease-step)_both]')} />
+          <HeroVideo className={HERO_MEDIA} />
+          {/* Two veils below lg: one for the headline at the top, a deeper one over the film's own
+              captions (« À partir de 40 000 € ») at the bottom, where the card sits. */}
+          <div aria-hidden="true" className="pointer-events-none absolute inset-0 bg-gradient-to-b from-ink/88 via-ink/25 via-38% to-transparent to-60% lg:hidden" />
+          <div aria-hidden="true" className="pointer-events-none absolute inset-x-0 bottom-0 h-[52%] bg-gradient-to-t from-ink via-ink/85 via-40% to-transparent lg:hidden" />
+        </div>
 
-      <div className={cn(SHELL, 'pb-7 pt-16 lg:grid lg:grid-cols-[minmax(0,7fr)_minmax(0,5fr)] lg:items-end lg:gap-16 lg:pb-12')}>
-        <div>
+        <div className="relative z-10 pt-9 lg:col-start-1 lg:row-start-2 lg:self-center lg:py-10">
           <p className={cn(EYEBROW, 'text-cream/80')}>Honest Signature 7 · Guéliz, Marrakech</p>
           <h1
             id="hero-title"
-            className="mt-4 font-sans text-[clamp(34px,9.2vw,50px)] font-medium leading-[1.02] tracking-[-0.03em] [text-shadow:0_2px_28px_rgba(0,0,0,0.5)] lg:text-[clamp(50px,4.8vw,72px)]"
+            className="mt-4 font-sans text-[clamp(34px,9.2vw,50px)] font-medium leading-[1.02] tracking-[-0.03em] [text-shadow:0_2px_28px_rgba(0,0,0,0.55)] lg:text-[clamp(50px,4.8vw,72px)]"
           >
             Un appartement neuf à Guéliz,
             <span className={cn(SERIF, 'block text-gold')}>dès {FACTS.priceFrom}.</span>
           </h1>
-          <p className="mt-4 max-w-[560px] text-[16.5px] leading-[1.5] text-cream/85 [text-shadow:0_1px_14px_rgba(0,0,0,0.5)] lg:text-[18px]">
+          <p className="mt-4 max-w-[560px] text-[16.5px] leading-[1.5] text-cream/85 [text-shadow:0_1px_14px_rgba(0,0,0,0.55)] lg:text-[18px]">
             Résidence avec piscines, spa et conciergerie, à 1 minute à pied du Plaza. {PAYMENT_PLAN[0].share} % à la réservation, le reste
             étalé jusqu’à la livraison, {FACTS.delivery.toLowerCase()}.
           </p>
@@ -205,13 +221,18 @@ function Hero() {
           </div>
         </div>
 
-        <dl className="mt-8 grid grid-cols-2 overflow-hidden rounded-[20px] border border-white/15 bg-ink/45 backdrop-blur-md lg:mt-0">
+        <dl className="relative z-10 mt-auto mb-7 grid grid-cols-2 overflow-hidden rounded-[20px] border border-white/15 bg-ink/50 backdrop-blur-md lg:col-start-1 lg:row-start-3 lg:mb-0 lg:mt-0 lg:max-w-[640px] lg:grid-cols-4">
           {HERO_STATS.map((stat, index) => (
             <div
               key={stat.label}
-              className={cn('px-4 py-3.5 lg:px-5 lg:py-4', index % 2 === 0 && 'border-r border-white/12', index < 2 && 'border-b border-white/12')}
+              className={cn(
+                'px-4 py-3.5 lg:px-5 lg:py-4',
+                index % 2 === 0 && 'border-r border-white/12',
+                index < 2 && 'border-b border-white/12 lg:border-b-0',
+                index === 1 && 'lg:border-r',
+              )}
             >
-              <dd className="whitespace-nowrap font-sans text-[clamp(24px,6.4vw,30px)] font-medium leading-none tracking-[-0.03em] tabular-nums lg:text-[32px]">
+              <dd className="whitespace-nowrap font-sans text-[clamp(24px,6.4vw,30px)] font-medium leading-none tracking-[-0.03em] tabular-nums lg:text-[28px]">
                 {stat.value}
               </dd>
               <dt className="mt-1.5 text-[13px] leading-tight text-cream/75">{stat.label}</dt>
