@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useRef, useState, type FormEvent, type ReactNode, type RefObject } from 'react';
 import { PhoneCountryField, type PhoneCountryPanel } from '@/components/forms/PhoneCountryField';
 import { ArrowRight, Check } from '@/components/honest-7/Icons';
-import { ActivityNotice } from '@/components/honest-7/ActivityNotice';
+import { DemandNotice } from '@/components/honest-7/DemandNotice';
 import { useLeadForm, type Placement } from '@/components/honest-7/LeadFormState';
 import { PROJECT } from '@/components/honest-7/shared';
 import { BUDGETS, CHANNELS, INTENTS, INVEST_INTENT, PROPERTY_TYPES, VALIDATION, VISIT_MOMENTS } from '@/lib/content/honest-signature-7';
@@ -212,9 +212,9 @@ export function LeadForm({
         'ring-0 ring-gold/0 transition-[box-shadow] duration-700 data-[arrived]:ring-[7px] data-[arrived]:ring-gold/45',
       )}
     >
-      {/* Today's activity, right above the question: a band across the top of the card (absent while there is none). */}
-      {VALIDATION.activityCounter && form.stage === 'form' && (
-        <ActivityNotice className="-mx-5 -mt-5 mb-5 rounded-t-[23px] border-b border-white/15 bg-white/[0.07] px-5 pb-4 pt-[18px] xs:-mx-6 xs:-mt-6 xs:mb-6 xs:px-6 sm:-mx-8 sm:-mt-8 sm:mb-7 sm:px-8" />
+      {/* The demand claim, right above the question: a band across the top of the card. */}
+      {form.stage === 'form' && (
+        <DemandNotice className="-mx-5 -mt-5 mb-5 rounded-t-[23px] border-b border-white/15 bg-white/[0.07] px-5 pb-4 pt-[18px] xs:-mx-6 xs:-mt-6 xs:mb-6 xs:px-6 sm:-mx-8 sm:-mt-8 sm:mb-7 sm:px-8" />
       )}
       {form.stage === 'form' && (
         <div ref={stepRef} tabIndex={-1} className="outline-none">

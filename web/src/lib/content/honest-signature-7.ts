@@ -62,11 +62,14 @@ export const VALIDATION = {
    */
   threeBedrooms: true,
   /**
-   * « N demandes reçues aujourd’hui » at the top of the lead cards. Needs
-   * /activity.php and its library on the server. `false` shows no band and
-   * sends no request to it.
+   * « N demandes reçues aujourd’hui » at the top of the lead cards — the live
+   * count of today's site requests. Needs /activity.php and its library on
+   * the server. Off since 2026-10-12: the client replaced it with the static
+   * DEMAND_CLAIM band below, because most enquiries arrive off-site (WhatsApp,
+   * phone, Meta forms) and the live count only sees this form. The server
+   * keeps counting either way; `true` brings the live band back.
    */
-  activityCounter: true,
+  activityCounter: false,
   /**
    * The optional questions shown once the lead is sent (project, preferred
    * contact, show-apartment visit) and their second request to the CRM. Off at
@@ -92,6 +95,17 @@ export const VALIDATION = {
    */
   typologies: true,
 } as const;
+
+/**
+ * « +30 demandes reçues chaque jour » at the top of the lead cards (see
+ * DemandNotice). A public, factual claim, not a counter: the client's stated
+ * average — about 33 enquiries a day across every channel (this form,
+ * WhatsApp, phone, the Meta lead forms) — rounded DOWN (2026-10-12). This is
+ * the only place the figure lives. Keep it at or below the real average: it
+ * is advertising the client must be able to substantiate. `0` removes the
+ * band.
+ */
+export const DEMAND_CLAIM = 30;
 
 export const FACTS = {
   project: 'Honest Signature 7',
