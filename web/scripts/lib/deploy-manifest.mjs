@@ -37,6 +37,8 @@ export const SLASHED_PAGES = [
   { from: 'simulateur.html', to: 'simulateur/index.html' },
   { from: 'appartements-temoins.html', to: 'appartements-temoins/index.html' },
   { from: 'honest-signature-7.html', to: 'honest-signature-7/index.html' },
+  // UK-English copy of the HS7 landing (2026-10-12).
+  { from: 'honest-signature-7-en.html', to: 'honest-signature-7-en/index.html' },
 ];
 
 /**
@@ -200,6 +202,15 @@ export const EXPECTED_ROUTES = [
   },
   { url: '/honest-signature-7', status: 301, to: '/honest-signature-7/' },
   { url: '/honest-signature-7.html', status: 301, to: '/honest-signature-7/' },
+  {
+    url: '/honest-signature-7-en/',
+    status: 200,
+    canonical: 'https://emaraestates.com/honest-signature-7-en/',
+    indexed: true,
+    newRoute: true,
+  },
+  { url: '/honest-signature-7-en', status: 301, to: '/honest-signature-7-en/' },
+  { url: '/honest-signature-7-en.html', status: 301, to: '/honest-signature-7-en/' },
   { url: '/contact', status: 200, canonical: 'https://emaraestates.com/contact', indexed: true },
   { url: '/contact/', status: 301, to: '/contact' },
   { url: '/contact.html', status: 301, to: '/contact' },
@@ -304,6 +315,7 @@ export const BROWSER_ROUTES = [
   '/simulateur/',
   '/appartements-temoins/',
   '/honest-signature-7/',
+  '/honest-signature-7-en/',
   '/contact',
   '/residences-honest-678/',
   '/immobilier-luxe-marrakech',
