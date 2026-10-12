@@ -97,15 +97,16 @@ export const VALIDATION = {
 } as const;
 
 /**
- * « +30 demandes reçues chaque jour » at the top of the lead cards (see
- * DemandNotice). A public, factual claim, not a counter: the client's stated
- * average — about 33 enquiries a day across every channel (this form,
- * WhatsApp, phone, the Meta lead forms) — rounded DOWN (2026-10-12). This is
- * the only place the figure lives. Keep it at or below the real average: it
- * is advertising the client must be able to substantiate. `0` removes the
- * band.
+ * « +66 demandes reçues chaque jour » at the top of the lead cards (see
+ * DemandNotice). A public, factual claim, not a counter. The figure is the
+ * client's, affirmed in writing on 2026-10-12: « on reçoit réellement ~66
+ * demandes ou plus par jour, tous canaux » (this form, WhatsApp, phone, the
+ * Meta lead forms; earlier the same day the stated average was ~33, shown
+ * as +30). This is the only place the figure lives. Keep it at or below the
+ * real average: it is advertising the client must be able to substantiate.
+ * `0` removes the band.
  */
-export const DEMAND_CLAIM = 30;
+export const DEMAND_CLAIM = 66;
 
 export const FACTS = {
   project: 'Honest Signature 7',
