@@ -23,7 +23,7 @@ export const VALIDATION = {
   emailRequired: true,
   /** Server-side drafts of abandoned forms (see the original for the caveats). */
   partialCapture: true,
-  /** Prices, simulator and budget ranges in euros (the campaigns target Europe). */
+  /** Prices, simulator and budget ranges in pounds on this page (client request, 2026-10-12). */
   euroPrices: true,
   /** Form, question 1: 1 / 2 / 3 bedrooms instead of Studio / 1 / 2. */
   threeBedrooms: true,
@@ -51,16 +51,17 @@ export const FACTS = {
   plaza: '1 minute’s walk from the Plaza',
   /**
    * The entry price is 1,590,000 MAD — about €149,000, the client's figure
-   * (2026-10-08). The FAQ and the simulator both say the euro amount is
-   * indicative.
+   * (2026-10-08), shown here in pounds (client request, 2026-10-12):
+   * £127,000 at ~0.85 GBP/EUR. The FAQ and the simulator both say the
+   * amount is indicative and moves with the exchange rate.
    */
-  priceFrom: VALIDATION.euroPrices ? '€149,000' : '1.59 M MAD',
+  priceFrom: VALIDATION.euroPrices ? '£127,000' : '1.59\u00a0M\u00a0MAD',
   /** The hero figure: the amount, and its unit set smaller when it has one. */
-  priceHero: VALIDATION.euroPrices ? { amount: '€149,000', unit: '' } : { amount: '1.59 M', unit: 'MAD' },
-  priceFromValue: VALIDATION.euroPrices ? 149_000 : 1_590_000,
+  priceHero: VALIDATION.euroPrices ? { amount: '£127,000', unit: '' } : { amount: '1.59 M', unit: 'MAD' },
+  priceFromValue: VALIDATION.euroPrices ? 127_000 : 1_590_000,
   priceFromMad: '1,590,000 MAD',
   /** What the simulator, its event and the lead’s `currency` are expressed in. */
-  currency: VALIDATION.euroPrices ? 'EUR' : 'MAD',
+  currency: VALIDATION.euroPrices ? 'GBP' : 'MAD',
   delivery: 'June 2028',
   typologies: 'Studios & apartments',
   surfaceFrom: 'from 56 m²',
@@ -78,9 +79,9 @@ export const PAYMENT_PLAN = [
 /** Example prices offered as shortcuts in the simulator — the form’s budget bounds, not unit prices. */
 export const SIMULATOR_PRESETS = VALIDATION.euroPrices
   ? ([
-      { label: '€149,000', value: 149_000 },
-      { label: '€180,000', value: 180_000 },
-      { label: '€225,000', value: 225_000 },
+      { label: '£127,000', value: 127_000 },
+      { label: '£155,000', value: 155_000 },
+      { label: '£190,000', value: 190_000 },
     ] as const)
   : ([
       { label: '1.59 M', value: 1_590_000 },
@@ -88,7 +89,7 @@ export const SIMULATOR_PRESETS = VALIDATION.euroPrices
       { label: '2.5 M', value: 2_500_000 },
     ] as const);
 
-export const SIMULATOR_MAX = VALIDATION.euroPrices ? 2_000_000 : 20_000_000;
+export const SIMULATOR_MAX = VALIDATION.euroPrices ? 1_700_000 : 20_000_000;
 
 /* ── Pictures ───────────────────────────────────────────────────────────── */
 
@@ -353,7 +354,7 @@ export const FAQ: { question: string; answer: string }[] = [
   {
     question: `What does the ${FACTS.priceFrom} price correspond to?`,
     answer:
-      `It is the project's starting price: ${FACTS.priceFromMad}${VALIDATION.euroPrices ? `, roughly ${FACTS.priceFrom} at the current exchange rate. The euro amount is indicative: it moves with that rate` : ''}. Each apartment's price then depends on its size, floor and orientation. The information pack details the prices unit by unit.`,
+      `It is the project's starting price: ${FACTS.priceFromMad}${VALIDATION.euroPrices ? `, roughly ${FACTS.priceFrom} at the current exchange rate. The pound amount is indicative: it moves with that rate` : ''}. Each apartment's price then depends on its size, floor and orientation. The information pack details the prices unit by unit.`,
   },
   {
     question: 'When will the residence be delivered?',
@@ -438,7 +439,7 @@ export const PROPERTY_TYPES = VALIDATION.threeBedrooms
  * travels as-is in `budget`, which contact.php caps at 30 characters.
  */
 export const BUDGETS = VALIDATION.euroPrices
-  ? (['€149,000 – €180,000', '€180,000 – €225,000', 'Over €225,000'] as const)
+  ? (['£127,000 – £155,000', '£155,000 – £190,000', 'Over £190,000'] as const)
   : (['1.59 M – 2 M MAD', '2 M – 2.5 M MAD', 'Over 2.5 M MAD'] as const);
 
 /*

@@ -91,7 +91,7 @@ export function PaymentSimulator() {
             aria-invalid={!valid}
             className="w-full min-w-0 bg-transparent font-sans text-[clamp(34px,8.5vw,56px)] font-normal leading-none tracking-[-0.03em] text-forest tabular-nums outline-none"
           />
-          <span className={cn('shrink-0 font-medium text-forest/75', EURO ? 'text-[22px]' : 'text-[16px] tracking-[0.06em]')}>{EURO ? '€' : 'MAD'}</span>
+          <span className={cn('shrink-0 font-medium text-forest/75', EURO ? 'text-[22px]' : 'text-[16px] tracking-[0.06em]')}>{EURO ? '£' : 'MAD'}</span>
         </div>
         <p id="hs7-simulator-hint" className={cn('mt-2.5 text-[14.5px] leading-[1.5]', valid ? 'text-forest/75' : 'text-[#8c4a32]')}>
           {valid ? 'Enter an apartment price, or pick an example.' : EURO ? `The project starts at about ${FACTS.priceFrom}.` : `The project starts at ${FACTS.priceFromMad}.`}
@@ -140,13 +140,13 @@ export function PaymentSimulator() {
               <span className={cn('text-right font-sans text-[19px] font-medium tabular-nums tracking-[-0.01em] sm:text-[21px]', valid ? 'text-forest' : 'text-forest/35')}>
                 <span className="mr-2 text-[13.5px] font-normal text-forest/75 sm:hidden">{row.share}&nbsp;%</span>
                 {valid ? formatAmount(row.amount) : '—'}
-                {valid && <span className={cn('font-medium text-forest/75', EURO ? 'ml-1 text-[0.8em]' : 'ml-1.5 text-[12.5px] tracking-[0.04em]')}>{EURO ? '€' : 'MAD'}</span>}
+                {valid && <span className={cn('font-medium text-forest/75', EURO ? 'ml-1 text-[0.8em]' : 'ml-1.5 text-[12.5px] tracking-[0.04em]')}>{EURO ? '£' : 'MAD'}</span>}
               </span>
             </li>
           ))}
         </ol>
         <p className="mt-4 text-[14.5px] leading-[1.55] text-forest/75">
-          Indicative schedule.{EURO && <> The starting price is {FACTS.priceFromMad}: its euro equivalent varies with the exchange rate.</>} Your
+          Indicative schedule.{EURO && <> The starting price is {FACTS.priceFromMad}: its pound equivalent varies with the exchange rate.</>} Your
           adviser confirms the exact terms for the unit you choose.
         </p>
       </div>
