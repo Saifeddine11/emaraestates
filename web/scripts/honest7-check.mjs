@@ -22,7 +22,9 @@ const MONEY = FLAGS.euroPrices
 /** The heading of the final panel: after the optional questions when the page has them, straight after the lead otherwise. */
 const DONE_TEXT = FLAGS.postLeadQuestions ? 'C’est noté.' : 'Demande envoyée.';
 /** What the lead says about the type and the budget: the two answers, or nothing when the form does not ask. */
-const ANSWERS = FLAGS.formQuestions ? { type: 'Appartement 2 chambres', budget: MONEY.budget, said: ['Type de bien : Appartement 2 chambres', `Budget : ${MONEY.budget}`], steps: '1:coordonnees,2:type_de_bien,3:budget' } : { type: '', budget: '', said: ['Type de bien : non précisé', 'Budget : non précisé'], steps: '1:coordonnees' };
+const ANSWERS = FLAGS.formQuestions ? { type: 'Appartement 2 chambres', budget: MONEY.budget, said: ['Type de bien : Appartement 2 chambres', `Budget : ${MONEY.budget}`], steps: '1:type_de_bien,2:budget,3:coordonnees' } : { type: '', budget: '', said: ['Type de bien : non précisé', 'Budget : non précisé'], steps: '1:coordonnees' };
+/** The apartments left, as the content file states it (the client's figure, kept by hand). */
+const STOCK_LEFT = Number(CONTENT.match(/^export const STOCK_LEFT = (\d+);/m)?.[1] ?? 0);
 const ROOMS = FLAGS.threeBedrooms ? /^(1 chambre|2 chambres|3 chambres)$/ : /^(Studio|1 chambre|2 chambres)$/;
 
 const engine = process.env.BROWSER === 'webkit' ? webkit : chromium;
@@ -185,15 +187,26 @@ const SNAP_EVENT_TYPES = ['PAGE_VIEW', 'VIEW_CONTENT', 'CUSTOM_EVENT_1', 'SIGN_U
 const count = (list, name) => list.filter((entry) => entry === name).length;
 const settle = (page, ms = 700) => page.waitForTimeout(ms);
 
-/** The contact details are the first step: brings the card and its fields on screen. */
+/** The two questions, when the form asks them — one tap each. Nothing to do once they are answered. */
+async function answerQuestions(card) {
+  if (!FLAGS.formQuestions) return;
+  const type = card.getByRole('button', { name: '2 chambres', exact: true });
+  if (await type.isVisible()) await type.click();
+  const budget = card.getByRole('button', { name: MONEY.budgetButton });
+  if (await budget.isVisible()) await budget.click();
+  await card.locator('button[type="submit"]').waitFor();
+}
+
+/** Brings the card on screen, past the questions: the contact step, its fields ready. */
 async function toContact(page, prefix = 'hs7-hero') {
   const card = page.locator(prefix === 'hs7-hero' ? '#dossier' : '#disponibilites');
   await card.scrollIntoViewIfNeeded();
+  await answerQuestions(card);
   await page.locator(`#${prefix}-name`).waitFor();
   return card;
 }
 
-/** Step 1 only: the three fields, nothing pressed. */
+/** The contact step with its three fields filled, nothing pressed. */
 async function fillContact(page, prefix, { email = 'client@example.com' } = {}) {
   const card = await toContact(page, prefix);
   await page.fill(`#${prefix}-name`, 'Client Test');
@@ -202,21 +215,9 @@ async function fillContact(page, prefix, { email = 'client@example.com' } = {}) 
   return card;
 }
 
-/** From valid contact details on step 1: « Continuer », the type, the budget — the last step, ready to send. */
-async function answerQuestions(card) {
-  if (!FLAGS.formQuestions) {
-    await card.locator('button[type="submit"]').waitFor();
-    return;
-  }
-  await card.getByRole('button', { name: /Continuer/ }).click();
-  await card.getByRole('button', { name: '2 chambres', exact: true }).click();
-  await card.getByRole('button', { name: MONEY.budgetButton }).click();
-  await card.locator('button[type="submit"]').waitFor();
-}
-
 /** The whole form up to the last step, ready to send. */
 async function fill(page, prefix, options = {}) {
-  await answerQuestions(await fillContact(page, prefix, options));
+  await fillContact(page, prefix, options);
 }
 
 console.log(`\nHONEST SIGNATURE 7 — PAID LANDING QA (${engine.name()})\n`);
@@ -258,7 +259,10 @@ console.log(`\nHONEST SIGNATURE 7 — PAID LANDING QA (${engine.name()})\n`);
   record('Copy: safe land claim only', /L’un des derniers terrains disponibles/.test(state.text) && !/le dernier terrain/i.test(state.text));
   record('Copy: no placeholder left', !/\[[^\]]{2,40}\]|lorem|TODO/i.test(state.text));
   record('Copy: accents — never “GUELIZ” / “DERNIERE”', !/GUELIZ|DERNIERE|OPPORTUNITE\b/.test(state.text));
-  record('Copy: no fake urgency', !/plus que \d|derniers appartements|personnes regardent|\d+ réservés/i.test(state.text));
+  // The one stock line allowed is the band with the client's hand-kept figure (STOCK_LEFT): nothing invented, nothing that moves.
+  const stockBand = new RegExp(`\\b${STOCK_LEFT}\\s+derniers\\s+appartements\\s+disponibles\\b`, 'gi');
+  record('Stock band: the client’s figure, once per lead card', (state.text.match(stockBand) || []).length === 2, `${(state.text.match(stockBand) || []).length} band(s)`);
+  record('Copy: no fake urgency', !/plus que \d|derniers appartements|personnes regardent|\d+ réservés/i.test(state.text.replace(stockBand, '')));
   const hero = page.locator('section[aria-labelledby="hero-title"]');
   const heroText = (await hero.innerText()).toLowerCase();
   record('Hero: price, Plaza, delivery, proof — no dirham figure when the page is in euros', [MONEY.hero, '1 minute', 'juin 2028', 'déjà livrées', 'en commercialisation'].every((word) => heroText.includes(word)) && (!FLAGS.euroPrices || !/\bmad\b/.test(heroText)));
@@ -379,7 +383,7 @@ for (const width of [360, 390, 768, 1440]) {
   const { context, page } = await open({ width: 390, height: 664 }, { top: false, activity: FLAGS.activityCounter ? { body: requestsToday(10) } : null });
   const fit = await page.evaluate(() => {
     const card = document.querySelector('#dossier');
-    return { card: Math.round(card.getBoundingClientRect().top), button: Math.round(card.querySelector('button[type="submit"]').getBoundingClientRect().bottom), viewport: window.innerHeight };
+    return { card: Math.round(card.getBoundingClientRect().top), button: Math.round(Array.from(card.querySelectorAll('button')).at(-1).getBoundingClientRect().bottom), viewport: window.innerHeight };
   });
   record('Opening, phone (390 × 664): the whole step is on the first screen — from the top of the card to its button', fit.card >= 0 && fit.button <= fit.viewport, JSON.stringify(fit));
   await context.close();
@@ -631,33 +635,19 @@ for (const width of WIDTHS) {
   await stubContact(page);
   await page.locator('#dossier').scrollIntoViewIfNeeded();
   const card = page.locator('#dossier');
-  const cardText = async () => (await card.innerText()).replace(/ /g, ' ');
+  // Whitespace folded: the underlined key word is an inline block, and innerText breaks the line after it.
+  const cardText = async () => (await card.innerText()).replace(/\s+/g, ' ');
   let stepEvents = [];
   let snapNow = [];
   if (FLAGS.formQuestions) {
-    // Step 1 — the contact details first (the client’s order): three fields, then « Continuer ».
-    record('Form step 1: the contact details first — three fields and « Continuer », no question yet', /Où vous envoyer les prix et les plans \?/.test(await cardText()) && /Étape 1 sur 3/i.test(await cardText()) && (await card.locator('input:not([name="company_website"]):visible').count()) === 3 && (await card.getByRole('button', { name: ROOMS }).count()) === 0, (await cardText()).slice(0, 110));
-    record('Form: says what is received and what happens next', /Un conseiller vous transmet les disponibilités et les prix lot par lot/.test(await cardText()) && /uniquement à vous recontacter au sujet de Honest Signature 7/.test(await cardText()));
+    // Step 1 — the type of apartment: one tap, nothing to type.
+    record('Form step 1: the type of apartment first — three one-tap answers, no field yet', /Quel type d’appartement recherchez-vous \?/.test(await cardText()) && /Étape 1 sur 3/i.test(await cardText()) && (await card.getByRole('button', { name: ROOMS }).count()) === 3 && (await card.locator('input:visible').count()) === 0, (await cardText()).slice(0, 110));
     record('Form step 1: nothing tracked as started or sent yet', !(await fbq(page)).includes('trackCustom:LeadFormStarted') && (await page.evaluate(() => window.__requests.length)) === 0);
     const continueButton = card.getByRole('button', { name: 'Continuer', exact: true });
-    await continueButton.click();
-    record('Validation: name, phone and e-mail explained', (await card.getByText('Indiquez votre nom complet.').isVisible()) && (await card.getByText('Vérifiez votre numéro de téléphone.').isVisible()) && (await card.getByText('Indiquez votre e-mail.').isVisible()));
-    record('Validation: nothing sent, still on step 1', (await page.evaluate(() => window.__requests.length)) === 0 && /Étape 1 sur 3/i.test(await cardText()));
-    record('Validation: focus on the first invalid field', await page.evaluate(() => document.activeElement?.id === 'hs7-hero-name'));
-
-    await fillContact(page, 'hs7-hero', { email: 'pas-un-email' });
-    await continueButton.click();
-    record('Validation: malformed e-mail refused', await card.getByText('Vérifiez votre adresse e-mail.').isVisible());
-    record('Shared state: the closing form holds the same details', (await page.locator('#hs7-final-name').inputValue()) === 'Client Test');
-
-    await page.fill('#hs7-hero-email', 'client@example.com');
-    await continueButton.click();
-    // Step 2 — the type of apartment: one tap.
-    record('Form step 2: then the type of apartment — three one-tap answers, nothing to type', /Quel type d’appartement recherchez-vous \?/.test(await cardText()) && /Étape 2 sur 3/i.test(await cardText()) && (await card.getByRole('button', { name: ROOMS }).count()) === 3 && (await card.locator('input:visible').count()) === 0, (await cardText()).slice(0, 110));
     // « Continuer » is at full strength from the start (cream on the green glass); pressed with no answer, it stays on the question and says why.
     const continueColour = await continueButton.evaluate((node) => getComputedStyle(node).backgroundColor);
     await continueButton.click();
-    const continueStep1 = continueColour === 'rgb(245, 240, 232)' && /Étape 2 sur 3/i.test(await card.innerText()) && (await card.getByRole('alert').filter({ hasText: 'Choisissez une réponse pour continuer.' }).count()) === 1;
+    const continueStep1 = continueColour === 'rgb(245, 240, 232)' && /Étape 1 sur 3/i.test(await card.innerText()) && (await card.getByRole('alert').filter({ hasText: 'Choisissez une réponse pour continuer.' }).count()) === 1;
     const look = await card.evaluate((node) => {
       const style = getComputedStyle(node);
       return {
@@ -674,22 +664,40 @@ for (const width of WIDTHS) {
     record('Form: looks like a form — a pane of frosted glass over Emara green, progress bar, a radio mark per answer, « Continuer » in cream, asking for an answer when pressed too early', continueStep1 && look.alpha < 0.3 && look.blur && look.behind === 'rgb(45, 58, 45)' && look.progress && look.radios === 3, JSON.stringify(look));
     record('First form: green only behind the card and its track line — the heading and the dossier list sit on the light page', look.stageOnlyCard && look.page === 'rgb(250, 248, 244)', JSON.stringify({ page: look.page, stageOnlyCard: look.stageOnlyCard }));
     await card.getByRole('button', { name: '1 chambre', exact: true }).click();
-    // Step 3 — the budget, and the button that sends everything.
-    record('Form step 3: one tap moves on to the budget — three ranges in the page’s currency, and the button that sends', /Quel budget prévoyez-vous \?/.test(await cardText()) && /Étape 3 sur 3/i.test(await cardText()) && (await card.getByRole('button', { name: MONEY.range }).count()) === 3 && (!FLAGS.euroPrices || !/MAD/.test(await cardText())) && (await card.locator('button[type="submit"]').count()) === 1 && /Recevoir les prix et plans/.test(await cardText()));
+    // Step 2 — the budget: one tap.
+    record('Form step 2: one tap moves on to the budget — three ranges in the page’s currency, nothing sent', /Quel budget prévoyez-vous \?/.test(await cardText()) && /Étape 2 sur 3/i.test(await cardText()) && (await card.getByRole('button', { name: MONEY.range }).count()) === 3 && (!FLAGS.euroPrices || !/MAD/.test(await cardText())) && (await page.evaluate(() => window.__requests.length)) === 0, (await cardText()).slice(0, 110));
     await card.getByRole('button', { name: /Type d’appartement/ }).click();
-    record('Form: back to step 2 keeps the answer', (await card.getByRole('button', { name: '1 chambre', exact: true }).getAttribute('aria-pressed')) === 'true');
+    record('Form: back to step 1 keeps the answer', (await card.getByRole('button', { name: '1 chambre', exact: true }).getAttribute('aria-pressed')) === 'true');
     const eventsBeforeContinue = (await fbq(page)).length;
     await continueButton.click();
-    record('Form: « Continuer » after going back → step 3, no new answer tracked', /Étape 3 sur 3/i.test(await cardText()) && (await fbq(page)).slice(eventsBeforeContinue).every((entry) => !/property_type_selected|LeadFormStepCompleted/.test(entry)));
-    await card.getByRole('button', { name: /Type d’appartement/ }).click();
-    await card.getByRole('button', { name: '2 chambres', exact: true }).click();
-    await card.locator('button[type="submit"]').click();
-    record('Form step 3: sending without a budget asks for one — nothing sent', (await card.getByRole('alert').filter({ hasText: 'Choisissez un budget pour continuer.' }).count()) === 1 && (await page.evaluate(() => window.__requests.length)) === 0);
+    record('Form: « Continuer » after going back → step 2, no new answer tracked', /Étape 2 sur 3/i.test(await cardText()) && (await fbq(page)).slice(eventsBeforeContinue).every((entry) => !/property_type_selected|LeadFormStepCompleted/.test(entry)));
+    await continueButton.click();
+    record('Form step 2: « Continuer » without a budget asks for one — nothing sent', (await card.getByRole('alert').filter({ hasText: 'Choisissez un budget pour continuer.' }).count()) === 1 && (await page.evaluate(() => window.__requests.length)) === 0 && /Étape 2 sur 3/i.test(await cardText()));
     await card.getByRole('button', { name: MONEY.budgetButton }).click();
-    record('Form: choosing the budget sends nothing by itself', (await page.evaluate(() => window.__requests.length)) === 0 && /Étape 3 sur 3/i.test(await cardText()) && (await card.getByRole('button', { name: MONEY.budgetButton }).getAttribute('aria-pressed')) === 'true');
-    record('Form: the closing card is on the same step, with the same answer', /Étape 3 sur 3/i.test(await page.locator('#disponibilites').innerText()) && (await page.locator('#disponibilites').getByRole('button', { name: MONEY.budgetButton }).getAttribute('aria-pressed')) === 'true');
+    // Step 3 — the contact details, and the button that sends everything.
+    record('Form step 3: the contact details last — three fields, the two answers recalled, and the button that sends', /Où vous envoyer les prix et les plans \?/.test(await cardText()) && /Étape 3 sur 3/i.test(await cardText()) && (await card.locator('input:not([name="company_website"]):visible').count()) === 3 && (await card.getByRole('button', { name: ROOMS }).count()) === 0 && (await cardText()).includes('1 chambre') && (await cardText()).includes(MONEY.budget) && (await card.locator('button[type="submit"]').count()) === 1 && /Recevoir les prix et plans/.test(await cardText()), (await cardText()).slice(0, 160));
+    record('Form: says what is received and what happens next', /Un conseiller vous transmet les disponibilités et les prix lot par lot/.test(await cardText()) && /uniquement à vous recontacter au sujet de Honest Signature 7/.test(await cardText()));
+    record('Form: choosing the budget sends nothing by itself', (await page.evaluate(() => window.__requests.length)) === 0);
+    record('Form: the closing card is on the same step, with the same answers', /Étape 3 sur 3/i.test(await page.locator('#disponibilites').innerText()) && (await page.locator('#disponibilites').innerText()).includes(MONEY.budget));
+    await card.getByRole('button', { name: 'Modifier', exact: true }).click();
+    record('Form: « Modifier » returns to the first question, the answer kept', /Étape 1 sur 3/i.test(await cardText()) && (await card.getByRole('button', { name: '1 chambre', exact: true }).getAttribute('aria-pressed')) === 'true');
+    await card.getByRole('button', { name: '2 chambres', exact: true }).click();
+    record('Form: a new type keeps the budget — step 2 with its answer', /Étape 2 sur 3/i.test(await cardText()) && (await card.getByRole('button', { name: MONEY.budgetButton }).getAttribute('aria-pressed')) === 'true');
+    await continueButton.click();
+    record('Form step 3: the changed answer is recalled', /Étape 3 sur 3/i.test(await cardText()) && (await cardText()).includes('2 chambres'));
+    await card.locator('button[type="submit"]').click();
+    record('Validation: name, phone and e-mail explained', (await card.getByText('Indiquez votre nom complet.').isVisible()) && (await card.getByText('Vérifiez votre numéro de téléphone.').isVisible()) && (await card.getByText('Indiquez votre e-mail.').isVisible()));
+    record('Validation: nothing sent, still on step 3', (await page.evaluate(() => window.__requests.length)) === 0 && /Étape 3 sur 3/i.test(await cardText()));
+    record('Validation: focus on the first invalid field', await page.evaluate(() => document.activeElement?.id === 'hs7-hero-name'));
+
+    await fillContact(page, 'hs7-hero', { email: 'pas-un-email' });
+    await card.locator('button[type="submit"]').click();
+    record('Validation: malformed e-mail refused', await card.getByText('Vérifiez votre adresse e-mail.').isVisible());
+    record('Shared state: the closing form holds the same details', (await page.locator('#hs7-final-name').inputValue()) === 'Client Test');
+
+    await page.fill('#hs7-hero-email', 'client@example.com');
     stepEvents = await fbq(page);
-    record('Tracking: form started once; the contact and type steps reported once each, even after going back', count(stepEvents, 'trackCustom:form_started') === 1 && count(stepEvents, 'trackCustom:LeadFormStarted') === 1 && count(stepEvents, 'trackCustom:LeadFormStepCompleted') === 2 && stepEvents.includes('trackCustom:property_type_selected') && stepEvents.includes('trackCustom:budget_selected'), stepEvents.filter((entry) => /Step|selected|started/.test(entry)).join(', '));
+    record('Tracking: form started once; the type and budget steps reported once each, even after going back', count(stepEvents, 'trackCustom:form_started') === 1 && count(stepEvents, 'trackCustom:LeadFormStarted') === 1 && count(stepEvents, 'trackCustom:LeadFormStepCompleted') === 2 && stepEvents.includes('trackCustom:property_type_selected') && stepEvents.includes('trackCustom:budget_selected'), stepEvents.filter((entry) => /Step|selected|started/.test(entry)).join(', '));
     record('Tracking: filling the form is not a conversion', !stepEvents.includes('track:Lead') && !(await snapCalls(page)).includes('track:SIGN_UP'));
 
     record('Tracking: no Lead before the server answers', !(await fbq(page)).includes('track:Lead'));
@@ -878,7 +886,7 @@ if (FLAGS.postLeadQuestions) {
   await card.locator('button[type="submit"]').click();
   await card.getByText('L’envoi n’a pas abouti.').waitFor();
   const events = await fbq(page);
-  record('Server error: message + WhatsApp fallback, details kept', (await card.getByRole('link', { name: /WhatsApp/ }).isVisible()) && (FLAGS.formQuestions ? (await card.getByRole('button', { name: MONEY.budgetButton }).getAttribute('aria-pressed')) === 'true' : (await page.locator('#hs7-hero-name').inputValue()) === 'Client Test'));
+  record('Server error: message + WhatsApp fallback, details kept', (await card.getByRole('link', { name: /WhatsApp/ }).isVisible()) && (await page.locator('#hs7-hero-name').inputValue()) === 'Client Test' && (!FLAGS.formQuestions || (await card.innerText()).includes(MONEY.budget)));
   record('Server error: lead_submit_error, no Lead', events.includes('trackCustom:lead_submit_error') && !events.includes('track:Lead'));
   record('Server error: no Snap SIGN_UP either', !(await snapCalls(page)).includes('track:SIGN_UP'));
   await stubContact(page, 200);
@@ -966,9 +974,10 @@ if (FLAGS.postLeadQuestions) {
     return { highest: Math.round(highest), headingMoved: getComputedStyle(heading).transform !== 'none' };
   });
   record('Question hop: the line lifts 6–10px, the heading itself stays put', lift.highest >= 6 && lift.highest <= 10 && !lift.headingMoved, JSON.stringify(lift));
-  await page.fill('#hs7-hero-name', 'Client');
+  if (FLAGS.formQuestions) await card.getByRole('button', { name: '1 chambre', exact: true }).click();
+  else await page.fill('#hs7-hero-name', 'Client');
   await settle(page, 300);
-  record('Question hop: once the visitor starts typing, the question no longer moves', (await card.locator('h2').isVisible()) && (await hopping()) === 'still | still', await hopping());
+  record(`Question hop: once the visitor ${FLAGS.formQuestions ? 'answers' : 'starts typing'}, the question no longer moves`, (await card.locator('h2').isVisible()) && (await hopping()) === 'still | still', await hopping());
   await context.close();
 }
 {
@@ -1261,7 +1270,8 @@ if (FLAGS.partialCapture) {
   await settle(page, 1000);
   record('Draft A: valid phone → saved once, with no blur, Continue or Submit', saves().length === 1, String(saves().length));
   const first = saves()[0] || {};
-  record('Draft: form_session_id, project, the fields typed, the step', /^[A-Za-z0-9-]{16,64}$/.test(first.form_session_id || '') && first.project_name === 'Honest Signature 7' && first.name === 'Yasmine El Idrissi' && /^\+\d+612345678$/.test(first.phone || '') && first.email === '' && first.current_step === 'coordonnees' && first.property_type === '' && first.budget === '', JSON.stringify(first));
+  // With the questions first, the draft already carries the two answers: the team sees what the visitor was after.
+  record('Draft: form_session_id, project, the fields typed, the answers given, the step', /^[A-Za-z0-9-]{16,64}$/.test(first.form_session_id || '') && first.project_name === 'Honest Signature 7' && first.name === 'Yasmine El Idrissi' && /^\+\d+612345678$/.test(first.phone || '') && first.email === '' && first.current_step === 'coordonnees' && first.property_type === ANSWERS.type && first.budget === ANSWERS.budget, JSON.stringify(first));
   record('Draft: campaign attribution and landing URL', first.utm_source === 'facebook' && first.utm_medium === 'paid_social' && first.utm_campaign === 'hs7-test' && first.utm_content === 'creative-a' && first.utm_term === 'gueliz' && first.fbclid === 'click-4' && first.page_url.includes('/honest-signature-7/'));
   const allowed = ['form_session_id', 'project_name', 'name', 'phone', 'email', 'property_type', 'budget', 'current_step', 'utm_source', 'utm_medium', 'utm_campaign', 'utm_content', 'utm_term', 'fbclid', 'page_url', 'company_website', 'elapsed_ms'];
   record('Draft: nothing else is collected', Object.keys(first).every((key) => allowed.includes(key)), Object.keys(first).filter((key) => !allowed.includes(key)).join());

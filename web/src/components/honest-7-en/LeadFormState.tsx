@@ -124,8 +124,6 @@ type LeadFormContext = Qualification & {
   goToStep: (step: Step, from: Placement) => void;
   /** « Continuer »: the next question, once the current one is answered (after going back). */
   nextStep: (from: Placement) => void;
-  /** « Continuer » on step 1: the contact details are checked, then question 2. */
-  continueFromContact: (from: Placement) => void;
   fullName: string;
   email: string;
   country: Country;
@@ -173,13 +171,16 @@ function visitSummary({ visitOpen, visitDay, visitMoment }: Qualification) {
  * in one shows in both, and the in-flight lock is shared — a visitor can never
  * produce two leads from one page.
  *
- * Three short steps, the contact details first (the client's order, 2026-10-09):
- *   1. name + phone (+ e-mail), checked when « Continuer » is pressed, then
- *      2. type of apartment and 3. budget — one tap each. Everything is posted
- *      to /contact.php in one request when the last step is sent. The Meta
- *      `Lead` fires once, only after the server answers 200 — and contact.php
- *      answers 200 only once Zapier accepted the lead. A visitor who leaves
- *      after step 1 is not a lead; their draft follows the abandoned path.
+ * Three short steps, the questions first (the client's order, 2026-10-14 —
+ * they had been after the contact details since 2026-10-09):
+ *   1. type of apartment and 2. budget — one tap each, nothing typed, nothing
+ *      sent — then 3. name + phone (+ e-mail), posted to /contact.php with the
+ *      two answers in one request. The Meta `Lead` fires once, only after the
+ *      server answers 200 — and contact.php answers 200 only once Zapier
+ *      accepted the lead. A visitor who leaves before step 3 is not a lead;
+ *      a draft of what they typed follows the abandoned path.
+ *   Without the questions (VALIDATION.formQuestions off) the contact details
+ *   are the only step.
  *
  * Then, optionally:
  *   4. The optional questions (project, channel, show-apartment visit) come
@@ -383,27 +384,32 @@ export function LeadFormProvider({ children }: { children: ReactNode }) {
     pixelFormStarted(from);
   }, []);
 
-  /** Question 2 answered: remember it and move on. One tap, nothing sent. */
+  /** Question 1 answered: remember it and move on. One tap, nothing sent. */
   const selectPropertyType = useCallback(
     (value: string, from: Placement) => {
       markStarted(from);
       setPropertyType(value);
       trackLandingEvent('property_type_selected', { project: PROJECT, placement: from, property_type: value });
-      if (!stepsReported.current.has(2)) {
-        stepsReported.current.add(2);
-        pixelStepCompleted(2, 'type_de_bien');
+      if (!stepsReported.current.has(1)) {
+        stepsReported.current.add(1);
+        pixelStepCompleted(1, 'type_de_bien');
       }
-      setStep(3);
+      setStep(2);
     },
     [markStarted],
   );
 
-  /** Question 3 answered. It is the last step: the choice is kept, the button sends. */
+  /** Question 2 answered: on to the contact details. */
   const selectBudget = useCallback(
     (value: string, from: Placement) => {
       markStarted(from);
       setBudget(value);
       trackLandingEvent('budget_selected', { project: PROJECT, placement: from, budget_range: value });
+      if (!stepsReported.current.has(2)) {
+        stepsReported.current.add(2);
+        pixelStepCompleted(2, 'budget');
+      }
+      setStep(3);
     },
     [markStarted],
   );
@@ -419,8 +425,8 @@ export function LeadFormProvider({ children }: { children: ReactNode }) {
     setActivePlacement(from);
     setStep((current) => {
       const answers = latest.current;
-      // Step 1 moves on through continueFromContact(), which checks the fields.
-      if (current === 2 && answers.propertyType) return 3;
+      if (current === 1 && answers.propertyType) return 2;
+      if (current === 2 && answers.budget) return 3;
       return current;
     });
   }, []);
@@ -534,23 +540,6 @@ export function LeadFormProvider({ children }: { children: ReactNode }) {
     return next.fullName ? 'name' : next.phone ? 'phone' : next.email ? 'email' : '';
   }, []);
 
-  const continueFromContact = useCallback(
-    (from: Placement) => {
-      setActivePlacement(from);
-      markStarted(from);
-      const wrong = checkContact();
-      if (wrong) {
-        document.getElementById(`hs7-${from}-${wrong}`)?.focus();
-        return;
-      }
-      if (!stepsReported.current.has(1)) {
-        stepsReported.current.add(1);
-        pixelStepCompleted(1, 'coordonnees');
-      }
-      setStep(2);
-    },
-    [checkContact, markStarted],
-  );
 
   const submit = useCallback(
     async (from: Placement) => {
@@ -560,10 +549,9 @@ export function LeadFormProvider({ children }: { children: ReactNode }) {
       setFeedback('');
 
       const state = latest.current;
-      // Checked at step 1 already; a field edited since sends the visitor back to it.
+      // The contact details are on the step being sent: what is wrong is shown there.
       const wrong = checkContact();
       if (wrong) {
-        setStep(1);
         document.getElementById(`hs7-${from}-${wrong}`)?.focus();
         return;
       }
@@ -611,9 +599,8 @@ export function LeadFormProvider({ children }: { children: ReactNode }) {
           // Meta `Lead` and Snapchat `SIGN_UP`, each to its own platform, once — and
           // not at all for a person contact.php already counted as a prospect.
           if (data.repeat_lead !== true) pixelLead({ eventId: metaLeadEventId.current, utmCampaign: captureLandingAttribution().utm_campaign || '' });
-          // The last step of the form: its third with the two questions, its only one without.
-          if (VALIDATION.formQuestions) pixelStepCompleted(3, 'budget');
-          else pixelStepCompleted(1, 'coordonnees');
+          // The contact step is the last of the form: its third with the two questions, its only one without.
+          pixelStepCompleted(VALIDATION.formQuestions ? 3 : 1, 'coordonnees');
           trackLandingEvent('lead_submit_success', { project: PROJECT, placement: from, property_type: state.propertyType, budget_range: state.budget });
         }
         // This form session is closed (its ID stays in memory for the
@@ -741,7 +728,6 @@ export function LeadFormProvider({ children }: { children: ReactNode }) {
       selectBudget,
       goToStep,
       nextStep,
-      continueFromContact,
       fullName,
       email,
       country,
@@ -792,7 +778,6 @@ export function LeadFormProvider({ children }: { children: ReactNode }) {
       selectBudget,
       goToStep,
       nextStep,
-      continueFromContact,
       fullName,
       email,
       country,

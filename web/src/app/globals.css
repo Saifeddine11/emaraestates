@@ -482,7 +482,8 @@
     stroke-dashoffset: 1;
   }
   .hs7-load .hs7-draw,
-  [data-inview] .hs7-draw {
+  [data-inview] .hs7-draw,
+  .hs7-key .hs7-draw {
     animation: hs7-draw 0.9s var(--ease-step) forwards;
   }
   .hs7-rule {

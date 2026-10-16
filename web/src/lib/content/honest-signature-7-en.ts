@@ -27,23 +27,23 @@ export const VALIDATION = {
   euroPrices: true,
   /** Form, question 1: 1 / 2 / 3 bedrooms instead of Studio / 1 / 2. */
   threeBedrooms: true,
-  /** The live daily counter — replaced by the static DEMAND_CLAIM band (2026-10-12). */
+  /** The live daily counter — replaced by a static band (2026-10-12; the stock figure STOCK_LEFT since 2026-10-14). */
   activityCounter: false,
   /** The optional post-lead questions. Off at the client's request (2026-10-09). */
   postLeadQuestions: false,
-  /** The two form questions (type, budget). Off at the client's request (2026-10-09). */
-  formQuestions: false,
+  /** The two form questions (type, budget), before the contact details. Back on at the client's request (2026-10-14). */
+  formQuestions: true,
   /** "Studios & apartments · from 56 m²" in the hero and the three types in the form. */
   typologies: true,
 } as const;
 
 /**
- * "+66 enquiries received every day" at the top of the lead cards (see
- * DemandNotice). The client's figure, affirmed in writing on 2026-10-12 —
- * see the French original for the provenance. Keep both pages' figures in
- * step, and at or below the real all-channels average. `0` removes the band.
+ * "15 last apartments available" at the top of the lead cards (see
+ * StockNotice). The client's own stock figure — see the French original for
+ * the provenance. Keep both pages' figures in step and never above the real
+ * stock. `0` removes the band.
  */
-export const DEMAND_CLAIM = 66;
+export const STOCK_LEFT = 15;
 
 export const FACTS = {
   project: 'Honest Signature 7',

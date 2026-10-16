@@ -2,8 +2,8 @@
 
 import { useEffect, useMemo, useRef, useState, type FormEvent, type ReactNode, type RefObject } from 'react';
 import { PhoneCountryField, type PhoneCountryPanel } from '@/components/forms/PhoneCountryField';
-import { ArrowRight, Check } from '@/components/honest-7/Icons';
-import { DemandNotice } from '@/components/honest-7-en/DemandNotice';
+import { ArrowRight, Check, Underline } from '@/components/honest-7/Icons';
+import { StockNotice } from '@/components/honest-7-en/StockNotice';
 import { useLeadForm, type Placement } from '@/components/honest-7-en/LeadFormState';
 import { PROJECT } from '@/components/honest-7/shared';
 import { BUDGETS, CHANNELS, INTENTS, INVEST_INTENT, PROPERTY_TYPES, VALIDATION, VISIT_MOMENTS } from '@/lib/content/honest-signature-7-en';
@@ -51,13 +51,30 @@ const CONTINUE_HINT = cn('mt-2.5 text-center text-[14px] font-medium leading-snu
 const QUESTION = 'mt-2 font-sans text-[clamp(22px,2vw,27px)] font-medium leading-[1.2] tracking-[-0.01em] text-cream';
 
 /**
+ * The key words of a question, underlined by hand in gold — drawn left to
+ * right as the step appears (`.hs7-key`, each step mounts fresh), so the eye
+ * lands on what is asked. The underline sits under the words; the words
+ * themselves do not move.
+ */
+function Key({ children }: { children: ReactNode }) {
+  return (
+    <span className="hs7-key relative inline-block whitespace-nowrap">
+      {children}
+      <Underline className="text-gold" delay={250} />
+    </span>
+  );
+}
+
+/**
  * The lead card, rendered twice (before the show apartments, and at the end of
  * the page) over one shared state — see LeadFormState.
  *
- * Three steps, the contact details first: name, phone and e-mail, checked on
- * « Continuer »; then the type of apartment (one tap, moves on by itself) and
- * the budget, whose button sends the whole request. The optional questions
- * that used to follow are switched off (VALIDATION.postLeadQuestions).
+ * Three steps, the easy ones first: the type of apartment and the budget are
+ * one tap each and move on by themselves; the contact details come last, with
+ * the button that sends the whole request. Without the questions
+ * (VALIDATION.formQuestions off) the contact details are the only step. The
+ * optional questions that used to follow the lead are switched off
+ * (VALIDATION.postLeadQuestions).
  */
 export function LeadForm({
   placement,
@@ -126,7 +143,8 @@ export function LeadForm({
     }
   }, [form.activePlacement, form.stage, form.step, placement]);
 
-  // The first step's question hops three times each time it comes on screen, until the visitor starts typing.
+  // The first step's question hops three times each time it comes on screen, until it is answered
+  // (the type chosen — or, without the questions, the visitor starts typing).
   // The heading is watched and the line inside it moves, so the hop cannot take it off screen.
   const [question, setQuestion] = useState<HTMLElement | null>(null);
   const [questionOnScreen, setQuestionOnScreen] = useState(false);
@@ -136,32 +154,19 @@ export function LeadForm({
     observer.observe(question);
     return () => observer.disconnect();
   }, [question]);
-  const hop = questionOnScreen && !form.fullName && !form.phoneNumber && !form.email;
+  const hop = questionOnScreen && (VALIDATION.formQuestions ? !form.propertyType : !form.fullName && !form.phoneNumber && !form.email);
 
   // « Continuer » pressed on a question that has no answer yet: the step it was pressed on.
   const [askedOn, setAskedOn] = useState<number | null>(null);
-  const answered = form.step === 2 ? Boolean(form.propertyType) : Boolean(form.budget);
+  const answered = form.step === 1 ? Boolean(form.propertyType) : Boolean(form.budget);
   const needsAnswer = askedOn === form.step && !answered;
   function onContinue() {
     if (answered) form.nextStep(placement);
     else setAskedOn(form.step);
   }
 
-  function onContactSubmit(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    form.continueFromContact(placement);
-  }
 
-  function onSubmit(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    if (!form.budget) {
-      setAskedOn(form.step);
-      return;
-    }
-    void form.submit(placement);
-  }
-
-  /** The form without its two questions: the contact step sends. */
+  /** The contact step sends: the last step with the two questions, the only one without. */
   function onSend(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     void form.submit(placement);
@@ -212,9 +217,9 @@ export function LeadForm({
         'ring-0 ring-gold/0 transition-[box-shadow] duration-700 data-[arrived]:ring-[7px] data-[arrived]:ring-gold/45',
       )}
     >
-      {/* The demand claim, right above the question: a band across the top of the card. */}
+      {/* The apartments left, right above the question: a band across the top of the card. */}
       {form.stage === 'form' && (
-        <DemandNotice className="-mx-5 -mt-5 mb-5 rounded-t-[23px] border-b border-white/15 bg-white/[0.07] px-5 pb-4 pt-[18px] xs:-mx-6 xs:-mt-6 xs:mb-6 xs:px-6 sm:-mx-8 sm:-mt-8 sm:mb-7 sm:px-8" />
+        <StockNotice className="-mx-5 -mt-5 mb-5 rounded-t-[23px] border-b border-white/15 bg-white/[0.07] px-5 pb-4 pt-[18px] xs:-mx-6 xs:-mt-6 xs:mb-6 xs:px-6 sm:-mx-8 sm:-mt-8 sm:mb-7 sm:px-8" />
       )}
       {form.stage === 'form' && (
         <div ref={stepRef} tabIndex={-1} className="outline-none">
@@ -233,20 +238,93 @@ export function LeadForm({
             </>
           )}
 
-          {form.step === 1 && (
-            <div key="contact" className="motion-safe:animate-[hs7-fade-up_0.35s_var(--ease-step)_both]">
+          {VALIDATION.formQuestions && form.step === 1 && (
+            <div key="type" className="motion-safe:animate-[hs7-fade-up_0.35s_var(--ease-step)_both]">
               <Heading ref={setQuestion} id={titleId} className={QUESTION}>
                 <span data-question-hop={hop ? '' : undefined} className={cn('block', hop && 'motion-safe:animate-[hs7-bounce_1.5s_0.4s_3]')}>
-                  Where should we send the prices and plans?
+                  What type of <Key>apartment</Key> are you looking for?
                 </span>
               </Heading>
+              <div role="group" aria-labelledby={titleId} className="mt-5 grid gap-2.5">
+                {PROPERTY_TYPES.map((type) => (
+                  <Option key={type.value} selected={form.propertyType === type.value} onSelect={() => form.selectPropertyType(type.value, placement)}>
+                    {type.label}
+                  </Option>
+                ))}
+              </div>
+              <button type="button" onClick={onContinue} className={CONTINUE}>
+                Continue
+              </button>
+              <p role="alert" className={CONTINUE_HINT}>
+                {needsAnswer && 'Please choose an answer to continue.'}
+              </p>
+              <p className="mt-4 text-center text-[13.5px] leading-[1.55] text-cream/80">
+                {title}: two questions, then your details. No obligation.
+              </p>
+            </div>
+          )}
+
+          {VALIDATION.formQuestions && form.step === 2 && (
+            <div key="budget" className="motion-safe:animate-[hs7-fade-up_0.35s_var(--ease-step)_both]">
+              <Heading id={titleId} className={QUESTION}>
+                What is your <Key>budget</Key>?
+              </Heading>
+              <div role="group" aria-labelledby={titleId} className="mt-5 grid gap-2.5">
+                {BUDGETS.map((budget) => (
+                  <Option key={budget} selected={form.budget === budget} onSelect={() => form.selectBudget(budget, placement)}>
+                    <span className="whitespace-nowrap">
+                      {budget.replace(/ MAD$/, '')}
+                      {budget.endsWith(' MAD') && <span className="ml-1 text-[0.85em] text-cream/75">MAD</span>}
+                    </span>
+                  </Option>
+                ))}
+              </div>
+              <button type="button" onClick={onContinue} className={CONTINUE}>
+                Continue
+              </button>
+              <p role="alert" className={CONTINUE_HINT}>
+                {needsAnswer && 'Please choose a budget to continue.'}
+              </p>
+              <BackLink onClick={() => form.goToStep(1, placement)}>Apartment type</BackLink>
+            </div>
+          )}
+
+          {(VALIDATION.formQuestions ? form.step === 3 : form.step === 1) && (
+            <div key="contact" className="motion-safe:animate-[hs7-fade-up_0.35s_var(--ease-step)_both]">
+              <Heading ref={VALIDATION.formQuestions ? undefined : setQuestion} id={titleId} className={QUESTION}>
+                <span data-question-hop={hop ? '' : undefined} className={cn('block', hop && 'motion-safe:animate-[hs7-bounce_1.5s_0.4s_3]')}>
+                  Where should we send the <Key>prices and plans</Key>?
+                </span>
+              </Heading>
+              {VALIDATION.formQuestions && (
+                // The two answers, and a way back to change them.
+                <p className="mt-2.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-[14.5px] text-cream">
+                  <Check className="text-cream" />
+                  <span className="font-medium text-cream">{PROPERTY_TYPES.find((type) => type.value === form.propertyType)?.label || 'Apartment'}</span>
+                  {form.budget && (
+                    <>
+                      <span aria-hidden="true" className="text-cream/45">
+                        ·
+                      </span>
+                      <span>{form.budget}</span>
+                    </>
+                  )}
+                  <button
+                    type="button"
+                    onClick={() => form.goToStep(1, placement)}
+                    className="ml-auto min-h-11 cursor-pointer px-1 text-[14px] font-medium text-cream underline decoration-cream/40 underline-offset-4 hover:decoration-cream"
+                  >
+                    Change
+                  </button>
+                </p>
+              )}
 
               <form
-                onSubmit={VALIDATION.formQuestions ? onContactSubmit : onSend}
+                onSubmit={onSend}
                 onFocusCapture={() => form.markStarted(placement)}
                 onBlurCapture={() => form.flushDraft()}
                 noValidate
-                className="mt-4 grid gap-3.5"
+                className={VALIDATION.formQuestions ? 'mt-2 grid gap-3.5' : 'mt-4 grid gap-3.5'}
               >
                 <input
                   type="text"
@@ -336,22 +414,15 @@ export function LeadForm({
                   )}
                 </div>
 
-                {VALIDATION.formQuestions ? (
-                    <button type="submit" className={cn(SUBMIT, 'mt-1.5 w-full')}>
-                      Continue
-                      <ArrowRight className="transition-transform duration-300 ease-step group-hover/cta:translate-x-1" />
-                    </button>
-                ) : (
-                  <>
-                    {sendButton}
-                    <DotList className="text-[13.5px] text-cream" items={['Prices unit by unit', 'Plans', 'Payment schedule', 'Availability']} />
-                    {sendFeedback}
-                  </>
-                )}
+                {sendButton}
+                <DotList className="text-[13.5px] text-cream" items={['Prices unit by unit', 'Plans', 'Payment schedule', 'Availability']} />
+                {sendFeedback}
 
-                <p className="text-center text-[13.5px] leading-[1.55] text-cream/80">
-                  {VALIDATION.formQuestions ? <>{title}: your details, then two questions. No obligation.</> : <>{title}. No obligation.</>}
-                </p>
+                {!VALIDATION.formQuestions && (
+                  <p className="text-center text-[13.5px] leading-[1.55] text-cream/80">
+                    {title}. No obligation.
+                  </p>
+                )}
 
                 <div className="border-t border-white/15 pt-3.5 text-[13.5px] leading-[1.55] text-cream/85">
                   <p>
@@ -362,57 +433,6 @@ export function LeadForm({
                   <p className="mt-1.5">Your details are used only to contact you about Honest Signature 7.</p>
                 </div>
               </form>
-            </div>
-          )}
-
-          {form.step === 2 && (
-            <div key="type" className="motion-safe:animate-[hs7-fade-up_0.35s_var(--ease-step)_both]">
-              <Heading id={titleId} className={QUESTION}>
-                What type of apartment are you looking for?
-              </Heading>
-              <div role="group" aria-labelledby={titleId} className="mt-5 grid gap-2.5">
-                {PROPERTY_TYPES.map((type) => (
-                  <Option key={type.value} selected={form.propertyType === type.value} onSelect={() => form.selectPropertyType(type.value, placement)}>
-                    {type.label}
-                  </Option>
-                ))}
-              </div>
-              <button type="button" onClick={onContinue} className={CONTINUE}>
-                Continue
-              </button>
-              <p role="alert" className={CONTINUE_HINT}>
-                {needsAnswer && 'Please choose an answer to continue.'}
-              </p>
-              <BackLink onClick={() => form.goToStep(1, placement)}>Your details</BackLink>
-            </div>
-          )}
-
-          {form.step === 3 && (
-            <div key="budget" className="motion-safe:animate-[hs7-fade-up_0.35s_var(--ease-step)_both]">
-              <Heading id={titleId} className={QUESTION}>
-                What is your budget?
-              </Heading>
-              <form onSubmit={onSubmit} noValidate className="mt-5 grid gap-3.5">
-                <div role="group" aria-labelledby={titleId} className="grid gap-2.5">
-                  {BUDGETS.map((budget) => (
-                    <Option key={budget} selected={form.budget === budget} onSelect={() => form.selectBudget(budget, placement)}>
-                      <span className="whitespace-nowrap">
-                        {budget.replace(/ MAD$/, '')}
-                        {budget.endsWith(' MAD') && <span className="ml-1 text-[0.85em] text-cream/75">MAD</span>}
-                      </span>
-                    </Option>
-                  ))}
-                </div>
-                <p role="alert" className={CONTINUE_HINT}>
-                  {needsAnswer && 'Please choose a budget to continue.'}
-                </p>
-                {sendButton}
-
-                <DotList className="text-[13.5px] text-cream" items={['Prices unit by unit', 'Plans', 'Payment schedule', 'Availability']} />
-
-                {sendFeedback}
-              </form>
-              <BackLink onClick={() => form.goToStep(2, placement)}>Apartment type</BackLink>
             </div>
           )}
         </div>

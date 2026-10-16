@@ -224,13 +224,16 @@ The WhatsApp prefill on this route differs from the homepage's and from
 > carries no `meta_event_id` and is never sent to Meta. A form still being
 > filled is not sent. `LEAD_DRAFTS_CRM_DISABLED=1` turns this off;
 > `LEAD_DRAFTS_WEBHOOK_URL` sends it to another hook.
-> Since 2026-10-09 the form asks for the contact details only
-> (`VALIDATION.formQuestions` off): one step, one request. `propertyType` and
-> `budget` arrive empty and the `message` says « Type de bien : non précisé —
-> Budget : non précisé ». With the switch on, the two questions come back as
-> steps 2 and 3, after the contact details.
-> Meta `LeadFormStepCompleted` fires once per step (`step` 1, 2, 3; the third
-> only when the lead is accepted). What follows is unchanged.
+> From 2026-10-09 to 2026-10-14 the form asked for the contact details only
+> (`VALIDATION.formQuestions` off): one step, one request, `propertyType` and
+> `budget` empty, and a `message` saying « Type de bien : non précisé —
+> Budget : non précisé ». Since 2026-10-14 the two questions are back, before
+> the contact details, in the order at the top of this section: **1** type,
+> **2** budget, **3** name + phone + e-mail. The switch off gives the one-step
+> form again.
+> Meta `LeadFormStepCompleted` fires once per step (`step` 1 `type_de_bien`,
+> 2 `budget`, 3 `coordonnees` — the third only when the lead is accepted).
+> What follows is unchanged.
 
 The Meta Ads landing posts to the same `/contact.php` → Zapier Catch Hook as
 this form. `form_type` (`honest_signature_7_request`), `source` (`Meta Ads`),

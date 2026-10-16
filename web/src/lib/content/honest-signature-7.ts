@@ -64,10 +64,11 @@ export const VALIDATION = {
   /**
    * « N demandes reçues aujourd’hui » at the top of the lead cards — the live
    * count of today's site requests. Needs /activity.php and its library on
-   * the server. Off since 2026-10-12: the client replaced it with the static
-   * DEMAND_CLAIM band below, because most enquiries arrive off-site (WhatsApp,
-   * phone, Meta forms) and the live count only sees this form. The server
-   * keeps counting either way; `true` brings the live band back.
+   * the server. Off since 2026-10-12: the client replaced it with a static
+   * band (demand claim, then the stock figure STOCK_LEFT below since
+   * 2026-10-14), because most enquiries arrive off-site (WhatsApp, phone,
+   * Meta forms) and the live count only sees this form. The server keeps
+   * counting either way; `true` brings the live band back.
    */
   activityCounter: false,
   /**
@@ -78,12 +79,14 @@ export const VALIDATION = {
    */
   postLeadQuestions: false,
   /**
-   * The two questions of the form (type of apartment, budget). Off at the
-   * client's request (2026-10-09, « laisse que les infos »): the form is one
-   * step — name, phone, e-mail — and the lead carries no type and no budget.
-   * `true` brings them back after the contact details, as steps 2 and 3.
+   * The two questions of the form (type of apartment, budget), as steps 1 and
+   * 2, before the contact details. Back on at the client's request
+   * (2026-10-14, « remets les questions au début du formulaire »); off from
+   * 2026-10-09 to 2026-10-14 (« laisse que les infos »). `false` makes the
+   * form one step — name, phone, e-mail — and the lead carries no type and no
+   * budget.
    */
-  formQuestions: false,
+  formQuestions: true,
   /**
    * « Studios & appartements · dès 56 m² » in the hero (56 m² is the client's
    * figure of 2026-10-08; the earlier copy said 51 m²), and the three types
@@ -97,16 +100,16 @@ export const VALIDATION = {
 } as const;
 
 /**
- * « +66 demandes reçues chaque jour » at the top of the lead cards (see
- * DemandNotice). A public, factual claim, not a counter. The figure is the
- * client's, affirmed in writing on 2026-10-12: « on reçoit réellement ~66
- * demandes ou plus par jour, tous canaux » (this form, WhatsApp, phone, the
- * Meta lead forms; earlier the same day the stated average was ~33, shown
- * as +30). This is the only place the figure lives. Keep it at or below the
- * real average: it is advertising the client must be able to substantiate.
- * `0` removes the band.
+ * « 15 derniers appartements disponibles » at the top of the lead cards (see
+ * StockNotice). A public, factual claim, not a counter: the figure is the
+ * client's, given on 2026-10-02 (« 15 appartements restants sur 150 ») and
+ * asked for here on 2026-10-14 in place of the « +66 demandes reçues chaque
+ * jour » band (that figure, affirmed in writing on 2026-10-12, is no longer
+ * shown). Kept by hand: it goes stale as apartments sell, so the client must
+ * update it, and it must never be higher than the real stock. `0` removes the
+ * band.
  */
-export const DEMAND_CLAIM = 66;
+export const STOCK_LEFT = 15;
 
 export const FACTS = {
   project: 'Honest Signature 7',
