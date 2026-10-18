@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react';
 import { Faq } from '@/components/honest-7/Faq';
 import { HeroCarousel } from '@/components/honest-7/HeroCarousel';
+import { Icon3d } from '@/components/honest-7/Icons3d';
 import { AmenityIcon, ArrowDown, ArrowRight, Check, Orbit, Oval, Phone, Underline } from '@/components/honest-7/Icons';
 import { HeaderCta, ScrollCta, SectionView, StickyCta } from '@/components/honest-7/LandingActions';
 import { LandingTracking } from '@/components/honest-7/LandingTracking';
@@ -22,7 +23,6 @@ import {
   HERO_SIZES,
   HERO_SLIDES,
   MAP_IMAGE,
-  PAYMENT_PLAN,
   RESIDENCES,
   SHOW_APARTMENTS,
   SOLD_SHOWN,
@@ -65,11 +65,11 @@ export function Honest7Landing() {
       <div className="bg-shell pl-[env(safe-area-inset-left)] pr-[env(safe-area-inset-right)]">
         <Header />
         <main id="main-content">
-          {/* Ask first (the client's order, 2026-10-09): the form straight under the hero — the page even
-              opens on it, see OpenOnForm — then how it is paid, then who builds it. */}
+          {/* Ask first (the client's order, 2026-10-09): the form straight under the hero — the page can
+              even open on it (VALIDATION.openOnForm, see OpenOnForm) — then how it is paid, then who builds it. */}
           <Hero />
           <FirstForm />
-          <OpenOnForm />
+          {VALIDATION.openOnForm && <OpenOnForm />}
           <Payment />
           <TrackRecord />
           <ShowApartments />
@@ -128,24 +128,21 @@ function Header() {
 function Hero() {
   return (
     <section aria-labelledby="hero-title" className="hs7-load relative overflow-x-clip bg-shell">
-      <div className={cn(SHELL, 'grid gap-x-[clamp(32px,4.5vw,72px)] pb-7 pt-5 lg:grid-cols-2 lg:pb-10 lg:pt-9')}>
+      <div className={cn(SHELL, 'grid gap-x-[clamp(32px,4.5vw,72px)] pb-7 pt-5 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.15fr)] lg:pb-10 lg:pt-9')}>
         <div className="min-w-0 lg:self-end">
-          <p className="flex flex-wrap items-center gap-x-3 gap-y-0.5 text-[12.5px] font-medium uppercase tracking-[0.18em] lg:text-[13px] lg:tracking-[0.2em]">
-            <span className="w-full text-forest sm:w-auto">Honest Signature 7</span>
-            <span aria-hidden="true" className="hidden h-px w-6 bg-forest/30 sm:block" />
-            <span className={EYEBROW_LIGHT}>Guéliz • Hyper-centre</span>
-          </p>
-
+          {/* No eyebrow above the headline (« Honest Signature 7 · Guéliz · Hyper-centre » removed at the client's request, 2026-10-17). */}
           <h1
             id="hero-title"
-            className="mt-3 font-sans text-[clamp(30px,8.9vw,46px)] font-medium uppercase leading-[0.95] tracking-[-0.04em] text-forest lg:mt-6 lg:text-[clamp(40px,3.95vw,57px)]"
+            className="font-sans text-[clamp(23px,6.6vw,34px)] font-medium uppercase leading-[0.95] tracking-[-0.04em] text-forest lg:text-[clamp(34px,3.1vw,46px)]"
           >
-            {/* Each mask keeps 0.2em above the line: capitals carry accents (È, É). */}
+            {/* Smaller than the first headline (« Une dernière opportunité… », replaced at the client's request,
+                2026-10-17): the room it gives back goes to the photo. Each mask keeps 0.2em above the line:
+                capitals carry accents (É, À). */}
             <span className="block overflow-hidden pt-[0.2em]">
-              <span className="block whitespace-nowrap">Une dernière</span>
+              <span className="block whitespace-nowrap">Devenez propriétaire</span>
             </span>
             <span className="-mt-[0.16em] block overflow-hidden pt-[0.2em]">
-              <span className="block whitespace-nowrap">opportunité</span>
+              <span className="block whitespace-nowrap">à Marrakech</span>
             </span>
             <span className="-mt-[0.16em] block overflow-hidden pb-[0.2em] pt-[0.2em]">
               <span className="block whitespace-nowrap">
@@ -164,7 +161,9 @@ function Hero() {
         </div>
 
         <div className="mt-4 min-w-0 lg:col-start-2 lg:row-span-2 lg:row-start-1 lg:mt-0 lg:self-center">
-          <figure className="relative m-0 h-[clamp(124px,min(44vw,22svh),330px)] overflow-hidden rounded-[18px] bg-sand/40 lg:h-[clamp(420px,calc(100svh-290px),600px)] lg:rounded-[24px]">
+          {/* Enlarged at the client's request (2026-10-17): on phones a 3:2 frame, the façade render's own shape (2:1 before);
+              from lg a wider column (1.15fr) rather than a taller frame, which would only zoom further into the render. */}
+          <figure className="relative m-0 h-[clamp(150px,min(59vw,32svh),460px)] overflow-hidden rounded-[18px] bg-sand/40 lg:h-[clamp(440px,calc(100svh-250px),640px)] lg:rounded-[24px]">
             <HeroCarousel slides={HERO_SLIDES} sizes={HERO_SIZES}>
               <picture className="block size-full">
                 <source
@@ -227,23 +226,6 @@ function Hero() {
             )}
           </dl>
 
-          {/* The payment plan in one line, with its five instalments drawn to scale. */}
-          <div className="mt-3.5 border-b border-forest/12 pb-3.5 lg:mt-5 lg:pb-5">
-            <p className="text-[15px] leading-[1.35] text-forest lg:text-[17px]">
-              <span className="font-semibold">{PAYMENT_PLAN[0].share} % à la réservation</span>
-              <span className="text-forest/75"> — solde progressif jusqu’à {FACTS.delivery.toLowerCase()}</span>
-            </p>
-            <div aria-hidden="true" className="mt-2 flex h-1.5 max-w-[520px] gap-1">
-              {PAYMENT_PLAN.map((step, index) => (
-                <span
-                  key={index}
-                  style={{ flexBasis: `${step.share}%` }}
-                  className={cn('rounded-full', index === 0 ? 'bg-forest' : 'bg-olive/55')}
-                />
-              ))}
-            </div>
-          </div>
-
           <div className="mt-3.5 grid gap-2.5 sm:grid-cols-2 lg:mt-6 lg:flex lg:flex-wrap lg:gap-3">
             <ScrollCta heroCta event="hero_primary_cta_click" location="hero" className={cn(CTA_PRIMARY, 'w-full lg:w-auto lg:px-8')}>
               <Orbit />
@@ -259,24 +241,32 @@ function Hero() {
 
           <p className="mt-4 text-[15px] leading-[1.45] text-forest/75 lg:hidden">{HERO_LINE}</p>
 
-          <ul
-            aria-label="Services de la résidence"
-            // Eight items: two columns, then three from xl, where the longest labels fit side by side.
-            className="mt-5 grid grid-cols-2 gap-x-4 gap-y-2.5 lg:mt-7 xl:grid-cols-[repeat(3,auto)] xl:justify-start xl:gap-x-8"
-          >
-            {HERO_AMENITIES.map((amenity) => (
-              <li key={amenity.label} className="flex items-center gap-2.5 text-[14.5px] font-medium text-forest">
-                <span className="flex size-9 shrink-0 items-center justify-center rounded-full border border-forest/15 text-olive">
-                  <AmenityIcon name={amenity.icon} />
-                </span>
-                {amenity.label}
-              </li>
-            ))}
-          </ul>
+          {/* Eight amenities in two rows of four, a pictogram over a word or two — the four-line
+              list read as too much text (client, 2026-10-17). The pictograms are on screen at once,
+              like the rest of the hero; only their loops wait to be seen. */}
+          <InView amount={0.3} className="mt-5 lg:mt-7">
+            <ul aria-label="Services de la résidence" className="grid grid-cols-4 gap-x-1.5 gap-y-3 lg:gap-x-3">
+              {HERO_AMENITIES.map((amenity, index) => (
+                <li key={amenity.label} className="flex flex-col items-center gap-1 text-center">
+                  <Icon3d name={amenity.icon} float={index * 0.6} className="size-11 lg:size-14" />
+                  <span className="text-balance text-[12.5px] font-medium leading-[1.15] text-forest lg:text-[14px]">
+                    {amenity.short ? (
+                      <>
+                        <span className="lg:hidden">{amenity.short}</span>
+                        <span className="max-lg:hidden">{amenity.label}</span>
+                      </>
+                    ) : (
+                      amenity.label
+                    )}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          </InView>
         </div>
       </div>
 
-      <TrackStrip />
+      {/* <TrackStrip /> */}
     </section>
   );
 }
@@ -355,8 +345,12 @@ function TrackStrip() {
 
 function FirstForm() {
   return (
-    <section aria-labelledby="dossier-title" className="hs7-load overflow-x-clip bg-shell py-band-tight text-forest">
-      <div className={cn(SHELL, 'grid items-start gap-x-[clamp(48px,6vw,104px)] gap-y-7 lg:grid-cols-[minmax(0,1fr)_minmax(420px,520px)] lg:gap-y-9')}>
+    // Only a short top padding: the hero above ends on the same background, its own padding already
+    // separates them (the gap was ~85px on a phone; « diminue l'espace », client, 2026-10-18).
+    <section aria-labelledby="dossier-title" className="hs7-load overflow-x-clip bg-shell pb-band-tight pt-4 text-forest lg:pt-6">
+      {/* From lg the card spans both rows; the second row takes what its height leaves over, so the
+          file's contents follow the steps instead of floating halfway down beside the card. */}
+      <div className={cn(SHELL, 'grid items-start gap-x-[clamp(48px,6vw,104px)] gap-y-7 lg:grid-cols-[minmax(0,1fr)_minmax(420px,520px)] lg:grid-rows-[auto_1fr] lg:gap-y-9')}>
         {/* 1 — Says "this is the form": on phones it sits right above the card, and CTAs scroll to it. */}
         <div data-lead-intro="hero" className="lg:col-start-1 lg:row-start-1 lg:pt-2">
           <p className={cn(EYEBROW, EYEBROW_LIGHT, 'flex items-center gap-3')}>
@@ -374,9 +368,38 @@ function FirstForm() {
               ]}
             />
           </h2>
-          <p className="mt-4 max-w-[520px] text-[17px] leading-[1.5] text-forest/80">
-            Prix lot par lot, plans, disponibilités et échéancier. Sans engagement.
-          </p>
+          {/* What happens next, right under the heading and above the card, in place of the line that
+              listed the file's contents (2026-10-17). Painted as it is, like the rest of the intro. */}
+          <div className="mt-6">
+            <div className="flex items-baseline justify-between gap-4">
+              <p className={cn(EYEBROW, EYEBROW_LIGHT)}>Et ensuite ?</p>
+              <p className="flex items-center gap-1.5 text-[13.5px] font-medium text-forest/75">
+                <Check className="size-3.5 shrink-0 text-olive" />
+                Sans engagement
+              </p>
+            </div>
+            <ol className="relative mt-3 grid grid-cols-3 gap-2 sm:gap-3">
+              {/* The thread from one step to the next, hidden behind the pictograms. */}
+              <span aria-hidden="true" className="absolute inset-x-[16%] top-8 border-t border-dashed border-forest/25" />
+              {(
+                [
+                  { icon: 'form', label: VALIDATION.formQuestions ? '3 questions' : 'Vos coordonnées' },
+                  { icon: 'adviser', label: 'Un conseiller vous contacte' },
+                  { icon: 'received', label: 'Dossier reçu' },
+                ] as const
+              ).map((step, index) => (
+                <li key={step.icon} className="relative flex flex-col items-center gap-1.5 text-center">
+                  <span className="relative rounded-full bg-shell px-1.5">
+                    <Icon3d name={step.icon} float={index * 0.9} className="size-16" />
+                    <span className="absolute -left-0.5 top-0 flex size-5 items-center justify-center rounded-full bg-forest text-[11px] font-semibold tabular-nums text-cream">
+                      {index + 1}
+                    </span>
+                  </span>
+                  <span className="text-balance text-[13.5px] font-medium leading-[1.25] text-forest sm:text-[15px]">{step.label}</span>
+                </li>
+              ))}
+            </ol>
+          </div>
         </div>
 
         {/* 2 — The card, on the only green of the section. */}
@@ -389,42 +412,25 @@ function FirstForm() {
           </GlassStage>
         </div>
 
-        {/* 3 — What the file contains and what happens next. */}
+        {/* 3 — What the file contains: a pictogram and a word or two each, in three columns (the
+            client found the list and its paragraphs too wordy, 2026-10-17). The investor's line
+            became the gold-edged « Potentiel locatif ». */}
         <div className="lg:col-start-1 lg:row-start-2">
           <Rise>
-            <ol className="grid border-t border-forest/12 sm:grid-cols-2 sm:gap-x-8">
+            <ul className="grid grid-cols-3 gap-2 sm:gap-3">
               {DOSSIER_CONTENTS.map((item, index) => (
-                <li key={item} className="flex items-baseline gap-4 border-b border-forest/12 py-3.5">
-                  <span className={cn('text-[13px] font-medium tabular-nums tracking-[0.14em]', EYEBROW_LIGHT)}>0{index + 1}</span>
-                  <span className="text-[16.5px] font-medium leading-snug">{item}</span>
+                <li
+                  key={item.label}
+                  className={cn(
+                    'flex flex-col items-center gap-1.5 rounded-[18px] border bg-white/70 px-1 pb-3 pt-2.5 text-center shadow-[0_14px_28px_-24px_rgba(45,58,45,0.6)] sm:flex-row sm:gap-3 sm:px-3 sm:py-2.5 sm:text-left',
+                    item.icon === 'rental' ? 'border-gold/80' : 'border-forest/[0.08]',
+                  )}
+                >
+                  <Icon3d name={item.icon} float={index * 0.7} symbol={VALIDATION.euroPrices ? '€' : undefined} className="size-14" />
+                  <span className="text-balance text-[13.5px] font-medium leading-[1.2] sm:text-[15px]">{item.label}</span>
                 </li>
               ))}
-            </ol>
-          </Rise>
-
-          <Rise className="mt-7 max-w-[560px]">
-            <p className="text-[16px] leading-[1.6] text-forest/75">
-              <span className="font-medium text-forest">Vous investissez ?</span> Le dossier comprend une analyse du potentiel locatif :
-              des informations sur la demande locative et des éléments pour évaluer l’investissement.
-            </p>
-          </Rise>
-
-          <Rise className="mt-8">
-            <p className={cn(EYEBROW, EYEBROW_LIGHT)}>Et ensuite ?</p>
-            <ol className="mt-4 grid gap-3.5 sm:grid-cols-3 sm:gap-6">
-              {[
-                VALIDATION.formQuestions ? 'Vous laissez vos coordonnées et répondez à deux questions.' : 'Vous laissez vos coordonnées.',
-                'Un conseiller vous transmet les disponibilités et les prix lot par lot.',
-                'Vous recevez les plans et la brochure. Sans engagement.',
-              ].map((step, index) => (
-                <li key={step} className="flex gap-3.5 text-[15.5px] leading-[1.5] text-forest/80 sm:block">
-                  <span className="flex size-7 shrink-0 items-center justify-center rounded-full border border-forest/25 text-[13px] font-medium tabular-nums text-forest sm:mb-3">
-                    {index + 1}
-                  </span>
-                  {step}
-                </li>
-              ))}
-            </ol>
+            </ul>
           </Rise>
         </div>
       </div>

@@ -88,6 +88,14 @@ export const VALIDATION = {
    */
   formQuestions: true,
   /**
+   * The page opens on the first lead card instead of the hero (OpenOnForm:
+   * an inline script that scrolls the page as its HTML is read). On from
+   * 2026-10-09; switched off at the client's request on 2026-10-17 (« désactive
+   * la redirection vers le formulaire direct, supprime pas »): the page opens
+   * on the hero, and every CTA still leads to the form. `true` brings it back.
+   */
+  openOnForm: false,
+  /**
    * « Studios & appartements · dès 56 m² » in the hero (56 m² is the client's
    * figure of 2026-10-08; the earlier copy said 51 m²), and the three types
    * offered in the form. Both come from copy already published for this
@@ -205,24 +213,25 @@ export const HERO_IMAGE: Picture = {
 export const HERO_SIZES = '(min-width: 1024px) 54vw, 100vw';
 
 /**
- * Below lg the façade sits in a ~2:1 frame, so phones get that crop of the
- * same render (a quarter fewer bytes for the LCP image) instead of the 3:2 file.
+ * Below lg the façade sits in a 3:2 frame, the render's own shape, so phones
+ * get the whole 3:2 file. Until 2026-10-17 the frame was ~2:1 and phones got
+ * that crop (facade-mobile-*, still used by the English page).
  */
 export const HERO_IMAGE_MOBILE = {
   media: '(max-width: 1023px)',
-  srcSet: `${M}/facade-mobile-640.webp 640w, ${M}/facade-mobile-828.webp 828w, ${M}/facade-mobile-1080.webp 1080w`,
-  src: `${M}/facade-mobile-828.webp`,
+  srcSet: `${M}/facade-jour-640.webp 640w, ${M}/facade-jour-828.webp 828w, ${M}/facade-jour-1080.webp 1080w`,
+  src: `${M}/facade-jour-828.webp`,
   sizes: '100vw',
   width: 1536,
-  height: 768,
+  height: 1024,
 } as const;
 export const HERO_MEDIA_DESKTOP = '(min-width: 1024px)';
 
 /**
  * The hero slideshow: the façade above comes first (it is the LCP image and
  * the only one in the page's HTML), then these renders of the same project,
- * loaded once the page is done. `position` is the crop kept in the wide,
- * shallow frame the hero has on phones.
+ * loaded once the page is done. `position` is the crop kept in the frame the
+ * hero has on phones (3:2, cut shorter on short screens).
  */
 export type HeroSlide = { picture: Picture; position?: string };
 export const HERO_SLIDES: HeroSlide[] = [
@@ -260,14 +269,18 @@ export type AmenityIconName =
   | 'concierge'
   | 'parking';
 
-/** Every amenity of the residence, one short label each — « Piscines » stands for both pools. */
-export const HERO_AMENITIES: { label: string; icon: AmenityIconName }[] = [
+/**
+ * Every amenity of the residence, one short label each — « Piscines » stands
+ * for both pools. `short` is what a phone shows, where four share a row under
+ * their pictograms (the cinema's moon and stars say « extérieur »).
+ */
+export const HERO_AMENITIES: { label: string; short?: string; icon: AmenityIconName }[] = [
   { label: 'Piscines', icon: 'pool' },
   { label: 'Spa', icon: 'spa' },
   { label: 'Sauna', icon: 'sauna' },
   { label: 'Jacuzzi', icon: 'jacuzzi' },
   { label: 'Salle de sport', icon: 'gym' },
-  { label: 'Cinéma extérieur', icon: 'cinema' },
+  { label: 'Cinéma extérieur', short: 'Cinéma', icon: 'cinema' },
   { label: 'Conciergerie', icon: 'concierge' },
   { label: 'Parking titré', icon: 'parking' },
 ];
@@ -455,15 +468,21 @@ export const FAQ: { question: string; answer: string }[] = [
 
 /* ── Lead form ──────────────────────────────────────────────────────────── */
 
-/** What the visitor receives — the value exchanged for their details. */
-export const DOSSIER_CONTENTS = [
-  'Brochure du projet',
-  'Plans des appartements',
-  'Prix lot par lot',
-  'Disponibilités actuelles',
-  'Échéancier de paiement',
-  'Analyse du potentiel locatif',
-] as const;
+export type DossierIconName = 'brochure' | 'plans' | 'prices' | 'availability' | 'schedule' | 'rental';
+
+/**
+ * What the visitor receives — the value exchanged for their details. A
+ * pictogram and a word or two each (Icons3d.tsx): the six-line list and
+ * its paragraph read as too much text (client, 2026-10-17).
+ */
+export const DOSSIER_CONTENTS: readonly { label: string; icon: DossierIconName }[] = [
+  { label: 'Brochure', icon: 'brochure' },
+  { label: 'Plans', icon: 'plans' },
+  { label: 'Prix par lot', icon: 'prices' },
+  { label: 'Disponibilités', icon: 'availability' },
+  { label: 'Échéancier', icon: 'schedule' },
+  { label: 'Potentiel locatif', icon: 'rental' },
+];
 
 /**
  * Post-submit question 1. `intent` is the `purchase_intent` sent to Zapier:

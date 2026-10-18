@@ -33,6 +33,8 @@ export const VALIDATION = {
   postLeadQuestions: false,
   /** The two form questions (type, budget), before the contact details. Back on at the client's request (2026-10-14). */
   formQuestions: true,
+  /** The page opens on the first lead card (OpenOnForm). Off at the client's request (2026-10-17), kept for later. */
+  openOnForm: false,
   /** "Studios & apartments · from 56 m²" in the hero and the three types in the form. */
   typologies: true,
 } as const;
@@ -194,15 +196,19 @@ export type AmenityIconName =
   | 'concierge'
   | 'parking';
 
-/** Every amenity of the residence, one short label each — "Pools" stands for both pools. */
-export const HERO_AMENITIES: { label: string; icon: AmenityIconName }[] = [
+/**
+ * Every amenity of the residence, one short label each — "Pools" stands for
+ * both pools. `short` is what a phone shows, where four share a row under
+ * their pictograms (the cinema's moon and stars say "outdoor").
+ */
+export const HERO_AMENITIES: { label: string; short?: string; icon: AmenityIconName }[] = [
   { label: 'Pools', icon: 'pool' },
   { label: 'Spa', icon: 'spa' },
   { label: 'Sauna', icon: 'sauna' },
   { label: 'Jacuzzi', icon: 'jacuzzi' },
   { label: 'Gym', icon: 'gym' },
-  { label: 'Outdoor cinema', icon: 'cinema' },
-  { label: 'Concierge service', icon: 'concierge' },
+  { label: 'Outdoor cinema', short: 'Cinema', icon: 'cinema' },
+  { label: 'Concierge service', short: 'Concierge', icon: 'concierge' },
   { label: 'Titled parking', icon: 'parking' },
 ];
 
@@ -389,15 +395,17 @@ export const FAQ: { question: string; answer: string }[] = [
 
 /* ── Lead form ──────────────────────────────────────────────────────────── */
 
+export type DossierIconName = 'brochure' | 'plans' | 'prices' | 'availability' | 'schedule' | 'rental';
+
 /** What the visitor receives — the value exchanged for their details. */
-export const DOSSIER_CONTENTS = [
-  'Project brochure',
-  'Apartment floor plans',
-  'Prices unit by unit',
-  'Current availability',
-  'Payment schedule',
-  'Rental potential analysis',
-] as const;
+export const DOSSIER_CONTENTS: readonly { label: string; icon: DossierIconName }[] = [
+  { label: 'Brochure', icon: 'brochure' },
+  { label: 'Floor plans', icon: 'plans' },
+  { label: 'Unit prices', icon: 'prices' },
+  { label: 'Availability', icon: 'availability' },
+  { label: 'Payment plan', icon: 'schedule' },
+  { label: 'Rental potential', icon: 'rental' },
+];
 
 /**
  * Post-submit question 1. `intent` is the `purchase_intent` sent to Zapier:

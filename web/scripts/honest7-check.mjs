@@ -15,7 +15,7 @@ import { startServer } from './lib/serve.mjs';
 // The page’s switches (VALIDATION in the content file). A record that depends
 // on one follows it, so the same script checks the page with a switch on or off.
 const CONTENT = readFileSync(new URL('../src/lib/content/honest-signature-7.ts', import.meta.url), 'utf8');
-const FLAGS = Object.fromEntries(['euroPrices', 'threeBedrooms', 'activityCounter', 'partialCapture', 'postLeadQuestions', 'formQuestions'].map((name) => [name, new RegExp(`^  ${name}: true,`, 'm').test(CONTENT)]));
+const FLAGS = Object.fromEntries(['euroPrices', 'threeBedrooms', 'activityCounter', 'partialCapture', 'postLeadQuestions', 'formQuestions', 'openOnForm'].map((name) => [name, new RegExp(`^  ${name}: true,`, 'm').test(CONTENT)]));
 const MONEY = FLAGS.euroPrices
   ? { hero: '149\u00a0000\u00a0€', budget: '149 000 – 180 000 €', budgetButton: /149 000 – 180 000 €/, range: /€$/, currency: 'EUR', preset: /^180.000.€$/, start: ['44 700', '22 350', '37 250'], typed: '180000', typedShown: '180 000', typedRows: ['54 000', '27 000', '45 000'], below: '90000', unit: '€' }
   : { hero: '1,59', budget: '1,59 M – 2 M MAD', budgetButton: /1,59 M – 2 M/, range: /MAD$/, currency: 'MAD', preset: /^2.M$/, start: ['477 000', '238 500', '397 500'], typed: '2000000', typedShown: '2 000 000', typedRows: ['600 000', '300 000', '500 000'], below: '900000', unit: 'MAD' };
@@ -244,7 +244,7 @@ console.log(`\nHONEST SIGNATURE 7 — PAID LANDING QA (${engine.name()})\n`);
   record('SEO: title, canonical, indexable', /Honest Signature 7/.test(state.title) && state.canonical === 'https://emaraestates.com/honest-signature-7/' && /index/.test(state.robots || ''));
   record('Viewport: viewport-fit=cover (safe-area insets available)', /viewport-fit=cover/.test(state.viewport || ''), state.viewport);
   record('A11y: exactly one H1', state.h1Count === 1);
-  record('Hero: headline', state.h1.replace(/ /g, '') === 'UNEDERNIÈREOPPORTUNITÉAUCŒURDEGUÉLIZ.', state.h1);
+  record('Hero: headline', state.h1.replace(/ /g, '') === 'DEVENEZPROPRIÉTAIREÀMARRAKECHAUCŒURDEGUÉLIZ.', state.h1);
   record(
     'Flow: hero → form → payment → proof, then the rest',
     state.sections.join() === 'hero-title,dossier-title,payment-title,track-title,show-title,amenities-title,location-title,scarcity-title,faq-title,final-title',
@@ -265,10 +265,10 @@ console.log(`\nHONEST SIGNATURE 7 — PAID LANDING QA (${engine.name()})\n`);
   record('Copy: no fake urgency', !/plus que \d|derniers appartements|personnes regardent|\d+ réservés/i.test(state.text.replace(stockBand, '')));
   const hero = page.locator('section[aria-labelledby="hero-title"]');
   const heroText = (await hero.innerText()).toLowerCase();
-  record('Hero: price, Plaza, delivery, proof — no dirham figure when the page is in euros', [MONEY.hero, '1 minute', 'juin 2028', 'déjà livrées', 'en commercialisation'].every((word) => heroText.includes(word)) && (!FLAGS.euroPrices || !/\bmad\b/.test(heroText)));
-  record('Hero: Honest 5–6 sold, kept apart from the delivered ones', heroText.includes('déjà vendues'), heroText.replace(/\s+/g, ' ').slice(-220));
+  record('Hero: price, Plaza, delivery, proof — no dirham figure when the page is in euros', [MONEY.hero, '1 minute', 'déjà livrées'].every((word) => heroText.includes(word)) && (!FLAGS.euroPrices || !/\bmad\b/.test(heroText)));
+  record('Hero: the Honest 1–7 strip stays hidden (commented out on request)', !heroText.includes('déjà vendues'), heroText.replace(/\s+/g, ' ').slice(-220));
   record('Copy: remaining stock is not shown anywhere on the page', !/appartements? restants?|restants? sur|sur 140|sur 150/i.test(state.text.replace(/\u00a0/g, ' ')));
-  record('Hero: what is sold and how it is paid — typologies, minimum surface, 30 % then progressive', ['studios & appartements', 'dès 56 m²', '30 % à la réservation', 'solde progressif jusqu’à juin 2028'].every((word) => heroText.replace(/\u00a0/g, ' ').includes(word)), heroText.replace(/\s+/g, ' ').slice(0, 400));
+  record('Hero: what is sold — typologies and minimum surface, no payment line (removed on request)', ['studios & appartements', 'dès 56 m²'].every((word) => heroText.replace(/\u00a0/g, ' ').includes(word)) && !heroText.replace(/\u00a0/g, ' ').includes('à la réservation'), heroText.replace(/\s+/g, ' ').slice(0, 400));
   record('Copy: with no data, no counter of any kind — no "+1", no "aujourd’hui" figure, no "live" claim', !/en direct|vendus? aujourd|vendus? en 7 jours|\+1\b/i.test(await page.evaluate(() => { const copy = document.body.cloneNode(true); copy.querySelectorAll('[data-lead-form] select, [data-lead-form] [role="listbox"], [data-lead-form] option').forEach((node) => node.remove()); return copy.textContent.replace(/\u00a0/g, ' '); })));
   record('Hero: all 8 amenities', (await hero.locator('ul[aria-label="Services de la résidence"] li').count()) === 8);
   const ctaLabels = await page.evaluate(() =>
@@ -290,8 +290,8 @@ console.log(`\nHONEST SIGNATURE 7 — PAID LANDING QA (${engine.name()})\n`);
   record('Amenities: all nine named on the page', ['piscine extérieure', 'piscine intérieure chauffée', 'spa', 'sauna', 'jacuzzi', 'salle de sport', 'cinéma extérieur', 'conciergerie', 'parking titré'].every((word) => state.text.toLowerCase().includes(word)));
   record('Track record: delivered ≠ sold (no “6 résidences”)', /4 RÉSIDENCES DÉJÀ LIVRÉES/.test(state.text) && !/6 résidences/i.test(state.text));
   record(
-    'Performance: hero preloaded — mobile crop below lg, full render from lg',
-    state.preloads.join(' | ') === '(max-width: 1023px) → /media/honest-7/facade-mobile-640.webp | (min-width: 1024px) → /media/honest-7/facade-jour-640.webp',
+    'Performance: hero preloaded — the 3:2 render below lg and from lg, each with its own media query',
+    state.preloads.join(' | ') === '(max-width: 1023px) → /media/honest-7/facade-jour-640.webp | (min-width: 1024px) → /media/honest-7/facade-jour-640.webp',
     state.preloads.join(' | '),
   );
   const heroImg = await hero.locator('img').first().evaluate((node) => ({ loading: node.loading, priority: node.getAttribute('fetchpriority'), ok: node.complete && node.naturalWidth > 0, file: node.currentSrc.split('/').pop() }));
@@ -313,6 +313,8 @@ console.log(`\nHONEST SIGNATURE 7 — PAID LANDING QA (${engine.name()})\n`);
 }
 
 /* ── Opening: the page opens on the first form, not on the hero ──────────── */
+if (FLAGS.openOnForm) {
+/* The switch on: the page opens on the first form. Off (VALIDATION.openOnForm), it opens on the hero — checked below. */
 
 /** Where the page is scrolled, and where the first form stands on screen. */
 const formOnScreen = (page) =>
@@ -482,6 +484,13 @@ async function openStillLoading(viewport) {
   record('Opening: a visitor who scrolls while the page is still loading is never pulled back to the form', moved > opened.y + 600 && Math.abs(after - moved) <= 2, `opened at ${opened.y}, scrolled to ${moved}, ${after} once loaded`);
   await context.close();
 }
+} else {
+  const { context, page, errors } = await open({ width: 390, height: 780 }, { top: false });
+  const state = await page.evaluate(() => ({ y: Math.round(window.scrollY), heroTop: Math.round(document.querySelector('[aria-labelledby="hero-title"]').getBoundingClientRect().top), scripts: Array.from(document.scripts).filter((node) => /scrollRestoration/.test(node.textContent)).length }));
+  record('Opening (switch off): the page opens on the hero, at the top — no script scrolls it to the form', state.y === 0 && state.heroTop >= 0 && state.heroTop < 120 && state.scripts === 0, JSON.stringify(state));
+  record('Opening (switch off): no console error', errors.length === 0, errors.join(' | '));
+  await context.close();
+}
 
 /* ── Every width: overflow, headline fit, CTAs, sticky bar ──────────────── */
 for (const width of WIDTHS) {
@@ -494,7 +503,8 @@ for (const width of WIDTHS) {
   record(`${width}px: headline fits its column`, clipped === 0, `${clipped} clipped line(s)`);
 
   const heroFile = await page.locator('section[aria-labelledby="hero-title"] img').first().evaluate((node) => node.currentSrc.split('/').pop());
-  record(`${width}px: hero serves the ${mobile ? '2:1 mobile crop' : 'full render'}`, mobile ? /^facade-mobile-/.test(heroFile) : /^(facade-jour-|honest006)/.test(heroFile), heroFile);
+  // Phones and desktops both get the 3:2 render since the phone frame became 3:2 (2026-10-17).
+  record(`${width}px: hero serves the full 3:2 render`, /^(facade-jour-|honest006)/.test(heroFile), heroFile);
 
   const primary = page.locator('[data-hero-cta]');
   const box = await primary.boundingBox();

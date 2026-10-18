@@ -699,6 +699,439 @@
 }
 
 /* ============================================================
+   /honest-signature-7/ — the pictograms in relief (Icons3d.tsx):
+   the hero's amenities, the dossier, the steps after the form.
+   Once their block has been seen ([data-inview]) each one floats
+   and moves one part on a loop. Their drawing without animation
+   is the resting state: what the page shows without JavaScript or
+   with reduced motion, and where every loop starts and ends —
+   only a duplicate (the turning page, the gold ring, the bell's
+   sound) is hidden at rest.
+   ============================================================ */
+@layer components {
+  .hs7-3d-shadow,
+  .hs7-3d-pop,
+  .hs7-3d-dot,
+  .hs7-3d-ping {
+    transform-box: fill-box;
+    transform-origin: center;
+  }
+  .hs7-3d-grow {
+    transform-box: fill-box;
+    transform-origin: 50% 100%;
+  }
+  /* The page turns about the spine, the tag swings from its pin. */
+  .hs7-3d-flip {
+    opacity: 0;
+    transform-box: view-box;
+    transform-origin: 32px 33px;
+  }
+  .hs7-3d-swing {
+    transform-box: view-box;
+    transform-origin: 32px 6px;
+  }
+  .hs7-3d-draw {
+    stroke-dasharray: 1;
+    stroke-dashoffset: 0;
+  }
+  .hs7-3d-ping {
+    opacity: 0;
+  }
+
+  [data-inview] .hs7-3d-float {
+    animation: hs7-3d-float 4.8s ease-in-out var(--hs7-3d-float, 0s) infinite;
+  }
+  [data-inview] .hs7-3d-shadow {
+    animation: hs7-3d-shadow 4.8s ease-in-out var(--hs7-3d-float, 0s) infinite;
+  }
+  [data-inview] .hs7-3d-flip {
+    animation: hs7-3d-flip 5s ease-in-out infinite;
+  }
+  [data-inview] .hs7-3d-draw {
+    animation: hs7-3d-draw 5s var(--ease-step) infinite;
+  }
+  [data-inview] .hs7-3d-pop {
+    animation: hs7-3d-pop 5s var(--ease-step) infinite;
+  }
+  [data-inview] .hs7-3d-swing {
+    animation: hs7-3d-swing 4.2s ease-in-out infinite;
+  }
+  [data-inview] .hs7-3d-lit {
+    animation: hs7-3d-lit 3.6s ease-in-out infinite;
+  }
+  [data-inview] .hs7-3d-drop {
+    animation: hs7-3d-drop 4.2s ease-in infinite;
+  }
+  [data-inview] .hs7-3d-grow {
+    animation: hs7-3d-grow 0.9s var(--ease-step) both;
+  }
+  [data-inview] .hs7-3d-dot {
+    animation: hs7-3d-dot 1.4s ease-in-out infinite;
+  }
+  [data-inview] .hs7-3d-ping {
+    animation: hs7-signal 2.4s ease-out infinite;
+  }
+  [data-inview] .hs7-3d-rise {
+    animation: hs7-3d-rise 4.6s var(--ease-step) infinite;
+  }
+
+  /* The hero's amenities. */
+  .hs7-3d-bubble,
+  .hs7-3d-lift,
+  .hs7-3d-twinkle,
+  .hs7-3d-beat,
+  .hs7-3d-ring-wave,
+  .hs7-3d-turn {
+    transform-box: fill-box;
+    transform-origin: center;
+  }
+  /* The leaves sway from their stem, the bell rocks on its base. */
+  .hs7-3d-sway {
+    transform-box: view-box;
+    transform-origin: 32px 28px;
+  }
+  .hs7-3d-ring {
+    transform-box: view-box;
+    transform-origin: 32px 45px;
+  }
+  .hs7-3d-ring-wave {
+    opacity: 0;
+  }
+  [data-inview] .hs7-3d-wave {
+    animation: hs7-3d-wave 2.4s linear infinite;
+  }
+  [data-inview] .hs7-3d-sway {
+    animation: hs7-3d-sway 3.6s ease-in-out infinite;
+  }
+  [data-inview] .hs7-3d-steam {
+    animation: hs7-3d-steam 2.1s ease-out infinite;
+  }
+  [data-inview] .hs7-3d-bubble {
+    animation: hs7-3d-bubble 2s ease-out infinite;
+  }
+  [data-inview] .hs7-3d-lift {
+    animation: hs7-3d-lift 2.8s ease-in-out infinite;
+  }
+  [data-inview] .hs7-3d-twinkle {
+    animation: hs7-3d-twinkle 2.4s ease-in-out infinite;
+  }
+  [data-inview] .hs7-3d-beat {
+    animation: hs7-3d-beat 2.6s ease-in-out infinite;
+  }
+  [data-inview] .hs7-3d-ring-wave {
+    animation: hs7-3d-ring-wave 3s ease-out infinite;
+  }
+  [data-inview] .hs7-3d-ring {
+    animation: hs7-3d-ring 3s ease-in-out infinite;
+  }
+  [data-inview] .hs7-3d-press {
+    animation: hs7-3d-press 3s ease-in-out infinite;
+  }
+  [data-inview] .hs7-3d-turn {
+    animation: hs7-3d-turn 4.4s ease-in-out infinite;
+  }
+}
+@keyframes hs7-3d-float {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-2.5px);
+  }
+}
+@keyframes hs7-3d-shadow {
+  0%,
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.7;
+    transform: scale(0.86);
+  }
+}
+@keyframes hs7-3d-flip {
+  0%,
+  40% {
+    opacity: 0;
+    transform: scaleX(0.96);
+  }
+  46% {
+    opacity: 1;
+    transform: scaleX(0.7);
+  }
+  72% {
+    opacity: 1;
+    transform: scaleX(-0.96);
+  }
+  84%,
+  100% {
+    opacity: 0;
+    transform: scaleX(-0.96);
+  }
+}
+@keyframes hs7-3d-draw {
+  0% {
+    opacity: 1;
+    stroke-dashoffset: 1;
+  }
+  35%,
+  88% {
+    opacity: 1;
+    stroke-dashoffset: 0;
+  }
+  100% {
+    opacity: 0;
+    stroke-dashoffset: 0;
+  }
+}
+@keyframes hs7-3d-pop {
+  0%,
+  30% {
+    transform: scale(0);
+  }
+  40% {
+    transform: scale(1.15);
+  }
+  46%,
+  90% {
+    transform: scale(1);
+  }
+  100% {
+    transform: scale(0);
+  }
+}
+@keyframes hs7-3d-swing {
+  0%,
+  70%,
+  100% {
+    transform: rotate(0);
+  }
+  12% {
+    transform: rotate(9deg);
+  }
+  30% {
+    transform: rotate(-6deg);
+  }
+  46% {
+    transform: rotate(3deg);
+  }
+  60% {
+    transform: rotate(-1deg);
+  }
+}
+@keyframes hs7-3d-lit {
+  0%,
+  45%,
+  85%,
+  100% {
+    opacity: 1;
+  }
+  55%,
+  75% {
+    opacity: 0.15;
+  }
+}
+@keyframes hs7-3d-drop {
+  0% {
+    opacity: 0;
+    transform: translateY(-14px);
+  }
+  12% {
+    opacity: 1;
+  }
+  26% {
+    transform: translateY(0);
+  }
+  32% {
+    transform: translateY(-3px);
+  }
+  38%,
+  86% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(0);
+  }
+}
+@keyframes hs7-3d-grow {
+  from {
+    transform: scaleY(0.12);
+  }
+  to {
+    transform: scaleY(1);
+  }
+}
+@keyframes hs7-3d-dot {
+  0%,
+  60%,
+  100% {
+    opacity: 0.55;
+    transform: translateY(0);
+  }
+  30% {
+    opacity: 1;
+    transform: translateY(-3px);
+  }
+}
+@keyframes hs7-3d-wave {
+  to {
+    transform: translateX(-8px);
+  }
+}
+@keyframes hs7-3d-sway {
+  0%,
+  100% {
+    transform: rotate(-5deg);
+  }
+  50% {
+    transform: rotate(5deg);
+  }
+}
+@keyframes hs7-3d-steam {
+  0% {
+    opacity: 0;
+    transform: translateY(3px);
+  }
+  35% {
+    opacity: 0.85;
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-6px);
+  }
+}
+@keyframes hs7-3d-bubble {
+  0% {
+    opacity: 0;
+    transform: translateY(0) scale(0.5);
+  }
+  25% {
+    opacity: 1;
+    transform: translateY(-2px) scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-9px) scale(1);
+  }
+}
+@keyframes hs7-3d-lift {
+  0%,
+  60%,
+  100% {
+    transform: translateY(0) rotate(0);
+  }
+  22% {
+    transform: translateY(-7px) rotate(-3deg);
+  }
+  40% {
+    transform: translateY(0) rotate(0);
+  }
+  46% {
+    transform: translateY(-1.2px);
+  }
+  52% {
+    transform: translateY(0);
+  }
+}
+@keyframes hs7-3d-twinkle {
+  0%,
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.4;
+    transform: scale(0.45);
+  }
+}
+@keyframes hs7-3d-beat {
+  0%,
+  40%,
+  60%,
+  100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.18);
+  }
+}
+@keyframes hs7-3d-ring-wave {
+  0%,
+  30% {
+    opacity: 0;
+    transform: scale(0.85);
+  }
+  38% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  62%,
+  100% {
+    opacity: 0;
+    transform: scale(1.08);
+  }
+}
+@keyframes hs7-3d-ring {
+  0%,
+  30%,
+  45%,
+  100% {
+    transform: rotate(0);
+  }
+  33% {
+    transform: rotate(-4deg);
+  }
+  36% {
+    transform: rotate(4deg);
+  }
+  39% {
+    transform: rotate(-3deg);
+  }
+  42% {
+    transform: rotate(2deg);
+  }
+}
+@keyframes hs7-3d-press {
+  0%,
+  24%,
+  33%,
+  100% {
+    transform: translateY(0);
+  }
+  28% {
+    transform: translateY(2.2px);
+  }
+}
+@keyframes hs7-3d-turn {
+  0%,
+  55%,
+  85%,
+  100% {
+    transform: scaleX(1);
+  }
+  70% {
+    transform: scaleX(0.08);
+  }
+}
+@keyframes hs7-3d-rise {
+  0%,
+  100% {
+    transform: translateY(10px);
+  }
+  28% {
+    transform: translateY(-2px);
+  }
+  36%,
+  86% {
+    transform: translateY(0);
+  }
+}
+
+/* ============================================================
    Reduced motion — parity with the four legacy opt-outs
    ============================================================ */
 @media (prefers-reduced-motion: reduce) {
@@ -722,5 +1155,9 @@
   }
   .hs7-orbit {
     display: none;
+  }
+  /* The dossier's pictograms stay as drawn. */
+  .hs7-3d * {
+    animation: none !important;
   }
 }
