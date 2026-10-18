@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react';
 import { Faq } from '@/components/honest-7/Faq';
 import { HeroCarousel } from '@/components/honest-7/HeroCarousel';
-import { Icon3d } from '@/components/honest-7/Icons3d';
+import { Icon3d, type TrackIconName } from '@/components/honest-7/Icons3d';
 import { AmenityIcon, ArrowDown, ArrowRight, Check, Orbit, Oval, Phone, Underline } from '@/components/honest-7/Icons';
 import { HeaderCta, ScrollCta, SectionView, StickyCta } from '@/components/honest-7/LandingActions';
 import { LandingTracking } from '@/components/honest-7/LandingTracking';
@@ -617,31 +617,42 @@ function TrackLine() {
 /* ── 5. Track record: delivery proof kept apart from commercial demand. ─── */
 
 function TrackRecord() {
-  const lines: ReactNode[] = [
-    <span key="delivered">
-      {delivered.length} résidences déjà{' '}
-      <InView as="span" className="relative inline-block">
-        livrées
-        <Underline className="text-sand" />
-      </InView>
-      .
-    </span>,
-    ...(SOLD_SHOWN ? [<span key="sold">{sold.length} autres déjà vendues.</span>] : []),
-    <span key="hs7" className={cn(SERIF, 'text-[1.1em] text-sand')}>
-      Honest 7 prend forme à Guéliz.
-    </span>,
+  // The record in three figures over their pictograms — the six-line headline read as too much text
+  // (client, 2026-10-18). « Honest 7 prend forme » became the third figure, the delivery year.
+  const stats: { icon: TrackIconName; value: number | string; label: string }[] = [
+    { icon: 'delivered', value: delivered.length, label: 'Résidences livrées' },
+    ...(SOLD_SHOWN ? [{ icon: 'sold' as const, value: sold.length, label: 'Déjà vendues' }] : []),
+    ...(current ? [{ icon: 'site' as const, value: FACTS.delivery.replace(/^\D+/, ''), label: 'Livraison Honest 7' }] : []),
   ];
 
   return (
     <section id="promoteur" aria-labelledby="track-title" className="overflow-x-clip bg-forest py-band-tight text-cream">
       <div className={SHELL}>
-        <p className={cn(EYEBROW, 'text-sand')}>Le promoteur</p>
-        <h2 id="track-title" className={cn(H2, 'mt-5 text-[clamp(32px,5.6vw,84px)]', H2_LEADING)}>
-          <Lines lines={lines} />
+        {/* The eyebrow is the heading: the figures under it carry the message. */}
+        <h2 id="track-title" className={cn('font-sans', EYEBROW, 'text-sand')}>
+          Le promoteur
         </h2>
+        <InView amount={0.3} className="mt-5">
+          <ul className={cn('grid gap-2 sm:gap-4', stats.length > 2 ? 'grid-cols-3' : 'grid-cols-2')}>
+            {stats.map((stat, index) => (
+              <li
+                key={stat.icon}
+                className="flex flex-col items-center gap-1 rounded-[18px] border border-cream/12 bg-white/[0.04] px-1 pb-4 pt-3 text-center lg:flex-row lg:gap-5 lg:px-6 lg:py-5 lg:text-left"
+              >
+                <Icon3d name={stat.icon} float={index * 0.8} symbol={stat.icon === 'sold' ? 'VENDU' : undefined} className="size-14 lg:size-20" />
+                <span>
+                  <span className="block font-sans text-[clamp(32px,9.5vw,60px)] font-medium leading-none tracking-[-0.03em] tabular-nums">{stat.value}</span>
+                  <span className="mt-2 block text-balance text-[11.5px] font-semibold uppercase leading-[1.3] tracking-[0.12em] text-sand lg:text-[13px]">
+                    {stat.label}
+                  </span>
+                </span>
+              </li>
+            ))}
+          </ul>
+        </InView>
 
-        <div className="mt-10 lg:mt-14">
-          <GroupLabel>Preuve de livraison</GroupLabel>
+        <div className="mt-9 lg:mt-12">
+          <GroupLabel aside="Photos réelles">Preuve de livraison</GroupLabel>
           <ol className="-mx-gutter mt-4 flex snap-x snap-mandatory gap-3 overflow-x-auto px-gutter scroll-px-gutter [scrollbar-width:none] sm:gap-4 lg:mx-0 lg:grid lg:grid-cols-4 lg:gap-5 lg:overflow-visible lg:px-0 [&::-webkit-scrollbar]:hidden">
             {delivered.map((residence) => (
               <li key={residence.number} className="w-[62vw] shrink-0 snap-start sm:w-[38vw] lg:w-auto">
@@ -664,38 +675,11 @@ function TrackRecord() {
               </li>
             ))}
           </ol>
-          <p className="mt-4 text-[14px] text-cream/65">Photographies réelles des résidences Honest 1 à 4.</p>
         </div>
 
-        {/* Phones: one compact card — the strip right above this section already carries the statuses. */}
-        {current && (
-          <div className="mt-7 rounded-[14px] bg-cream px-5 py-4 text-forest lg:hidden">
-            <p className="font-sans text-[19px] font-medium uppercase leading-none tracking-[-0.01em]">Honest Signature 7</p>
-            <p className="mt-2.5 flex items-center gap-2 text-[13px] font-semibold uppercase tracking-[0.12em]">
-              <span aria-hidden="true" className="size-2 rounded-full bg-olive" />
-              {STATUS_LABEL[current.status]}
-            </p>
-            <p className="mt-1.5 text-[14.5px] text-forest/75">Livraison prévue {FACTS.delivery.toLowerCase()}</p>
-          </div>
-        )}
-
-        <div className={cn('mt-12 hidden gap-12 lg:grid', SOLD_SHOWN && 'lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]')}>
-          {SOLD_SHOWN && (
-            <Rise>
-              <GroupLabel>Demande commerciale</GroupLabel>
-              <ul className="mt-4 grid grid-cols-2 gap-3 sm:gap-4">
-                {sold.map((residence) => (
-                  <li key={residence.number} className="rounded-[14px] border border-cream/20 p-4 sm:p-5">
-                    <span className="text-[13px] font-medium tabular-nums tracking-[0.14em] text-sand">0{residence.number}</span>
-                    <p className="mt-2 font-sans text-[21px] font-medium uppercase leading-none tracking-[-0.01em]">{residence.name}</p>
-                    <p className="mt-2.5 text-[13px] font-semibold uppercase tracking-[0.12em] text-cream/85">{STATUS_LABEL[residence.status]}</p>
-                  </li>
-                ))}
-              </ul>
-            </Rise>
-          )}
+        {/* From lg, Honest 7 with its CTA. On phones the third figure says it, and the sticky bar carries the CTA. */}
           {current && (
-            <Rise delay={0.08}>
+            <Rise className="mt-12 hidden lg:block">
               <GroupLabel>Aujourd’hui</GroupLabel>
               <div className="mt-4 flex flex-col gap-5 rounded-[14px] bg-cream p-5 text-forest sm:flex-row sm:items-center sm:justify-between sm:p-6">
                 <div>
@@ -717,17 +701,17 @@ function TrackRecord() {
               </div>
             </Rise>
           )}
-        </div>
       </div>
     </section>
   );
 }
 
-function GroupLabel({ children }: { children: ReactNode }) {
+function GroupLabel({ children, aside }: { children: ReactNode; aside?: string }) {
   return (
     <p className="flex items-center gap-4 text-[13px] font-medium uppercase tracking-[0.2em] text-sand">
       {children}
       <span aria-hidden="true" className="h-px flex-1 bg-cream/18" />
+      {aside && <span className="text-[12.5px] font-normal normal-case tracking-normal text-cream/65">{aside}</span>}
     </p>
   );
 }

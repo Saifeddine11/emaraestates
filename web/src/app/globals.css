@@ -700,7 +700,8 @@
 
 /* ============================================================
    /honest-signature-7/ — the pictograms in relief (Icons3d.tsx):
-   the hero's amenities, the dossier, the steps after the form.
+   the hero's amenities, the dossier, the steps after the form and
+   the developer's record.
    Once their block has been seen ([data-inview]) each one floats
    and moves one part on a loop. Their drawing without animation
    is the resting state: what the page shows without JavaScript or
@@ -829,6 +830,25 @@
   }
   [data-inview] .hs7-3d-turn {
     animation: hs7-3d-turn 4.4s ease-in-out infinite;
+  }
+
+  /* The developer's record: the « sold » board swings from its arm, the crane lowers a block. */
+  .hs7-3d-hang {
+    transform-box: view-box;
+    transform-origin: 33px 11px;
+  }
+  .hs7-3d-cable {
+    transform-box: fill-box;
+    transform-origin: 50% 0;
+  }
+  [data-inview] .hs7-3d-hang {
+    animation: hs7-3d-hang 3.8s ease-in-out infinite;
+  }
+  [data-inview] .hs7-3d-cable {
+    animation: hs7-3d-cable 4s ease-in-out infinite;
+  }
+  [data-inview] .hs7-3d-hoist {
+    animation: hs7-3d-hoist 4s ease-in-out infinite;
   }
 }
 @keyframes hs7-3d-float {
@@ -1115,6 +1135,41 @@
   }
   70% {
     transform: scaleX(0.08);
+  }
+}
+@keyframes hs7-3d-hang {
+  0%,
+  100% {
+    transform: rotate(0);
+  }
+  25% {
+    transform: rotate(3deg);
+  }
+  75% {
+    transform: rotate(-3deg);
+  }
+}
+/* The cable runs 8.8 units: 1.5 times as long lowers the block by 4.4, as `hs7-3d-hoist` does. */
+@keyframes hs7-3d-cable {
+  0%,
+  20%,
+  100% {
+    transform: scaleY(1);
+  }
+  50%,
+  70% {
+    transform: scaleY(1.5);
+  }
+}
+@keyframes hs7-3d-hoist {
+  0%,
+  20%,
+  100% {
+    transform: translateY(0);
+  }
+  50%,
+  70% {
+    transform: translateY(4.4px);
   }
 }
 @keyframes hs7-3d-rise {

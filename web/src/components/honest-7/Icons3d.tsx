@@ -3,18 +3,20 @@ import type { AmenityIconName, DossierIconName } from '@/lib/content/honest-sign
 import { cn } from '@/lib/cn';
 
 /*
- * The page's pictograms in relief — the hero's amenities, the dossier and the
- * steps after the form: lit faces, a side in shadow and a soft shadow on the
- * ground, in the brand's greens and golds. Each one floats and moves one part
- * on a loop (the water ripples, the page turns, the bell rings…)
- * once its block has been seen — `[data-inview] .hs7-3d-*` in globals.css.
- * The drawing as it stands, with no animation, is the reduced-motion and
- * no-JavaScript state. Plain SVG: nothing to download, sharp at any size.
+ * The page's pictograms in relief — the hero's amenities, the dossier, the
+ * steps after the form and the developer's record: lit faces, a side in shadow
+ * and a soft shadow on the ground, in the brand's greens and golds. Each one
+ * floats and moves one part on a loop (the water ripples, the page turns, the
+ * bell rings…) once its block has been seen — `[data-inview] .hs7-3d-*` in
+ * globals.css. The drawing as it stands, with no animation, is the
+ * reduced-motion and no-JavaScript state. Plain SVG: nothing to download,
+ * sharp at any size.
  *
  * Gradient ids carry the icon's name: each pictogram appears once per page.
  */
 
 export type StepIconName = 'form' | 'adviser' | 'received';
+export type TrackIconName = 'delivered' | 'sold' | 'site';
 
 type Point = readonly [number, number];
 const points = (list: Point[]) => list.map(([x, y]) => `${+x.toFixed(2)},${+y.toFixed(2)}`).join(' ');
@@ -29,13 +31,30 @@ function Gradient({ id, from, to, x2 = 0, y2 = 1 }: { id: string; from: string; 
   );
 }
 
-function Frame({ id, children, defs, shadow, className, style }: { id: string; children: ReactNode; defs: ReactNode; shadow: { cy: number; rx: number }; className?: string; style?: CSSProperties }) {
+function Frame({
+  id,
+  children,
+  defs,
+  shadow,
+  ground = '#2d3a2d',
+  className,
+  style,
+}: {
+  id: string;
+  children: ReactNode;
+  defs: ReactNode;
+  shadow: { cy: number; rx: number };
+  /** The shadow's colour: black on the green band, where the green one would not show. */
+  ground?: string;
+  className?: string;
+  style?: CSSProperties;
+}) {
   return (
     <svg viewBox="0 0 64 64" aria-hidden="true" focusable="false" className={cn('hs7-3d shrink-0 overflow-visible', className)} style={style}>
       <defs>
         <radialGradient id={`${id}-ground`}>
-          <stop offset="0" stopColor="#2d3a2d" stopOpacity="0.28" />
-          <stop offset="1" stopColor="#2d3a2d" stopOpacity="0" />
+          <stop offset="0" stopColor={ground} stopOpacity="0.28" />
+          <stop offset="1" stopColor={ground} stopOpacity="0" />
         </radialGradient>
         {defs}
       </defs>
@@ -643,9 +662,144 @@ function Parking(props: IconProps) {
   );
 }
 
+/* ── The developer's record, on the green band ───────────────────────────── */
+
+function Delivered(props: IconProps) {
+  const id = 'hs7t-delivered';
+  const left = (s: number, t: number): Point => [16 + 15 * s, 15 + 7.5 * s + 31 * t];
+  const right = (s: number, t: number): Point => [31 + 15 * s, 22.5 - 7.5 * s + 31 * t];
+  const pane = (face: typeof left, s: number, t: number) => points([face(s, t), face(s + 0.22, t), face(s + 0.22, t + 0.12), face(s, t + 0.12)]);
+  const LIT: Record<string, number> = { 'l-1-0': 0, 'r-0-1': 0.7, 'l-0-2': 1.4, 'r-1-3': 2.1 };
+  const windows = (face: typeof left, side: 'l' | 'r') =>
+    [0.2, 0.58].flatMap((s, column) =>
+      [0.1, 0.31, 0.52, 0.73].map((t, row) => {
+        const key = `${side}-${column}-${row}`;
+        return key in LIT ? (
+          <polygon key={key} className="hs7-3d-lit" style={delay(LIT[key])} points={pane(face, s, t)} fill="#d2b178" />
+        ) : (
+          <polygon key={key} points={pane(face, s, t)} fill="#2d3a2d" fillOpacity={side === 'l' ? 0.28 : 0.4} />
+        );
+      }),
+    );
+  return (
+    <Frame
+      id={id}
+      ground="#000"
+      shadow={{ cy: 55, rx: 20 }}
+      className={props.className}
+      style={props.style}
+      defs={
+        <>
+          <Gradient id={`${id}-left`} from="#fffdf8" to="#e2d8c6" />
+          <Gradient id={`${id}-right`} from="#d6c9b1" to="#b3a48b" />
+          <Gradient id={`${id}-badge`} from="#9fae8c" to="#5d705a" x2={1} />
+        </>
+      }
+    >
+      <polygon points="16,15 31,22.5 31,53.5 16,46" fill={`url(#${id}-left)`} />
+      <polygon points="31,22.5 46,15 46,46 31,53.5" fill={`url(#${id}-right)`} />
+      <polygon points="31,7.5 46,15 31,22.5 16,15" fill="#fffdf8" />
+      {windows(left, 'l')}
+      {windows(right, 'r')}
+      <g className="hs7-3d-beat" style={delay(0.3)}>
+        <circle cx="47" cy="45" r="8.5" fill={`url(#${id}-badge)`} stroke="#2d3a2d" strokeWidth="1.2" />
+        <path d="M43.2 45.1L45.9 47.7L50.9 42.5" fill="none" stroke="#faf8f4" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+      </g>
+    </Frame>
+  );
+}
+
+function Sold({ symbol = 'VENDU', ...props }: IconProps) {
+  const id = 'hs7t-sold';
+  return (
+    <Frame
+      id={id}
+      ground="#000"
+      shadow={{ cy: 56, rx: 16 }}
+      className={props.className}
+      style={props.style}
+      defs={
+        <>
+          <Gradient id={`${id}-wood`} from="#e2d8c6" to="#a99a83" x2={1} y2={0} />
+          <Gradient id={`${id}-board`} from="#fffdf8" to="#ece2cf" />
+          <Gradient id={`${id}-band`} from="#f1dfb5" to="#b8925a" x2={1} />
+          <clipPath id={`${id}-clip`}>
+            <rect x="17" y="17" width="32" height="22" rx="2.5" />
+          </clipPath>
+        </>
+      }
+    >
+      <ellipse cx="13.5" cy="55" rx="4.5" ry="1.6" fill="#a99a83" />
+      <rect x="12" y="8" width="3" height="47" rx="1" fill={`url(#${id}-wood)`} />
+      <rect x="12" y="8.6" width="40" height="2.8" rx="1" fill={`url(#${id}-wood)`} />
+      <g className="hs7-3d-hang">
+        <path d="M22 11.4V17M44 11.4V17" stroke="#c8bba8" strokeWidth="1" />
+        <rect x="18.8" y="18.8" width="32" height="22" rx="2.5" fill="#8a7d68" />
+        <rect x="17" y="17" width="32" height="22" rx="2.5" fill={`url(#${id}-board)`} />
+        <g clipPath={`url(#${id}-clip)`} transform="rotate(-14 33 28)">
+          <rect className="hs7-3d-beat" x="8" y="23.4" width="50" height="9.2" fill={`url(#${id}-band)`} />
+        </g>
+        <text x="33" y="30.4" transform="rotate(-14 33 28)" textAnchor="middle" fontSize="6.8" fontWeight="700" letterSpacing="0.6" fill="#2d3a2d">
+          {symbol}
+        </text>
+      </g>
+    </Frame>
+  );
+}
+
+function Site(props: IconProps) {
+  const id = 'hs7t-site';
+  /** A lattice between two rails: the crane's mast and jib. */
+  const lattice = (from: number, to: number, a: number, b: number, vertical: boolean) => {
+    const steps = Math.round(Math.abs(to - from) / 3.5);
+    const step = (to - from) / steps;
+    const zig = Array.from({ length: steps + 1 }, (_, i) => {
+      const along = from + i * step;
+      const across = i % 2 ? b : a;
+      return vertical ? `${across} ${along}` : `${along} ${across}`;
+    });
+    const rails = vertical ? `M${a} ${from}V${to}M${b} ${from}V${to}` : `M${from} ${a}H${to}M${from} ${b}H${to}`;
+    return `${rails}M${zig.join('L')}`;
+  };
+  return (
+    <Frame
+      id={id}
+      ground="#000"
+      shadow={{ cy: 56, rx: 24 }}
+      className={props.className}
+      style={props.style}
+      defs={
+        <>
+          <Gradient id={`${id}-left`} from="#fffdf8" to="#e2d8c6" />
+          <Gradient id={`${id}-right`} from="#d6c9b1" to="#b3a48b" />
+        </>
+      }
+    >
+      <polygon points="8,38 21,44.5 21,55 8,48.5" fill={`url(#${id}-left)`} />
+      <polygon points="21,44.5 34,38 34,48.5 21,55" fill={`url(#${id}-right)`} />
+      <polygon points="21,31.5 34,38 21,44.5 8,38" fill="#fffdf8" />
+      <path d="M8 38V33M21 44.5V39.5M34 38V33M21 31.5V26.5" stroke="#c8bba8" strokeWidth="1.3" strokeLinecap="round" />
+      <path d="M11 41.5V45.5M14.5 43.3V47.3M24.5 46.5V50.5M28 44.8V48.8" stroke="#2d3a2d" strokeOpacity="0.3" strokeWidth="2" />
+      <g fill="none" stroke="#d2b178" strokeWidth="0.9" strokeLinejoin="round">
+        <path d={lattice(55, 10, 42.5, 45.5, true)} />
+        <path d={lattice(14, 57, 9.5, 12.2, false)} />
+        <path d="M44 4L16 9.5M44 4L56 9.5M42.5 10L44 4L45.5 10" />
+      </g>
+      <rect x="51" y="12.2" width="5.5" height="4.2" rx="0.6" fill="#a8834a" />
+      <rect x="40.5" y="12.2" width="5" height="4" rx="0.8" fill="#fffdf8" />
+      <path className="hs7-3d-cable" d="M23 12.2V21" stroke="#c8bba8" strokeWidth="0.8" />
+      <g className="hs7-3d-hoist">
+        <polygon points="23,21 27,23 23,25 19,23" fill="#fffdf8" />
+        <polygon points="19,23 23,25 23,29 19,27" fill="#e2d8c6" />
+        <polygon points="23,25 27,23 27,27 23,29" fill="#b3a48b" />
+      </g>
+    </Frame>
+  );
+}
+
 type IconProps = { className?: string; style?: CSSProperties; symbol?: string };
 
-type Icon3dName = AmenityIconName | DossierIconName | StepIconName;
+type Icon3dName = AmenityIconName | DossierIconName | StepIconName | TrackIconName;
 
 const ICONS: Record<Icon3dName, (props: IconProps) => ReactNode> = {
   pool: Pool,
@@ -666,11 +820,15 @@ const ICONS: Record<Icon3dName, (props: IconProps) => ReactNode> = {
   form: Form,
   adviser: Adviser,
   received: Received,
+  delivered: Delivered,
+  sold: Sold,
+  site: Site,
 };
 
 /**
  * One pictogram. `float` offsets its float in the loop so a row of them does
- * not bob in step; `symbol` is the currency printed on the price tag.
+ * not bob in step; `symbol` is the currency printed on the price tag, or the
+ * word on the « sold » board.
  */
 export function Icon3d({ name, className, float = 0, symbol }: { name: Icon3dName; className?: string; float?: number; symbol?: string }) {
   const Drawing = ICONS[name];

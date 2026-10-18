@@ -288,7 +288,8 @@ console.log(`\nHONEST SIGNATURE 7 — PAID LANDING QA (${engine.name()})\n`);
   record('CTAs: a light turns around the border of each one (a transform, never a repaint), hidden from assistive tech', orbit.rings === 7 && orbit.onForms === 0 && orbit.name === 'hs7-orbit' && orbit.loops === 'infinite' && orbit.hidden, JSON.stringify(orbit));
   record('Hero: two CTAs', (await hero.getByRole('link', { name: /Demander les disponibilités/ }).count()) === 1 && (await hero.getByRole('link', { name: /Voir les appartements témoins/ }).count()) === 1);
   record('Amenities: all nine named on the page', ['piscine extérieure', 'piscine intérieure chauffée', 'spa', 'sauna', 'jacuzzi', 'salle de sport', 'cinéma extérieur', 'conciergerie', 'parking titré'].every((word) => state.text.toLowerCase().includes(word)));
-  record('Track record: delivered ≠ sold (no “6 résidences”)', /4 RÉSIDENCES DÉJÀ LIVRÉES/.test(state.text) && !/6 résidences/i.test(state.text));
+  // Since 2026-10-18 the record is three figures over pictograms: « 4 / Résidences livrées », « 2 / Déjà vendues ».
+  record('Track record: delivered ≠ sold (no “6 résidences”)', /\b4\s+RÉSIDENCES LIVRÉES/.test(state.text) && /\b2\s+DÉJÀ VENDUES/.test(state.text) && !/6 résidences/i.test(state.text));
   record(
     'Performance: hero preloaded — the 3:2 render below lg and from lg, each with its own media query',
     state.preloads.join(' | ') === '(max-width: 1023px) → /media/honest-7/facade-jour-640.webp | (min-width: 1024px) → /media/honest-7/facade-jour-640.webp',
