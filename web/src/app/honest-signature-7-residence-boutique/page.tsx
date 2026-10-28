@@ -2,7 +2,8 @@ import type { Metadata, Viewport } from 'next';
 import Script from 'next/script';
 import { preload } from 'react-dom';
 import { BoutiqueLanding } from '@/components/honest-7-residence-boutique/BoutiqueLanding';
-import { FACTS, HERO_IMAGE, HERO_IMAGE_MOBILE, HERO_MEDIA_DESKTOP, HERO_SIZES, VALIDATION } from '@/lib/content/honest-signature-7';
+import { FACTS, HERO_IMAGE_MOBILE, HERO_MEDIA_DESKTOP, HERO_SIZES, VALIDATION } from '@/lib/content/honest-signature-7';
+import { HERO_AVIF } from '@/lib/content/honest-signature-7-residence-boutique';
 import { ANALYTICS_AHREFS_KEY } from '@/lib/site';
 
 /**
@@ -43,15 +44,24 @@ export const viewport: Viewport = {
 
 export default function Honest7BoutiquePage() {
   // The façade is the LCP element on every screen: fetch the right file first —
-  // the 3:2 render below lg, the full render from lg. The media queries are exclusive.
-  preload(HERO_IMAGE_MOBILE.src, {
+  // the 3:2 render below lg, the full render from lg, in AVIF like the <picture>'s
+  // first sources (`type` lets a browser without AVIF skip the hint). The media queries are exclusive.
+  preload('/media/honest-7/facade-jour-828.avif', {
     as: 'image',
-    imageSrcSet: HERO_IMAGE_MOBILE.srcSet,
+    type: 'image/avif',
+    imageSrcSet: HERO_AVIF.mobile,
     imageSizes: HERO_IMAGE_MOBILE.sizes,
     media: HERO_IMAGE_MOBILE.media,
     fetchPriority: 'high',
   });
-  preload(HERO_IMAGE.src, { as: 'image', imageSrcSet: HERO_IMAGE.srcSet, imageSizes: HERO_SIZES, media: HERO_MEDIA_DESKTOP, fetchPriority: 'high' });
+  preload('/media/honest-7/facade-jour-1536.avif', {
+    as: 'image',
+    type: 'image/avif',
+    imageSrcSet: HERO_AVIF.desktop,
+    imageSizes: HERO_SIZES,
+    media: HERO_MEDIA_DESKTOP,
+    fetchPriority: 'high',
+  });
 
   return (
     <>

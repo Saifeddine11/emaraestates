@@ -20,6 +20,21 @@ import { AMENITY_GROUPS as BASE_AMENITY_GROUPS, FAQ as BASE_FAQ, FACTS, type Ame
  */
 export const MESSAGE_TAG = 'Page : résidence boutique';
 
+/**
+ * The façade in AVIF, offered before the WebP files of HERO_IMAGE and
+ * HERO_IMAGE_MOBILE (same widths, same render): about 40 % lighter for the
+ * LCP image. Browsers without AVIF take the WebP sources.
+ */
+export const HERO_AVIF = {
+  mobile: '/media/honest-7/facade-jour-640.avif 640w, /media/honest-7/facade-jour-828.avif 828w, /media/honest-7/facade-jour-1080.avif 1080w',
+  desktop:
+    '/media/honest-7/facade-jour-640.avif 640w, /media/honest-7/facade-jour-828.avif 828w, /media/honest-7/facade-jour-1080.avif 1080w, /media/honest-7/facade-jour-1536.avif 1536w',
+} as const;
+
+/** The header logo, drawn about 60 px wide (72 px from lg): a 160 px file below 2× screens. */
+export const LOGO_SRCSET = '/media/honest-7/logo-emara-forest-160.webp 160w, /media/honest-7/logo-emara-forest-320.webp 320w';
+export const LOGO_SIZES = '(min-width: 1024px) 72px, 57px';
+
 /** The conciergerie and parking lines say « comme à l’hôtel »; the pictured groups are unchanged. */
 export const AMENITY_GROUPS: AmenityGroup[] = BASE_AMENITY_GROUPS.map((group) => {
   if (group.items[0].icon === 'concierge') {

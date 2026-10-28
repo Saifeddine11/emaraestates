@@ -1,7 +1,8 @@
 import type { ReactNode } from 'react';
 import { Faq } from '@/components/honest-7-residence-boutique/Faq';
 import { HeroCarousel } from '@/components/honest-7/HeroCarousel';
-import { Icon3d, type TrackIconName } from '@/components/honest-7/Icons3d';
+import type { TrackIconName } from '@/components/honest-7/Icons3d';
+import { Pictogram } from '@/components/honest-7-residence-boutique/Pictogram';
 import { ArrowDown, ArrowRight, Check, Orbit, Oval, Phone } from '@/components/honest-7/Icons';
 import { Hotel3d } from '@/components/honest-7-residence-boutique/Hotel3d';
 import { HeaderCta, ScrollCta, SectionView, StickyCta } from '@/components/honest-7/LandingActions';
@@ -20,6 +21,7 @@ import {
   HERO_AMENITIES,
   HERO_IMAGE,
   HERO_IMAGE_MOBILE,
+  HERO_MEDIA_DESKTOP,
   HERO_SIZES,
   HERO_SLIDES,
   MAP_IMAGE,
@@ -31,7 +33,7 @@ import {
   type AmenityGroup,
   type Residence,
 } from '@/lib/content/honest-signature-7';
-import { AMENITY_GROUPS, MESSAGE_TAG } from '@/lib/content/honest-signature-7-residence-boutique';
+import { AMENITY_GROUPS, HERO_AVIF, LOGO_SIZES, LOGO_SRCSET, MESSAGE_TAG } from '@/lib/content/honest-signature-7-residence-boutique';
 import { CONTACT, WHATSAPP } from '@/lib/site';
 import { cn } from '@/lib/cn';
 
@@ -135,7 +137,15 @@ function Header() {
     <header className="relative z-50 border-b border-forest/10 bg-shell/92 backdrop-blur-md lg:sticky lg:top-0">
       <div className={cn(SHELL, 'flex h-14 items-center justify-between gap-4 lg:h-[68px]')}>
         {/* eslint-disable-next-line @next/next/no-img-element -- static export; 320px WebP of the official forest logo */}
-        <img src="/media/honest-7/logo-emara-forest-320.webp" alt="Emara Estates" width={320} height={180} className="h-8 w-auto lg:h-10" />
+        <img
+          src="/media/honest-7/logo-emara-forest-320.webp"
+          srcSet={LOGO_SRCSET}
+          sizes={LOGO_SIZES}
+          alt="Emara Estates"
+          width={320}
+          height={180}
+          className="h-8 w-auto lg:h-10"
+        />
         <p className="hidden text-[13px] font-medium uppercase tracking-[0.2em] text-forest/75 md:block">Honest Signature 7 · Résidence boutique</p>
         <div className="flex items-center gap-3">
           <HeaderCta />
@@ -205,6 +215,15 @@ function Hero() {
             <HeroCarousel slides={HERO_SLIDES} sizes={HERO_SIZES}>
               <picture className="block size-full">
                 <source
+                  type="image/avif"
+                  media={HERO_IMAGE_MOBILE.media}
+                  srcSet={HERO_AVIF.mobile}
+                  sizes={HERO_IMAGE_MOBILE.sizes}
+                  width={HERO_IMAGE_MOBILE.width}
+                  height={HERO_IMAGE_MOBILE.height}
+                />
+                <source type="image/avif" media={HERO_MEDIA_DESKTOP} srcSet={HERO_AVIF.desktop} sizes={HERO_SIZES} width={HERO_IMAGE.width} height={HERO_IMAGE.height} />
+                <source
                   media={HERO_IMAGE_MOBILE.media}
                   srcSet={HERO_IMAGE_MOBILE.srcSet}
                   sizes={HERO_IMAGE_MOBILE.sizes}
@@ -221,11 +240,6 @@ function Hero() {
               </span>
               {FACTS.plaza}
             </figcaption>
-            {/* Delivery proof in the first screen, on phones too. */}
-            <p className="absolute bottom-3 left-3 z-[3] flex items-center gap-1.5 whitespace-nowrap rounded-full bg-forest/92 py-1.5 pl-2.5 pr-3.5 text-[12px] font-medium uppercase tracking-[0.08em] text-cream lg:bottom-5 lg:left-5 lg:py-2 lg:pl-3 lg:pr-4 lg:text-[13px] lg:tracking-[0.1em]">
-              <Check className="size-3.5" />
-              {delivered.length} résidences <span className="hidden sm:inline">Honest </span>déjà livrées
-            </p>
           </figure>
         </div>
 
@@ -284,7 +298,7 @@ function Hero() {
             <ul aria-label="Les services hôteliers de la résidence" className="grid grid-cols-4 gap-x-1.5 gap-y-3 lg:gap-x-3">
               {HERO_AMENITIES.map((amenity, index) => (
                 <li key={amenity.label} className="flex flex-col items-center gap-1 text-center">
-                  <Icon3d name={amenity.icon} float={index * 0.6} className="size-11 lg:size-14" />
+                  <Pictogram name={amenity.icon} float={index * 0.6} className="size-11 lg:size-14" />
                   <span className="text-balance text-[12.5px] font-medium leading-[1.15] text-forest lg:text-[14px]">
                     {amenity.short ? (
                       <>
@@ -355,7 +369,7 @@ function FirstForm() {
               ).map((step, index) => (
                 <li key={step.icon} className="relative flex flex-col items-center gap-1.5 text-center">
                   <span className="relative rounded-full bg-shell px-1.5">
-                    <Icon3d name={step.icon} float={index * 0.9} className="size-16" />
+                    <Pictogram name={step.icon} float={index * 0.9} className="size-16" />
                     <span className="absolute -left-0.5 top-0 flex size-5 items-center justify-center rounded-full bg-forest text-[11px] font-semibold tabular-nums text-cream">
                       {index + 1}
                     </span>
@@ -391,7 +405,7 @@ function FirstForm() {
                     item.icon === 'rental' ? 'border-gold/80' : 'border-forest/[0.08]',
                   )}
                 >
-                  <Icon3d name={item.icon} float={index * 0.7} symbol={VALIDATION.euroPrices ? '€' : undefined} className="size-14" />
+                  <Pictogram name={item.icon} float={index * 0.7} symbol={VALIDATION.euroPrices ? '€' : undefined} className="size-14" />
                   <span className="text-balance text-[13.5px] font-medium leading-[1.2] sm:text-[15px]">{item.label}</span>
                 </li>
               ))}
@@ -516,7 +530,7 @@ function Amenities() {
         <div className="mt-3 grid gap-x-5 sm:mt-4 sm:grid-cols-2 lg:mt-5">
           {services.map((service, index) => (
             <Rise key={service.benefit} delay={index * 0.08} className="flex gap-4 border-t border-forest/18 py-6 lg:py-8">
-              <Icon3d name={service.items[0].icon} float={index * 0.7} className="size-14 shrink-0 lg:size-16" />
+              <Pictogram name={service.items[0].icon} float={index * 0.7} className="size-14 shrink-0 lg:size-16" />
               <div>
                 <p className={cn('text-[12.5px] font-medium uppercase tracking-[0.18em]', EYEBROW_LIGHT)}>{service.benefit}</p>
                 <h3 className="mt-1.5 font-sans text-[clamp(24px,2.6vw,34px)] font-medium uppercase leading-none tracking-[-0.025em] text-forest">
@@ -552,7 +566,7 @@ function AmenityCard({ group, className, sizes }: { group: AmenityGroup; classNa
           <ul className="mt-3 flex flex-wrap gap-1.5">
             {group.items.map((item, index) => (
               <li key={item.label} className="flex items-center gap-1.5 rounded-full bg-shell/95 py-1 pl-1.5 pr-3 text-[13.5px] font-medium text-forest">
-                <Icon3d name={item.icon} float={index * 0.6} className="size-8" />
+                <Pictogram name={item.icon} float={index * 0.6} className="size-8" />
                 {item.label}
               </li>
             ))}
@@ -610,7 +624,7 @@ function TrackRecord() {
                 key={stat.icon}
                 className="flex flex-col items-center gap-1 rounded-[18px] border border-cream/12 bg-white/[0.04] px-1 pb-4 pt-3 text-center lg:flex-row lg:gap-5 lg:px-6 lg:py-5 lg:text-left"
               >
-                <Icon3d name={stat.icon} float={index * 0.8} symbol={stat.icon === 'sold' ? 'VENDU' : undefined} className="size-14 lg:size-20" />
+                <Pictogram name={stat.icon} float={index * 0.8} symbol={stat.icon === 'sold' ? 'VENDU' : undefined} className="size-14 lg:size-20" />
                 <span>
                   <span className="block font-sans text-[clamp(32px,9.5vw,60px)] font-medium leading-none tracking-[-0.03em] tabular-nums">{stat.value}</span>
                   <span className="mt-2 block text-balance text-[11.5px] font-semibold uppercase leading-[1.3] tracking-[0.12em] text-sand lg:text-[13px]">

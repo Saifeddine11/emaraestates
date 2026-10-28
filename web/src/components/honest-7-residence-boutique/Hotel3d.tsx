@@ -1,3 +1,5 @@
+'use client';
+
 import type { CSSProperties } from 'react';
 import { cn } from '@/lib/cn';
 
@@ -9,7 +11,8 @@ import { cn } from '@/lib/cn';
  * Arcades on the ground floor and planted balconies, like the façade.
  *
  * Its gradient ids are its own; when it appears twice, both copies stay on
- * screen, so the first copy's definitions always resolve.
+ * screen, so the first copy's definitions always resolve. A client component
+ * so that its SVG is in the HTML once, not repeated in the RSC payload.
  */
 
 type Point = readonly [number, number];
