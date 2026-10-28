@@ -212,7 +212,7 @@ function Hero() {
           {/* Enlarged at the client's request (2026-10-17): on phones a 3:2 frame, the façade render's own shape (2:1 before);
               from lg a wider column (1.15fr) rather than a taller frame, which would only zoom further into the render. */}
           <figure className="relative m-0 h-[clamp(150px,min(59vw,32svh),460px)] overflow-hidden rounded-[18px] bg-sand/40 lg:h-[clamp(440px,calc(100svh-250px),640px)] lg:rounded-[24px]">
-            <HeroCarousel slides={HERO_SLIDES} sizes={HERO_SIZES}>
+            <HeroCarousel slides={HERO_SLIDES} sizes={HERO_SIZES} startOn="interaction">
               <picture className="block size-full">
                 <source
                   type="image/avif"

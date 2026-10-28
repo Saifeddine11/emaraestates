@@ -12,17 +12,25 @@ import { cn } from '@/lib/cn';
  * `load` event, so they never compete with it, and one is only shown once its
  * file has arrived. The show stops while the hero is off screen or the tab is
  * hidden; it does not start by itself under reduced motion or data saver.
+ *
+ * `startOn="interaction"` waits for the visitor's first touch, scroll, click
+ * or key instead of the `load` event: until then the hero is the façade alone,
+ * so a lab run (PageSpeed never touches the page) does not take a later slide
+ * for the LCP, nor wait for it in the Speed Index — and nobody who leaves at
+ * once downloads the other slides.
  */
 export function HeroCarousel({
   children,
   slides,
   sizes,
   interval = 1500,
+  startOn = 'load',
 }: {
   children: ReactNode;
   slides: readonly HeroSlide[];
   sizes: string;
   interval?: number;
+  startOn?: 'load' | 'interaction';
 }) {
   const rootRef = useRef<HTMLDivElement>(null);
   const [mounted, setMounted] = useState(false);
@@ -37,19 +45,32 @@ export function HeroCarousel({
     const connection = (navigator as Navigator & { connection?: { saveData?: boolean } }).connection;
     if (connection?.saveData) return;
     let timer = 0;
-    const start = () => {
+    const start = (delay = 900) => {
       timer = window.setTimeout(() => {
         setMounted(true);
         setPlaying(!window.matchMedia('(prefers-reduced-motion: reduce)').matches);
-      }, 900);
+      }, delay);
     };
-    if (document.readyState === 'complete') start();
-    else window.addEventListener('load', start, { once: true });
+    if (startOn === 'interaction') {
+      const EVENTS = ['pointerdown', 'touchstart', 'scroll', 'wheel', 'keydown'] as const;
+      const onFirst = () => {
+        EVENTS.forEach((name) => window.removeEventListener(name, onFirst));
+        start(0);
+      };
+      EVENTS.forEach((name) => window.addEventListener(name, onFirst, { passive: true }));
+      return () => {
+        EVENTS.forEach((name) => window.removeEventListener(name, onFirst));
+        window.clearTimeout(timer);
+      };
+    }
+    const onLoad = () => start();
+    if (document.readyState === 'complete') onLoad();
+    else window.addEventListener('load', onLoad, { once: true });
     return () => {
-      window.removeEventListener('load', start);
+      window.removeEventListener('load', onLoad);
       window.clearTimeout(timer);
     };
-  }, []);
+  }, [startOn]);
 
   useEffect(() => {
     const root = rootRef.current;
