@@ -645,6 +645,25 @@
     animation-timing-function: cubic-bezier(0.8, 0, 1, 1);
   }
 }
+/* /honest-signature-7-residence-boutique/: the letters of « résidence boutique » hop in turn, in em so the
+   hop stays clear of the line above at every size, then rest. */
+@keyframes hs7-letter-hop {
+  0%,
+  24%,
+  40%,
+  100% {
+    transform: translateY(0);
+    animation-timing-function: cubic-bezier(0, 0, 0.2, 1);
+  }
+  12% {
+    transform: translateY(-0.14em);
+    animation-timing-function: cubic-bezier(0.8, 0, 1, 1);
+  }
+  32% {
+    transform: translateY(-0.05em);
+    animation-timing-function: cubic-bezier(0.8, 0, 1, 1);
+  }
+}
 @keyframes hs7-ping {
   from {
     opacity: 0.7;

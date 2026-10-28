@@ -39,6 +39,8 @@ export const SLASHED_PAGES = [
   { from: 'honest-signature-7.html', to: 'honest-signature-7/index.html' },
   // UK-English copy of the HS7 landing (2026-10-12).
   { from: 'honest-signature-7-en.html', to: 'honest-signature-7-en/index.html' },
+  // « Résidence boutique » video campaign copy of the HS7 landing — noindex, not in the sitemap.
+  { from: 'honest-signature-7-residence-boutique.html', to: 'honest-signature-7-residence-boutique/index.html' },
 ];
 
 /**
@@ -211,6 +213,15 @@ export const EXPECTED_ROUTES = [
   },
   { url: '/honest-signature-7-en', status: 301, to: '/honest-signature-7-en/' },
   { url: '/honest-signature-7-en.html', status: 301, to: '/honest-signature-7-en/' },
+  {
+    url: '/honest-signature-7-residence-boutique/',
+    status: 200,
+    canonical: null,
+    robots: 'noindex, nofollow',
+    newRoute: true,
+  },
+  { url: '/honest-signature-7-residence-boutique', status: 301, to: '/honest-signature-7-residence-boutique/' },
+  { url: '/honest-signature-7-residence-boutique.html', status: 301, to: '/honest-signature-7-residence-boutique/' },
   { url: '/contact', status: 200, canonical: 'https://emaraestates.com/contact', indexed: true },
   { url: '/contact/', status: 301, to: '/contact' },
   { url: '/contact.html', status: 301, to: '/contact' },
@@ -316,6 +327,7 @@ export const BROWSER_ROUTES = [
   '/appartements-temoins/',
   '/honest-signature-7/',
   '/honest-signature-7-en/',
+  '/honest-signature-7-residence-boutique/',
   '/contact',
   '/residences-honest-678/',
   '/immobilier-luxe-marrakech',

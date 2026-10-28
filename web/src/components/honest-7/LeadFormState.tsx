@@ -200,8 +200,12 @@ function visitSummary({ visitOpen, visitDay, visitMoment }: Qualification) {
  *
  * Wire contract: same endpoint, form_type, source, leadSource, lead_origin and
  * landing_name as before. See the hand-off notes for the added keys.
+ *
+ * `messageTag` (e.g. « Page : résidence boutique ») opens the CRM `message`
+ * of a sibling landing that shares this form, so its leads can be told apart
+ * in HubSpot. Without it the message is exactly what it always was.
  */
-export function LeadFormProvider({ children }: { children: ReactNode }) {
+export function LeadFormProvider({ children, messageTag }: { children: ReactNode; messageTag?: string }) {
   const [stage, setStage] = useState<Stage>('form');
   // A lead already sent from this browser (known only after hydration): the confirmation, not the form.
   const alreadySent = useSyncExternalStore(subscribeToNothing, leadAlreadySent, () => false);
@@ -445,7 +449,8 @@ export function LeadFormProvider({ children }: { children: ReactNode }) {
     const isUpdate = kind === 'qualification';
     if (!isUpdate) metaLeadEventId.current ||= createMetaEventId('lead');
 
-    const message = isUpdate
+    const tag = messageTag ? `${messageTag} — ` : '';
+    const message = tag + (isUpdate
       ? [
           'Complément au dossier Honest Signature 7',
           `Projet : ${answers.intent || 'non précisé'}`,
@@ -458,7 +463,7 @@ export function LeadFormProvider({ children }: { children: ReactNode }) {
           'Demande : prix, plans et disponibilités',
           `Type de bien : ${state.propertyType || 'non précisé'}`,
           `Budget : ${state.budget || 'non précisé'}`,
-        ].join(' — ');
+        ].join(' — '));
 
     return {
       form_type: FORM_TYPE,
@@ -522,7 +527,7 @@ export function LeadFormProvider({ children }: { children: ReactNode }) {
       // from the qualification request, which must not count as a second Lead.
       ...(isUpdate ? {} : { meta_event_id: metaLeadEventId.current }),
     };
-  }, []);
+  }, [messageTag]);
 
   /** Checks the contact details and shows what is wrong; the name of the first wrong field, or ''. */
   const checkContact = useCallback((): 'name' | 'phone' | 'email' | '' => {

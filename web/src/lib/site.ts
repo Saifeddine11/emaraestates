@@ -84,6 +84,7 @@ export const WHATSAPP_FLOAT_HIDDEN_ROUTES = new Set([
   // Paid lead pages: keep the floating control from covering the inline form.
   '/honest-signature-7',
   '/honest-signature-7-en',
+  '/honest-signature-7-residence-boutique',
   // Internal sales calculator: the client WhatsApp button would cover amounts.
   '/simulateur-equipe',
 ]);
@@ -92,7 +93,7 @@ export const WHATSAPP_FLOAT_HIDDEN_ROUTES = new Set([
  * Routes that skip the intro curtain. Paid-traffic landing pages must show
  * the ad's promise immediately; a 1.6s logo screen there costs visitors.
  */
-export const INTRO_CURTAIN_SKIPPED_ROUTES = new Set(['/honest-signature-7', '/honest-signature-7-en']);
+export const INTRO_CURTAIN_SKIPPED_ROUTES = new Set(['/honest-signature-7', '/honest-signature-7-en', '/honest-signature-7-residence-boutique']);
 
 export const SOCIAL = {
   instagram: 'https://www.instagram.com/emara.estates',
