@@ -31,6 +31,9 @@ const cormorant = Cormorant_Garamond({
   style: ['normal', 'italic'],
   variable: '--font-cormorant',
   display: 'swap',
+  // Not preloaded: the serif never sets the first screen of the ads landings, and its two
+  // files (~75 KB) competed with the hero image, the LCP, on every page. It loads with the CSS.
+  preload: false,
 });
 
 const jost = Jost({
